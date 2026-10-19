@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "build": "vite build",
-    "test": "node --test model.test.mjs id-display.test.mjs ui.test.mjs schedule-views.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "tauri": "tauri",
     "version:set": "node scripts/version.mjs",
     "version:check": "node scripts/version.mjs --check"

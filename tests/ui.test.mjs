@@ -1,20 +1,19 @@
-import {renderTaskDetail} from './task-detail.mjs';
-import {bindChartPan} from './chart-pan.mjs';
-import {renderDependencies,renderGantt} from './schedule-views.mjs';
+import {renderTaskDetail} from '../src/views/task-detail.mjs';
+import {bindChartPan} from '../src/interactions/chart-pan.mjs';
+import {renderDependencies,renderGantt} from '../src/views/schedule-views.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {parseWbs} from './model.mjs';
-import {createIdLabels,readSeparator,saveSeparator} from './id-display.mjs';
+import {parseWbs} from '../src/domain/model.mjs';
+import {createIdLabels,readSeparator,saveSeparator} from '../src/domain/id-display.mjs';
 test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참조를 유지한다',async()=>{
  const elements=new Map();const element=id=>{if(!elements.has(id))elements.set(id,{value:id==='status'?'all':'',textContent:'',innerHTML:'',showModal(){this.open=true;},close(){this.open=false;},replaceChildren(){this.innerHTML='';},classList:{toggle(){}}});return elements.get(id);};
  const views=['tree','board','flow','gantt'].map(view=>({dataset:{view},classList:{toggle(){}},setAttribute(){}}));
  const data=new Map();
- const source=fs.readFileSync(new URL('./planning/Worktree.wbs',import.meta.url),'utf8').replace('project_id: WORKTREE','project_id: WORKTREE\nid_prefix: OBS');
+ const source=fs.readFileSync(new URL('../planning/Worktree.wbs',import.meta.url),'utf8').replace('project_id: WORKTREE','project_id: WORKTREE\nid_prefix: OBS');
  const original=parseWbs(source);
- const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
- const script=html.split('<script type="module">')[1].split('</script>')[0].split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
+ const script=fs.readFileSync(new URL('../src/main.mjs',import.meta.url),'utf8').split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
  const context={renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
  vm.runInNewContext(script+"\nload(source,'Worktree.wbs');",context);
  assert.match(element('content').innerHTML,/OBS001/);

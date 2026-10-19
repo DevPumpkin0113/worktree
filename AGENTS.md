@@ -141,3 +141,9 @@ UI 변경 요청은 다음 구역 명칭을 기준으로 해석한다. 아래 �
 - 커밋 유형은 docs(문서), fix(오류 수정), feat(기능 추가)를 기본으로 사용하고, 필요하면 refactor·test·chore·style을 사용한다.
 - 해당 작업에 필요한 검증을 마친 뒤 관련 파일만 커밋한다. 다른 작업이나 사용자 변경을 임의로 포함하지 않는다.
 - 일반적인 로컬 커밋은 매번 재승인을 요청하지 않고 수행하며, 완료 보고에 커밋 ID와 변경 요약을 남긴다. 원격 푸시나 게시 권한은 별도로 판단한다.
+
+### 프런트엔드 파일 위치
+
+- index.html은 화면 마크업·진입점이며 인라인 앱 스크립트와 공통 CSS는 src/main.mjs와 src/styles/main.css로 분리한다.
+- src/domain은 WBS·ID 규칙, src/views는 화면 렌더링, src/styles는 CSS, src/platform은 Tauri 창 제어, src/interactions는 입력 동작을 담당한다.
+- 자동화 테스트는 tests에 두고 npm test로 실행한다. public 및 src-tauri의 에셋 위치는 유지한다.

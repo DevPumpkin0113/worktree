@@ -95,7 +95,25 @@ exe: `src-tauri/target/release/worktree.exe`
 - 선행 관계는 왼쪽에서 오른쪽으로 배치한 그래프다. 노드를 선택하면 선행·후속 경로를 강조하고 작업 상세 버튼으로 내용을 확인한다. 두 번 클릭해도 상세가 열린다.
 - 그래프의 단계는 선행 관계의 깊이이며 일정이나 지금 착수할 수 있는지를 뜻하지 않는다. 필터 사용 중에도 관련 경로 확인을 위한 항목을 함께 표시한다.
 - [시각 검증용 예제](examples/Visualization-demo.wbs)는 가상 일정·상태를 포함한다. 실제 개발 계획은 planning/Worktree.wbs를 사용한다.
-- 새로운 화면 관련 코드는 schedule-views.mjs와 schedule-views.css에 분리했다. 기존 PNG는 참고용으로 유지하며 보기 아이콘은 SVG를 사용한다.
+- 새로운 화면 관련 코드는 src/views/schedule-views.mjs와 src/styles/schedule-views.css에 분리했다. 기존 PNG는 참고용으로 유지하며 보기 아이콘은 SVG를 사용한다.
 보기 이름은 트리·칸반·작업 네트워크·간트 차트입니다. 작업 네트워크와 간트 차트는 빈 공간을 마우스로 잡아 끌어 좌우·상하로 이동할 수 있습니다. 노드·막대의 일정이나 위치 데이터는 변경하지 않습니다.
 
 작업 상세는 일정·담당자·예상 공수·완료 기준과 선행·후속 관계를 구역별로 표시합니다. 연결 작업을 누르면 같은 모달에서 해당 작업으로 이동하며 원본 ID는 식별 정보에서 확인할 수 있습니다.
+
+## 프런트엔드 폴더 구조
+
+```text
+index.html                화면 마크업·진입점
+src/
+  main.mjs                화면 상태와 이벤트 연결
+  domain/                 WBS 파싱·ID 표시 규칙
+  views/                  간트·작업 네트워크·작업 상세 렌더링
+  styles/                 공통 및 화면별 CSS
+  platform/               Tauri 창 제어
+  interactions/           차트 드래그 입력 처리
+tests/                    자동화 테스트
+public/                   현재 에셋 위치 유지
+src-tauri/                Rust·앱 설정·배포 아이콘
+```
+
+화면의 구조는 index.html, 화면 동작은 src/main.mjs, 디자인은 src/styles에서 관리합니다. 테스트는 npm test로 실행합니다. 버전 스크립트는 scripts에 유지합니다.

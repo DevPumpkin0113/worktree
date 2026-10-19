@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseWbs} from './model.mjs';
-import {createIdLabels,readSeparator,saveSeparator} from './id-display.mjs';
+import {parseWbs} from '../src/domain/model.mjs';
+import {createIdLabels,readSeparator,saveSeparator} from '../src/domain/id-display.mjs';
 const header='## 작업 목록\n| ID | 상위 ID | 유형 | 작업명 | 산출물 / 완료 기준 | 담당자 | 상태 | 시작일 | 종료일 | 예상 공수(h) | 선행 작업 |\n|---|---|---|---|---|---|---|---|---|---|---|\n';
 const row=(id,parent='-',type='task',deps='-')=>'| '+[id,parent,type,'작업','완료','-',type==='group'?'auto':'todo','-','-','-',deps].join(' | ')+' |\n';
 const doc=(body,prefix)=> (prefix===undefined?'':'---\ntitle: "테스트"\nid_prefix: '+prefix+'\n---\n')+header+body;

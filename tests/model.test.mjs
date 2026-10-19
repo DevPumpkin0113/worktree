@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseWbs} from './model.mjs';
+import {parseWbs} from '../src/domain/model.mjs';
 const header='## 작업 목록\n| ID | 상위 ID | 유형 | 작업명 | 산출물 / 완료 기준 | 담당자 | 상태 | 시작일 | 종료일 | 예상 공수(h) | 선행 작업 |\n|---|---|---|---|---|---|---|---|---|---|---|\n';
 const group='| W001 | - | group | 그룹 | 완료 | - | auto | - | - | - | - |\n';
 const task=(id,parent,dep,status='todo')=>`| ${id} | ${parent} | task | 작업 | 완료 | - | ${status} | - | - | - | ${dep} |\n`;

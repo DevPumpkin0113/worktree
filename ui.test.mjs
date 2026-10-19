@@ -1,3 +1,4 @@
+import {renderTaskDetail} from './task-detail.mjs';
 import {bindChartPan} from './chart-pan.mjs';
 import {renderDependencies,renderGantt} from './schedule-views.mjs';
 import {test} from 'node:test';
@@ -14,7 +15,7 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  const original=parseWbs(source);
  const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
  const script=html.split('<script type="module">')[1].split('</script>')[0].split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
- const context={bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
+ const context={renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
  vm.runInNewContext(script+"\nload(source,'Worktree.wbs');",context);
  assert.match(element('content').innerHTML,/OBS001/);
  element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'Worktree · v0.3.5');element('idSeparator').value='hyphen';element('idSeparator').onchange();assert.equal(element('settings').open,true);

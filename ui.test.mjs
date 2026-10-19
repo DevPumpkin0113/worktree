@@ -15,8 +15,8 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  const context={getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
  vm.runInNewContext(script+"\nload(source,'Worktree.wbs');",context);
  assert.match(element('content').innerHTML,/OBS001/);
- element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'Worktree · v0.3.5');element('idSeparator').value='hyphen';element('settingsSave').onclick();
- assert.equal(readSeparator(context.window.localStorage),'hyphen');
+ element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'Worktree · v0.3.5');element('idSeparator').value='hyphen';element('idSeparator').onchange();assert.equal(element('settings').open,true);
+ assert.equal(readSeparator(context.window.localStorage),'hyphen');element('settingsClose').onclick();assert.equal(element('settings').open,false);element('settingsOpen').onclick();assert.equal(element('idSeparator').value,'hyphen');
  for(const view of views){view.onclick();assert.match(element('content').innerHTML,/OBS-00/);assert.match(element('content').innerHTML,/data-id="W00/);}
  views[0].onclick();element('content').onclick({target:{closest:()=>({dataset:{id:'W002'}})}});
  assert.match(element('detailTitle').textContent,/OBS-002/);assert.match(element('detailBody').innerHTML,/원본 ID/);assert.match(element('detailBody').innerHTML,/W002/);

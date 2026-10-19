@@ -1,15 +1,48 @@
 name: Windows Release
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
 permissions:
   contents: read
 concurrency:
-  group: release-${{ github.ref }}
+  group: windows-release
   cancel-in-progress: false
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.plan.outputs.publish }}
+      tag: ${{ steps.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Check release version
+        id: plan
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $version = (Get-Content -LiteralPath package.json -Raw | ConvertFrom-Json).version
+          if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') { throw 'Invalid app version' }
+          $tag = "v$version"
+          $published = @(gh api --paginate "repos/$env:GH_REPO/releases" --jq '.[] | select(.draft == false) | .tag_name')
+          if ($LASTEXITCODE -ne 0) { throw 'Could not check published releases' }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          if ($published -contains $tag) {
+            'publish=false' >> $env:GITHUB_OUTPUT
+            Write-Host "$tag is already published; skipping release."
+            exit 0
+          }
+          git ls-remote --exit-code --tags origin "refs/tags/$tag"
+          $tagStatus = $LASTEXITCODE
+          if ($tagStatus -eq 0) { throw 'An unpublished tag already exists; resolve it before releasing' }
+          if ($tagStatus -ne 2) { throw 'Could not check remote tags' }
+          'publish=true' >> $env:GITHUB_OUTPUT
+          exit 0
   release:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
     runs-on: windows-latest
     permissions:
       contents: write
@@ -26,8 +59,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run version:check
-      - name: Verify release tag
-        run: node -e "const p=require('./package.json'); if(process.env.GITHUB_REF_NAME !== 'v'+p.version) throw new Error('Tag and app version differ')"
+      - name: Verify release version
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: node -e "const p=require('./package.json'); if(process.env.RELEASE_TAG !== 'v'+p.version) throw new Error('Release and app version differ')"
       - name: Build Windows installer
         run: npm run tauri build -- --ci --bundles nsis
       - uses: actions/upload-artifact@v7.0.2
@@ -40,11 +75,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: |
           $installers = @(Get-ChildItem -LiteralPath 'src-tauri/target/release/bundle/nsis' -Filter '*-setup.exe' -File)
           if ($installers.Count -eq 0) { throw 'Installer was not generated' }
           $assets = @($installers.FullName)
-          gh release create $env:RELEASE_TAG @assets --verify-tag --generate-notes --title "Worktree $env:RELEASE_TAG"
+          gh release create $env:RELEASE_TAG @assets --target $env:GITHUB_SHA --generate-notes --title "Worktree $env:RELEASE_TAG"
           if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
-

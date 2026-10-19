@@ -2,6 +2,24 @@
 
 Markdown 기반 WBS를 시각화하는 Windows Tauri 앱입니다. 로컬 서버 없이 exe에서 문서를 읽습니다.
 
+## WBS 문서 작성
+
+작성 규칙은 [templates/README.md](templates/README.md), 복사용 양식은 [templates/template.wbs](templates/template.wbs)입니다. **`.wbs` 파일의 내부 내용은 `.md`와 같은 Markdown 형식**이며 일반 텍스트 편집기로 작성할 수 있습니다. 실제 작업 문서는 반드시 **프로젝트명.wbs**로 저장합니다.
+
+1. 템플릿을 프로젝트 기획 폴더로 복사합니다. 예: `planning/MyProject.wbs`.
+2. 메타데이터의 `title`, `project_id`, `updated`와 문서 제목을 수정합니다. `id_prefix`는 선택 항목이며 생략하면 `W`입니다.
+3. 예시 행을 실제 작업으로 교체합니다. 표의 열 이름·순서는 유지하고 ID는 문서 안에서 고유하게 지정합니다.
+4. `상위 ID`로 계층을, `선행 작업`으로 의존 관계를 연결합니다. 미정인 일정·공수는 `-`로 둡니다.
+5. Worktree 우측 하단 `+` 또는 드래그 앤 드롭으로 문서를 엽니다. 파일 연결이 설정됐다면 더블클릭으로 열 수 있습니다.
+
+```powershell
+Copy-Item templates/template.wbs planning/MyProject.wbs
+```
+
+복사 대상 폴더는 먼저 만들어 주세요. 내부 내용은 Markdown이며 원본 저장 시 활성 문서가 자동 갱신됩니다.
+
+이 템플릿은 공용 `resources/templates/wbs/template.wbs`의 프로젝트 배포용 사본입니다. 규격을 변경하면 공용 양식과 이 사본을 함께 갱신합니다. 현재 개발 계획은 [planning/Worktree.wbs](planning/Worktree.wbs)를 참고하세요.
+
 ## 개발
 
 Node.js 20.19+ 또는 22.12+, Rust, Visual Studio C++ 빌드 도구와 WebView2가 필요합니다.

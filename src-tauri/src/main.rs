@@ -1,0 +1,95 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use std::{path::PathBuf, sync::Mutex};
+use tauri::Manager;
+
+#[derive(Default)]
+struct OpenQueue(Mutex<Vec<String>>);
+
+fn enqueue(state: &OpenQueue, paths: impl Iterator<Item = PathBuf>) {
+    if let Ok(mut queue) = state.0.lock() {
+        for path in paths {
+            if let Some(ext) = path.extension().and_then(|x| x.to_str()) {
+                if ["wbs", "md", "markdown"].contains(&ext.to_lowercase().as_str()) {
+                    queue.push(path.to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+}
+
+#[tauri::command]
+fn take_open_requests(state: tauri::State<OpenQueue>) -> Result<Vec<String>, String> {
+    let mut queue = state.0.lock().map_err(|e| e.to_string())?;
+    Ok(std::mem::take(&mut *queue))
+}
+
+#[tauri::command]
+fn read_document(path: String) -> Result<String, String> {
+    let file = PathBuf::from(path);
+    let ext = file
+        .extension()
+        .and_then(|x| x.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+    if !["wbs", "md", "markdown"].contains(&ext.as_str()) {
+        return Err("WBS 문서 파일을 선택해 주세요.".into());
+    }
+    let meta = std::fs::metadata(&file).map_err(|e| e.to_string())?;
+    if !meta.is_file() || meta.len() > 5 * 1024 * 1024 {
+        return Err("5MB 이하 문서 파일만 열 수 있습니다.".into());
+    }
+    std::fs::read_to_string(file).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn pick_document() -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        rfd::FileDialog::new()
+            .add_filter("WBS 문서", &["wbs"])
+            .pick_file()
+            .map(|p| p.to_string_lossy().to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+fn main() {
+    tauri::Builder::default()
+        .manage(OpenQueue::default())
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            enqueue(
+                &app.state::<OpenQueue>(),
+                args.into_iter().skip(1).map(|arg| {
+                    let p = PathBuf::from(arg);
+                    if p.is_absolute() {
+                        p
+                    } else {
+                        PathBuf::from(&cwd).join(p)
+                    }
+                }),
+            );
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }))
+        .setup(|app| {
+            enqueue(
+                &app.state::<OpenQueue>(),
+                std::env::args_os().skip(1).map(PathBuf::from),
+            );
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) = event {
+                enqueue(&window.state::<OpenQueue>(), paths.iter().cloned());
+            }
+        })
+        .invoke_handler(tauri::generate_handler![
+            take_open_requests,
+            read_document,
+            pick_document
+        ])
+        .run(tauri::generate_context!())
+        .expect("Worktree 실행 실패");
+}

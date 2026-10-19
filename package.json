@@ -1,0 +1,21 @@
+{
+  "name": "worktree",
+  "version": "0.3.4",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
+    "build": "vite build",
+    "test": "node --test model.test.mjs id-display.test.mjs ui.test.mjs",
+    "tauri": "tauri",
+    "version:set": "node scripts/version.mjs",
+    "version:check": "node scripts/version.mjs --check"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "vite": "^7"
+  }
+}

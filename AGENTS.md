@@ -87,7 +87,7 @@
 ## Worktree 프로젝트 안내
 
 - Windows 데스크톱 앱이며 Tauri 2, Rust, Vite, JavaScript를 사용한다.
-- 먼저 `planning/Worktree.wbs`, `README.md`, `CHANGELOG.md`, `VERSIONING.md`를 읽는다.
+- 먼저 `planning/Worktree.wbs`, `README.md`, `CHANGELOG.md`를 읽는다.
 - `npm test`: 파서·ID 표시·화면 연결 테스트. 화면 연결 테스트는 DOM 대역을 사용하며 실제 앱 조작 검증을 대체하지 않는다.
 - `npm run tauri dev`: 개발 실행. `npm run tauri build`: Windows exe·NSIS 설치 프로그램 빌드.
 - `npm run version:set -- X.Y.Z`로 버전을 함께 변경하고 `npm run version:check`로 일치 여부를 검사한다.
@@ -151,3 +151,13 @@ UI 변경 요청은 다음 구역 명칭을 기준으로 해석한다. 아래 �
 - 상세 정보는 설정에서 모달·우측 사이드 패널을 선택하며 같은 상세 렌더러를 재사용한다. 기본은 우측 사이드 패널이며 설정은 앱 전체에 저장한다. 사이드 패널은 목록 조작을 막지 않는다. 문서 전환 시 이전 상세를 닫는다.
 
 - 페이지 전체가 아니라 #content 작업 영역 내부에서 스크롤한다. 상단 요약·도구 모음·상태 표시줄·문서 탭은 고정하고 상세 패널은 자체 스크롤을 유지한다.
+
+### 버전과 릴리즈 운영
+
+- 버전은 MAJOR.MINOR.PATCH 형식이며 package.json을 기준으로 한다. 0.x 단계에서 새 기능·사용자 흐름 변경은 MINOR, 기존 동작을 유지하는 오류 수정·작은 시각 조정은 PATCH를 올린다. 안정적인 문서 규격과 배포 기준을 확정하면 1.0.0을 검토한다.
+- 버전 변경은 npm run version:set -- X.Y.Z로만 수행한다. package.json·package-lock.json·Tauri 설정·Cargo.toml·Cargo.lock을 개별 수정하지 않는다. 변경 후 npm run version:check로 일치를 확인한다.
+- 앱 버전과 WBS의 schema_version은 별개다. 문서 호환성이 바뀌면 CHANGELOG.md에 영향과 이전 방법을 명시한다.
+- 개발 중 변경은 CHANGELOG.md의 Unreleased에 기록하고, 릴리즈 시 해당 버전과 날짜 아래로 옮긴다. 문서만 정리하는 변경에는 앱 버전을 올리지 않는다.
+- 릴리즈 전 npm test·버전 검사·Windows 빌드를 수행한다. exe 실행·파일 열기·문서 전환·자동 갱신·창 제어와 설치 후 파일 연결의 실제 확인 여부를 구분해 기록한다.
+- 배포 절차는 README.md의 GitHub Release 자동 배포 항목을 따른다. vX.Y.Z 태그는 앱 버전과 일치해야 하며 태그 푸시는 공개 Release 게시를 실행한다. 버전 변경 명령 자체는 커밋·태그·게시를 수행하지 않는다.
+- 이미 게시한 태그·설치 파일을 덮어쓰지 않고 새 버전으로 수정 배포한다. 커밋·푸시·배포에 관한 사용자의 현재 지시를 우선하며 과거 작업의 일시적인 합의를 상시 규칙으로 남기지 않는다.

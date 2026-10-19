@@ -62,7 +62,9 @@ exe: `src-tauri/target/release/worktree.exe`
 
 ## 버전과 변경 이력
 
-현재 버전과 버전 올리는 절차는 [VERSIONING.md](VERSIONING.md), 변경 내역은 [CHANGELOG.md](CHANGELOG.md)를 참고하세요. `npm run version:check`로 버전 일치 여부를 검사합니다.
+버전은 MAJOR.MINOR.PATCH 형식을 사용합니다. 0.x 단계에서 새 기능·사용자 흐름 변경은 MINOR, 오류 수정·작은 시각 조정은 PATCH를 올립니다. 안정적인 문서 규격과 배포 기준을 확정하면 1.0.0을 검토합니다. 문서만 정리할 때는 앱 버전을 올리지 않습니다.
+
+현재 앱 버전은 package.json, 버전별 변경 내역은 [CHANGELOG.md](CHANGELOG.md)에서 확인합니다. 버전 변경과 배포 절차는 아래 GitHub Release 자동 배포 항목을 참고하세요.
 
 ## ID 접두어와 표시 설정 (0.3.0)
 
@@ -132,12 +134,13 @@ src-tauri/                Rust·앱 설정·배포 아이콘
 
 [공개 저장소](https://github.com/DevPumpkin0113/worktree)의 main에 소스를 올린 뒤 `v0.4.0` 같은 버전 태그를 푸시하면 Windows Release 워크플로가 실행됩니다. 테스트·버전 일치 검사·Windows x64 NSIS 빌드가 모두 성공하면 설치 파일을 GitHub Release에 게시합니다. 앱 내부 자동 업데이트는 포함하지 않습니다.
 
-다음 버전 배포 시 버전 동기화 명령으로 버전을 올리고 CHANGELOG.md와 VERSIONING.md를 갱신한 뒤 커밋합니다. 버전 검사와 테스트를 통과한 커밋에 태그를 만듭니다.
+다음 버전 배포 시 버전 동기화 명령으로 package.json·npm 잠금 파일·Tauri 설정·Cargo.toml·Cargo.lock을 함께 변경합니다. CHANGELOG.md의 Unreleased 내용을 버전과 날짜 아래로 옮기고 검증 후 커밋합니다. 앱 버전과 WBS의 schema_version은 별개이며 문서 호환성 변경 시 영향과 이전 방법을 변경 이력에 기록합니다.
 
 ```powershell
 npm run version:set -- 0.4.1
 npm run version:check
 npm test
+npm run tauri build
 # 변경 내역과 문서를 갱신하고 커밋한 뒤:
 git push origin main
 git tag -a v0.4.1 -m "Worktree 0.4.1"
@@ -145,3 +148,5 @@ git push origin v0.4.1
 ```
 
 태그와 앱 버전이 다르면 배포가 중단됩니다. 진행 상태는 저장소 Actions에서, 설치 파일은 [Releases](https://github.com/DevPumpkin0113/worktree/releases)에서 확인합니다. 이미 배포한 버전은 새 버전 번호로 수정 배포합니다.
+
+릴리즈 전 앱 실행·파일 열기·문서 전환·자동 갱신·창 제어와 설치 후 파일 연결을 확인합니다. 버전 변경 명령은 커밋·태그·공개 게시를 수행하지 않으며, 태그 푸시가 자동 배포를 시작합니다.

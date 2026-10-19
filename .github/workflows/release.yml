@@ -1,0 +1,49 @@
+name: Windows Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - run: npm test
+      - run: npm run version:check
+      - name: Verify release tag
+        run: node -e "const p=require('./package.json'); if(process.env.GITHUB_REF_NAME !== 'v'+p.version) throw new Error('Tag and app version differ')"
+      - name: Build Windows installer
+        run: npm run tauri build -- --ci --bundles nsis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Worktree-Windows-x64
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $installers = @(Get-ChildItem -LiteralPath 'src-tauri/target/release/bundle/nsis' -Filter '*-setup.exe' -File)
+          if ($installers.Count -eq 0) { throw 'Installer was not generated' }
+          $assets = @($installers.FullName)
+          gh release create $env:RELEASE_TAG @assets --verify-tag --generate-notes --title "Worktree $env:RELEASE_TAG"
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }

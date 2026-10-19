@@ -127,3 +127,21 @@ src-tauri/                Rust·앱 설정·배포 아이콘
 상세 정보의 기본 표시 방식은 우측 사이드 패널입니다. 기존에 저장한 모달 선택은 유지합니다.
 
 1차 목표 평가와 후속 보완·편집 기능 방향은 [planning/ROADMAP.md](planning/ROADMAP.md)를 참고하세요. 후보 항목이며 추가 구현을 확정한 것은 아닙니다.
+
+## GitHub Release 자동 배포
+
+[공개 저장소](https://github.com/DevPumpkin0113/worktree)의 main에 소스를 올린 뒤 `v0.4.0` 같은 버전 태그를 푸시하면 Windows Release 워크플로가 실행됩니다. 테스트·버전 일치 검사·Windows x64 NSIS 빌드가 모두 성공하면 설치 파일을 GitHub Release에 게시합니다. 앱 내부 자동 업데이트는 포함하지 않습니다.
+
+다음 버전 배포 시 버전 동기화 명령으로 버전을 올리고 CHANGELOG.md와 VERSIONING.md를 갱신한 뒤 커밋합니다. 버전 검사와 테스트를 통과한 커밋에 태그를 만듭니다.
+
+```powershell
+npm run version:set -- 0.4.1
+npm run version:check
+npm test
+# 변경 내역과 문서를 갱신하고 커밋한 뒤:
+git push origin main
+git tag -a v0.4.1 -m "Worktree 0.4.1"
+git push origin v0.4.1
+```
+
+태그와 앱 버전이 다르면 배포가 중단됩니다. 진행 상태는 저장소 Actions에서, 설치 파일은 [Releases](https://github.com/DevPumpkin0113/worktree/releases)에서 확인합니다. 이미 배포한 버전은 새 버전 번호로 수정 배포합니다.

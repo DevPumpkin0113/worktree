@@ -1,3 +1,4 @@
+import {createSessionStorage,emptySession,MAX_RECENT_FILES,MAX_SESSION_TABS} from './platform/session-storage.mjs';
 import {createDocumentViewState} from './interactions/document-view-state.mjs';
 import {escapeHtml as esc} from './views/html.mjs';
 import {summarizeWork} from './domain/work-summary.mjs';
@@ -20,6 +21,8 @@ import {invoke,Channel} from '@tauri-apps/api/core';
 import {getVersion} from '@tauri-apps/api/app';
 import {setupWindowFrame,setWindowTitle} from './platform/window-frame.mjs';
 const documents=new Map();let activePath=null,polling=false;
+const sessionStorage=createSessionStorage(invoke),documentViews=new Map();
+let recentFiles=[],restoringSession=true;
 const viewState=createDocumentViewState();let displayedPath=null,renderedView=null,refreshDetail=null;
 let validationProblems=[],operationProblems=[],renderedProblems='';
 function setProblemsOpen(open,focus=false){
@@ -51,8 +54,27 @@ function reportProblem(error,source='',kind='문서 오류',markdown=''){
 function tabs(){ $('reload').disabled=!activePath; $('tabs').innerHTML=[...documents.keys()].map((path,i)=>{
 let title=path.split(/[\\/]/).pop();try{title=parseWbs(documents.get(path)).title;}catch{}
 return `<div class="document-tab ${path===activePath?'selected':''}" title="${esc(path)}"><button data-tab="${i}" aria-pressed="${path===activePath}">${esc(title)}</button><button class="tab-close" data-close-tab="${i}" aria-label="${esc(title)} 문서 닫기">×</button></div>`;
-}).join('')||'<span class="dock-empty">열린 문서 없음</span>'; }
-async function openPath(path){try{const text=await invoke('read_document',{path});documents.set(path,text);activePath=path;load(text,path);tabs();}catch(e){reportProblem(e,path,'파일 읽기 오류');}}
+}).join('')||'<span class="dock-empty">열린 문서 없음</span>';saveSession(); }
+function sessionSnapshot(){
+ const paths=[...documents.keys()].slice(-MAX_SESSION_TABS);
+ if(activePath&&!paths.includes(activePath)&&documents.has(activePath))paths.splice(0,1,activePath);
+ return {schemaVersion:1,recentFiles:recentFiles.slice(0,MAX_RECENT_FILES),tabs:paths.map(path=>({path,...(documentViews.get(path)||{view:'tree',ganttUnit:'day'})})),activePath:paths.includes(activePath)?activePath:null};
+}
+function saveSession(){
+ if(restoringSession)return;
+ try{sessionStorage.save(sessionSnapshot()).catch(error=>reportProblem(error,'','세션 저장 오류'));}
+ catch(error){reportProblem(error,'','세션 저장 오류');}
+}
+function renderRecentFiles(){
+ $('recentFiles').innerHTML=recentFiles.length?recentFiles.map((path,index)=>`<button type="button" data-recent="${index}" title="${esc(path)}">${esc(path.split(/[\\/]/).pop())}<span>${esc(path)}</span></button>`).join(''):'<p>최근 파일이 없습니다.</p>';
+}
+async function openPath(path,{quiet=false}={}){
+ try{
+  const text=await invoke('read_document',{path});documents.set(path,text);activePath=path;
+  recentFiles=[path,...recentFiles.filter(item=>item!==path)].slice(0,MAX_RECENT_FILES);renderRecentFiles();
+  load(text,path);tabs();return null;
+ }catch(error){if(!quiet)reportProblem(error,path,'파일 읽기 오류');return {error,path};}
+}
 
 let model,view='tree',idLabels=new Map(),graphFocus=null,ganttUnit='day';
 const storage=createSettingsStorage({invoke,legacyStorage:()=>window.localStorage});
@@ -78,6 +100,9 @@ $('notice').title=$('notice').textContent;
 $('content').innerHTML=html||'<div class="empty">조건에 맞는 작업이 없습니다.</div>';viewState.restore(displayedPath,view,$('content'),rows);renderedView=view;syncWorkSelection();}
 function load(markdown,source){
  const same=displayedPath===source;
+ if(displayedPath&&documents.has(displayedPath))documentViews.set(displayedPath,{view,ganttUnit});
+ const savedView=documentViews.get(source);if(!same){view=savedView?.view||'tree';ganttUnit=savedView?.ganttUnit||'day';}
+ syncViewButtons();
  if(model&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));
  if(!same){refreshDetail=null;graphFocus=null;}
  else if(model)refreshDetail={id:$('detail').open?selectedDetailId:pendingDetailId,scroll:$('detail').scrollTop||0};
@@ -98,7 +123,8 @@ function load(markdown,source){
 }
 async function reload(){if(activePath)await openPath(activePath);}
 async function poll(){if(polling)return;polling=true;try{const paths=await invoke('take_open_requests');for(const path of paths)await openPath(path);if(activePath){const path=activePath;try{const text=await invoke('read_document',{path});if(operationProblems[0]?.kind==='파일 읽기 오류'&&operationProblems[0]?.source===path){operationProblems=[];updateProblems();}if(path===activePath&&documents.get(path)!==text){documents.set(path,text);load(text,path);}}catch(e){reportProblem(e,path,'파일 읽기 오류');}}}catch(e){reportProblem(e,activePath||'','앱 오류');}finally{polling=false;}}
-document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});render();});
+function syncViewButtons(){document.querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===view;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;syncViewButtons();if(activePath)documentViews.set(activePath,{view,ganttUnit});render();saveSession();});
 $('search').oninput=render;$('status').onchange=render;$('reload').onclick=reload;$('dockOpen').onclick=async()=>{try{const path=await invoke('pick_document');if(path)await openPath(path);}catch(e){reportProblem(e,activePath||'','앱 오류');}};$('close').onclick=()=>{$('detail').close();syncWorkSelection();};
 $('detail').onclose=syncWorkSelection;
 $('error').onclick=()=>{if(validationProblems.length||operationProblems.length)setProblemsOpen($('documentProblems').hidden,true);};
@@ -120,8 +146,12 @@ const chartPan=bindChartPan($('content'));
 $('content').onclick=e=>{if(!chartPan.consumeClick())activateContent(e.target.closest('[data-select],[data-id],[data-clear-focus]'));};
 $('content').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&(e.target.dataset.id||e.target.dataset.select)){e.preventDefault();activateContent(e.target);}};
 $('content').ondblclick=e=>{const target=e.target.closest('[data-select]');if(target?.dataset.select)show(target.dataset.select);};
-$('content').onchange=e=>{if(e.target.id==='ganttUnit'){ganttUnit=e.target.value;render();}};
-$('tabs').onclick=e=>{const close=e.target.closest('[data-close-tab]'),tab=e.target.closest('[data-tab]');if(close){const path=[...documents.keys()][Number(close.dataset.closeTab)];documents.delete(path);viewState.forget(path);if(path===activePath){activePath=[...documents.keys()].at(-1)||null;if(activePath)load(documents.get(activePath),activePath);else{if($('detail').open)$('detail').close();selectedDetailId=null;model=null;displayedPath=null;renderedView=null;refreshDetail=null;$('title').textContent='Worktree';setWindowTitle('Worktree');$('source').textContent='열린 문서 없음';$('source').title='';$('content').replaceChildren();$('metrics').replaceChildren();$('notice').textContent='문서를 열어 주세요.';$('notice').title='';clearProblems();}}tabs();}else if(tab){activePath=[...documents.keys()][Number(tab.dataset.tab)];load(documents.get(activePath),activePath);tabs();}};
+$('content').onchange=e=>{if(e.target.id==='ganttUnit'){ganttUnit=e.target.value;if(activePath)documentViews.set(activePath,{view,ganttUnit});render();saveSession();}};
+$('tabs').onclick=e=>{const close=e.target.closest('[data-close-tab]'),tab=e.target.closest('[data-tab]');if(close){const path=[...documents.keys()][Number(close.dataset.closeTab)];documents.delete(path);documentViews.delete(path);viewState.forget(path);if(path===activePath){activePath=[...documents.keys()].at(-1)||null;if(activePath)load(documents.get(activePath),activePath);else{if($('detail').open)$('detail').close();selectedDetailId=null;model=null;displayedPath=null;renderedView=null;refreshDetail=null;$('title').textContent='Worktree';setWindowTitle('Worktree');$('source').textContent='열린 문서 없음';$('source').title='';$('content').replaceChildren();$('metrics').replaceChildren();$('notice').textContent='문서를 열어 주세요.';$('notice').title='';clearProblems();}}tabs();}else if(tab){activePath=[...documents.keys()][Number(tab.dataset.tab)];load(documents.get(activePath),activePath);tabs();}};
+$('recentOpen').onclick=()=>{const open=$('recentFiles').hidden;$('recentFiles').hidden=!open;$('recentOpen').setAttribute('aria-expanded',String(open));renderRecentFiles();};
+$('recentFiles').onclick=event=>{const button=event.target.closest('[data-recent]');if(!button)return;const path=recentFiles[Number(button.dataset.recent)];$('recentFiles').hidden=true;$('recentOpen').setAttribute('aria-expanded','false');if(path)openPath(path);};
+document.addEventListener?.('pointerdown',event=>{if(!event.target.closest?.('#recentFiles,#recentOpen')){$('recentFiles').hidden=true;$('recentOpen').setAttribute('aria-expanded','false');}});
+$('dockOpen').disabled=true;$('recentOpen').disabled=true;
 $('notice').textContent='우측 하단 + 버튼으로 문서를 열거나 파일을 끌어오세요.';
 setupWindowFrame(error=>reportProblem(error,activePath||'','창 제어 오류'));
 tabs();
@@ -146,6 +176,7 @@ $('detailMode').onchange=async()=>{const control=$('detailMode');control.disable
 $('settings').onclose=()=>{syncSettingsState();if($('settings').open)return;const id=pendingDetailId;pendingDetailId=null;$('settingsOpen').focus?.({preventScroll:true});if(id)show(id);};
 document.onkeydown=e=>{
  if(e.key!=='Escape')return;
+ if(!$('recentFiles').hidden){e.preventDefault();$('recentFiles').hidden=true;$('recentOpen').setAttribute('aria-expanded','false');return;}
  if($('settings').open){e.preventDefault();$('settings').close();syncSettingsState();return;}
  if($('detail').open&&detailMode==='modal')return;
  if(!$('documentProblems').hidden){e.preventDefault();setProblemsOpen(false,true);return;}
@@ -173,4 +204,18 @@ const settingsReady=storage.ready.then(()=>{
  settingsLoadError='설정을 불러오지 못했습니다: '+String(error);$('settingsError').textContent=settingsLoadError;
  startAppInfo({getItem:()=> 'false',setItem:()=>Promise.reject(error)});$('autoCheckUpdates').disabled=true;
 });
-poll();setInterval(poll,1500);
+async function restoreSession(){
+ let saved=emptySession();const failures=[];
+ try{saved=await sessionStorage.load();}catch(error){failures.push(...describeDocumentErrors(error,'','','세션 읽기 오류'));}
+ recentFiles=saved.recentFiles;renderRecentFiles();
+ for(const tab of saved.tabs)documentViews.set(tab.path,{view:tab.view,ganttUnit:tab.ganttUnit});
+ for(const tab of saved.tabs){const failed=await openPath(tab.path,{quiet:true});if(failed)failures.push(...describeDocumentErrors(failed.error,'',tab.path,'파일 읽기 오류'));}
+ // Preserve recent order; opening restored tabs is not a new user visit.
+ recentFiles=saved.recentFiles;renderRecentFiles();
+ if(saved.activePath&&documents.has(saved.activePath)){activePath=saved.activePath;load(documents.get(activePath),activePath);}
+ restoringSession=false;$('dockOpen').disabled=false;$('recentOpen').disabled=false;tabs();
+ await poll();
+ if(failures.length){operationProblems.push(...failures);updateProblems();}
+ setInterval(poll,1500);
+}
+const sessionReady=restoreSession();

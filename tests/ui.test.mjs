@@ -1,3 +1,4 @@
+import {createSessionStorage,emptySession,MAX_RECENT_FILES,MAX_SESSION_TABS} from '../src/platform/session-storage.mjs';
 import {createDocumentViewState} from '../src/interactions/document-view-state.mjs';
 import {escapeHtml as esc} from '../src/views/html.mjs';
 import {summarizeWork} from '../src/domain/work-summary.mjs';
@@ -26,8 +27,8 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  const source=fs.readFileSync(new URL('../planning/Worktree.wbs',import.meta.url),'utf8').replace('project_id: WORKTREE','project_id: WORKTREE\nid_prefix: OBS');
  const original=parseWbs(source);
  const script=fs.readFileSync(new URL('../src/main.mjs',import.meta.url),'utf8').split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
- const context={createDocumentViewState,esc,summarizeWork,renderMetrics,renderStatusNotice,renderTree,renderBoard,createSettingsStorage,setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async(command,args)=>command==='load_settings'?{settings:null,warning:''}:['initialize_settings','save_settings'].includes(command)?args.settings:[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
- await vm.runInNewContext(script+"\nsettingsReady.then(()=>load(source,'Worktree.wbs'));",context);
+ const context={createSessionStorage,emptySession,MAX_RECENT_FILES,MAX_SESSION_TABS,createDocumentViewState,esc,summarizeWork,renderMetrics,renderStatusNotice,renderTree,renderBoard,createSettingsStorage,setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async(command,args)=>command==='load_session'?(context.sessionValue||emptySession()):command==='save_session'?(context.sessionSaves||=[]).push(args.session):command==='read_document'?(context.files?.has(args.path)?context.files.get(args.path):Promise.reject(Error('파일 없음'))):command==='load_settings'?{settings:null,warning:''}:['initialize_settings','save_settings'].includes(command)?args.settings:[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
+ await vm.runInNewContext(script+"\nPromise.all([settingsReady,sessionReady]).then(()=>load(source,'Worktree.wbs'));",context);
  assert.match(element('content').innerHTML,/OBS001/);
  element('settingsOpen').onclick();
  assert.equal(element('settingsOpen').attributes['aria-pressed'],'true');assert.equal(element('workspace').inert,true);assert.equal(element('documentDock').inert,true);
@@ -63,5 +64,22 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  element('error').onclick();assert.equal(element('documentProblems').hidden,false);assert.match(element('problemsBody').innerHTML,/선행 작업/);
  vm.runInNewContext("load(source,'Worktree.wbs');",context);
  assert.equal(element('error').hidden,true);assert.equal(element('notice').hidden,false);assert.equal(element('documentProblems').hidden,true);
+
+ const a='C:\\docs\\a.wbs',b='C:\\docs\\b.wbs',missing='C:\\docs\\missing.wbs';
+ context.files=new Map([[a,source],[b,source]]);
+ context.sessionValue={schemaVersion:1,recentFiles:[b,missing,a],tabs:[{path:a,view:'gantt',ganttUnit:'week'},{path:missing,view:'tree',ganttUnit:'day'},{path:b,view:'board',ganttUnit:'day'}],activePath:a};
+ await vm.runInNewContext('restoringSession=true;restoreSession();',context);
+ assert.equal(vm.runInNewContext('activePath',context),a);
+ assert.equal(vm.runInNewContext('view',context),'gantt');assert.equal(vm.runInNewContext('ganttUnit',context),'week');
+ assert.equal(vm.runInNewContext('documents.size',context),2);
+ assert.match(element('error').textContent,/파일 읽기 오류/);
+ assert.match(element('recentFiles').innerHTML,/missing.wbs/);
+ assert.equal(vm.runInNewContext('recentFiles[0]',context),b);
+ element('tabs').onclick({target:{closest:selector=>selector==='[data-tab]'?{dataset:{tab:'1'}}:null}});
+ assert.equal(vm.runInNewContext('view',context),'board');
+ element('tabs').onclick({target:{closest:selector=>selector==='[data-close-tab]'?{dataset:{closeTab:'1'}}:null}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(context.sessionSaves.at(-1).tabs.length,1);
+ assert.equal(context.sessionSaves.at(-1).activePath,a);
 
 });

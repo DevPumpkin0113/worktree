@@ -1,3 +1,7 @@
+import {escapeHtml as esc} from './views/html.mjs';
+import {summarizeWork} from './domain/work-summary.mjs';
+import {renderMetrics,renderStatusNotice} from './views/work-summary.mjs';
+import {renderTree,renderBoard} from './views/list-views.mjs';
 import {createSettingsStorage} from './platform/settings-storage.mjs';
 import {setupAppInfo} from './interactions/app-info.mjs';
 import {setupSettingsNavigation} from './interactions/settings-navigation.mjs';
@@ -54,19 +58,17 @@ let settingsLoadError='';
 for(const id of ['idSeparator','detailMode','autoCheckUpdates'])document.getElementById(id).disabled=true;
 let separator=readSeparator(storage),detailMode=readDetailMode(storage),selectedDetailId=null,pendingDetailId=null;
 const label=id=>idLabels.get(id)||id;
-const $=id=>document.getElementById(id),labels={todo:'시작 전',doing:'진행 중',blocked:'막힘',done:'완료'},types={task:'작업',milestone:'마일스톤',group:'그룹'};
-const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const badge=r=>`<span class="tag ${r.status}">${labels[r.status]}</span>`;
+const $=id=>document.getElementById(id);
 function matches(r){const q=$('search').value.trim().toLowerCase();return [r.id,label(r.id),r.name,r.owner].join(' ').toLowerCase().includes(q)&&($('status').value==='all'||r.status===$('status').value);}
-function card(r){return `<div class="task" tabindex="0" role="button" data-id="${r.id}"><span class="id">${esc(label(r.id))}</span><div>${r.type==='milestone'?'◇ ':''}${esc(r.name)}<div class="sub">${types[r.type]} · ${r.owner==='-'?'담당 미정':esc(r.owner)}</div></div>${badge(r)}</div>`;}
 function syncWorkSelection(){markSelectedWork($('content'),detailMode==='sidebar'&&$('detail').open?selectedDetailId:null);}
 function show(id){if(!model)return;const result=renderTaskDetail(model,id,label);if(!result)return;selectedDetailId=id;$('detailTitle').textContent=result.title;$('detailMeta').innerHTML=result.meta;$('detailBody').innerHTML=result.body;const dialog=$('detail');const sidebar=detailMode==='sidebar';if(dialog.open&&dialog.classList.contains('sidebar')!==sidebar)dialog.close();dialog.classList.toggle('sidebar',sidebar);if(!dialog.open){if(sidebar)dialog.show();else dialog.showModal();}else dialog.scrollTop=0;syncWorkSelection();}
-function render(){if(!model)return;idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group'),tasks=leaves.filter(r=>r.type==='task'),known=tasks.every(r=>r.effort!=='-'),total=tasks.reduce((n,r)=>n+(Number(r.effort)||0),0),progress=known&&total?Math.round(tasks.filter(r=>r.status==='done').reduce((n,r)=>n+Number(r.effort),0)/total*100)+'%':'산정 불가';
-$('metrics').innerHTML=[['작업',tasks.length+'개'],['마일스톤',leaves.filter(r=>r.type==='milestone'&&r.status==='done').length+' / '+leaves.filter(r=>r.type==='milestone').length],['완료 작업',tasks.filter(r=>r.status==='done').length+' / '+tasks.length],['공수 기준 진척도',progress]].map(([k,v])=>`<div class="metric"><span>${k}</span><strong>${v}</strong></div>`).join('');
-const missing=leaves.filter(r=>r.start==='-').length;$('notice').textContent=`구조 검사 통과 · ${rows.filter(r=>r.type==='group').length}개 그룹 · 일정 미정 ${missing}개 · 공수 미정 ${tasks.filter(r=>r.effort==='-').length}개`;
+function render(){if(!model)return;idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
+const summary=summarizeWork(rows);
+$('metrics').innerHTML=renderMetrics(summary);
+$('notice').textContent=renderStatusNotice(summary);
 const filtered=leaves.filter(matches);let html='';
-if(view==='tree'){const branch=parent=>rows.filter(r=>r.parent===parent).map(r=>{if(r.type!=='group')return matches(r)?card(r):'';const children=branch(r.id);return children?`<details class="group" open><summary data-work-id="${r.id}">${esc(label(r.id))} · ${esc(r.name)} <span class="tag ${r.status}">${labels[r.status]}</span></summary><div class="children">${children}</div></details>`:'';}).join('');html=branch('-');}
-if(view==='board')html='<div class="lanes">'+Object.entries(labels).map(([status,label])=>`<section class="lane"><h3>${label} · ${filtered.filter(r=>r.status===status).length}</h3>${filtered.filter(r=>r.status===status).map(card).join('')}</section>`).join('')+'</div>';
+if(view==='tree')html=renderTree(rows,matches,label);
+if(view==='board')html=renderBoard(filtered,label);
 if(view==='flow')html=renderDependencies(leaves,filtered,graphFocus,label);
 if(view==='gantt')html=renderGantt(filtered,label,ganttUnit,undefined,$('content').clientWidth||960);
 const collisions=model.rows.filter(r=>label(r.id).includes('[')).length;if(collisions)$('notice').textContent+=' 표시 ID 중복 '+collisions+'개: 원본 ID를 함께 표시합니다.';

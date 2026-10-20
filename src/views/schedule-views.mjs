@@ -1,5 +1,5 @@
+import {escapeHtml as escape} from './html.mjs';
 const DAY=86400000;
-const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stateName={todo:'시작 전',doing:'진행 중',blocked:'막힘',done:'완료'};
 const dateString=time=>new Date(time).toISOString().slice(0,10);
 

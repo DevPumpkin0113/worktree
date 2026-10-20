@@ -1,4 +1,4 @@
-const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {escapeHtml as esc} from './html.mjs';
 const states={todo:'시작 전',doing:'진행 중',blocked:'진행 막힘',done:'완료'};
 const types={group:'작업 그룹',task:'작업',milestone:'마일스톤'};
 export function renderTaskDetail(model,id,label){

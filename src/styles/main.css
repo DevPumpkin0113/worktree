@@ -53,3 +53,4 @@ body:has(#documentProblems:not([hidden])){--problems-panel-height:clamp(180px,32
 .problem-copy{font-size:11px;padding:4px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0}.problem-copy:hover{background:#e0ecee;color:#205d63;border-color:#99b4b9}
 .problem-source-actions{display:flex;justify-content:flex-end;margin-top:8px}.statusbar-error[aria-expanded="true"]{box-shadow:inset 0 -2px #a65e41}
 @media(max-width:800px){#documentProblems .problems-heading{padding-left:10px;padding-right:10px}.problems-actions{gap:6px}#problemsBody{padding-left:10px;padding-right:10px}#copyFeedback{max-width:200px}}
+.header-actions-left{border-right:0;margin-right:0;padding:0 6px 0 0}

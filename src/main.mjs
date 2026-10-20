@@ -1,3 +1,4 @@
+import {setupSettingsNavigation} from './interactions/settings-navigation.mjs';
 import {copyText} from './platform/clipboard.mjs';
 import {describeDocumentErrors,formatDocumentProblem} from './domain/document-errors.mjs';
 import {renderDocumentErrors} from './views/document-errors.mjs';
@@ -100,20 +101,31 @@ tabs();
 
 function previewIds(){const prefix=model?.idPrefix||'W';$('idPreview').textContent='미리보기: '+prefix+($('idSeparator').value==='hyphen'?'-':'')+'001';}
 async function updateAppVersion(){try{$('appVersion').textContent='Worktree · v'+await getVersion();}catch{$('appVersion').textContent='Worktree · 버전 정보를 불러오지 못했습니다.';}}
-$('settingsOpen').onclick=()=>{$('detailMode').value=detailMode;updateAppVersion();$('idSeparator').value=separator;$('settingsError').textContent='';previewIds();$('settings').showModal();};
+const settingsNavigation=setupSettingsNavigation(document);
+function syncSettingsState(){
+ const open=$('settings').open;
+ $('settingsOpen').classList.toggle('active',open);$('settingsOpen').setAttribute('aria-pressed',String(open));$('settingsOpen').setAttribute('aria-expanded',String(open));
+ for(const id of ['workspace','documentDock','appStatusbar','documentProblems'])$(id).inert=open;
+}
+$('settingsOpen').onclick=()=>{
+ if($('settings').open){$('settings').close();syncSettingsState();return;}
+ settingsNavigation.activate('display');$('detailMode').value=detailMode;updateAppVersion();$('idSeparator').value=separator;$('settingsError').textContent='';previewIds();
+ if($('detail').open){pendingDetailId=selectedDetailId;$('detail').close();}
+ $('settings').show();syncSettingsState();
+};
 $('idSeparator').onchange=()=>{try{saveSeparator(storage,$('idSeparator').value);separator=$('idSeparator').value;$('settingsError').textContent='';previewIds();render();}catch(error){$('idSeparator').value=separator;previewIds();$('settingsError').textContent='설정을 저장하지 못했습니다: '+String(error);}};
-$('settingsClose').onclick=()=>$('settings').close();
+$('settingsClose').onclick=()=>{$('settings').close();syncSettingsState();};
 $('detailMode').onchange=()=>{try{saveDetailMode(storage,$('detailMode').value);detailMode=$('detailMode').value;$('settingsError').textContent='';if($('detail').open){pendingDetailId=selectedDetailId;$('detail').close();}}catch(error){$('detailMode').value=detailMode;$('settingsError').textContent='설정을 저장하지 못했습니다: '+String(error);}};
-$('settings').onclose=()=>{const id=pendingDetailId;pendingDetailId=null;if(id)show(id);};
+$('settings').onclose=()=>{syncSettingsState();if($('settings').open)return;const id=pendingDetailId;pendingDetailId=null;$('settingsOpen').focus?.({preventScroll:true});if(id)show(id);};
 document.onkeydown=e=>{
  if(e.key!=='Escape')return;
- if($('settings').open)return;
+ if($('settings').open){e.preventDefault();$('settings').close();syncSettingsState();return;}
  if($('detail').open&&detailMode==='modal')return;
  if(!$('documentProblems').hidden){e.preventDefault();setProblemsOpen(false,true);return;}
  if(detailMode==='sidebar'&&$('detail').open){$('detail').close();syncWorkSelection();}
 };
 
-for(const dialog of [$('detail'),$('settings')]){
+for(const dialog of [$('detail')]){
  let pressedOutside=false;
  const isBackdrop=event=>{const rect=dialog.getBoundingClientRect();return event.target===dialog&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom);};
  dialog.onpointerdown=event=>{pressedOutside=event.button===0&&isBackdrop(event);};

@@ -1,3 +1,4 @@
+import {setupAppInfo} from './interactions/app-info.mjs';
 import {setupSettingsNavigation} from './interactions/settings-navigation.mjs';
 import {copyText} from './platform/clipboard.mjs';
 import {describeDocumentErrors,formatDocumentProblem} from './domain/document-errors.mjs';
@@ -9,7 +10,7 @@ import {renderTaskDetail} from './views/task-detail.mjs';
 import {bindChartPan} from './interactions/chart-pan.mjs';
 import {renderDependencies,renderGantt} from './views/schedule-views.mjs';
 import {createIdLabels,readSeparator,saveSeparator} from './domain/id-display.mjs';
-import {invoke} from '@tauri-apps/api/core';
+import {invoke,Channel} from '@tauri-apps/api/core';
 import {getVersion} from '@tauri-apps/api/app';
 import {setupWindowFrame,setWindowTitle} from './platform/window-frame.mjs';
 const documents=new Map();let activePath=null,polling=false;
@@ -135,4 +136,5 @@ for(const dialog of [$('detail')]){
 
 
 
+setupAppInfo({document,storage,invoke,makeChannel:handler=>{const channel=new Channel();channel.onmessage=handler;return channel;}});
 poll();setInterval(poll,1500);

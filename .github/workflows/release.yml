@@ -59,16 +59,33 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run version:check
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
       - name: Verify release version
         env:
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: node -e "const p=require('./package.json'); if(process.env.RELEASE_TAG !== 'v'+p.version) throw new Error('Release and app version differ')"
       - name: Build Windows installer
-        run: npm run tauri build -- --ci --bundles nsis
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          WORKTREE_RELEASE_BUILD: '1'
+        shell: pwsh
+        run: |
+          if (-not $env:TAURI_SIGNING_PRIVATE_KEY) { throw 'Updater signing key is not configured' }
+          npm run tauri build -- --ci --bundles nsis
+          if ($LASTEXITCODE -ne 0) { throw 'Signed installer build failed' }
+          node scripts/update-manifest.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Updater manifest generation failed' }
+      - name: Verify installer signature and tamper rejection
+        working-directory: src-tauri
+        run: cargo test signed_installer_verifies_and_tampering_is_rejected -- --ignored
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: Worktree-Windows-x64
-          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/nsis/*-setup.exe.sig
+            src-tauri/target/release/bundle/nsis/latest.json
           if-no-files-found: error
       - name: Publish GitHub Release
         shell: pwsh
@@ -79,6 +96,10 @@ jobs:
         run: |
           $installers = @(Get-ChildItem -LiteralPath 'src-tauri/target/release/bundle/nsis' -Filter '*-setup.exe' -File)
           if ($installers.Count -eq 0) { throw 'Installer was not generated' }
-          $assets = @($installers.FullName)
+          $directory = 'src-tauri/target/release/bundle/nsis'
+          $signature = $installers[0].FullName + '.sig'
+          $manifest = Join-Path $directory 'latest.json'
+          if (-not (Test-Path -LiteralPath $signature) -or -not (Test-Path -LiteralPath $manifest)) { throw 'Signed updater artifacts missing' }
+          $assets = @($installers.FullName) + @($signature, (Resolve-Path -LiteralPath $manifest).Path)
           gh release create $env:RELEASE_TAG @assets --target $env:GITHUB_SHA --generate-notes --title "Worktree $env:RELEASE_TAG"
           if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }

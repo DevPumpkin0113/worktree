@@ -20,7 +20,7 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  const source=fs.readFileSync(new URL('../planning/Worktree.wbs',import.meta.url),'utf8').replace('project_id: WORKTREE','project_id: WORKTREE\nid_prefix: OBS');
  const original=parseWbs(source);
  const script=fs.readFileSync(new URL('../src/main.mjs',import.meta.url),'utf8').split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
- const context={setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
+ const context={setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
  vm.runInNewContext(script+"\nload(source,'Worktree.wbs');",context);
  assert.match(element('content').innerHTML,/OBS001/);
  element('settingsOpen').onclick();

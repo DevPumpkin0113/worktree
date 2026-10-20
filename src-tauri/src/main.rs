@@ -1,6 +1,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
+mod app_updates;
+use app_updates::{
+    check_app_update, get_build_info, install_app_update, open_issue_report, open_releases,
+    UpdateState,
+};
 
 #[derive(Default)]
 struct OpenQueue(Mutex<Vec<String>>);
@@ -56,6 +61,8 @@ async fn pick_document() -> Result<Option<String>, String> {
 fn main() {
     tauri::Builder::default()
         .manage(OpenQueue::default())
+        .manage(UpdateState::default())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             enqueue(
                 &app.state::<OpenQueue>(),
@@ -88,7 +95,12 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             take_open_requests,
             read_document,
-            pick_document
+            pick_document,
+            get_build_info,
+            check_app_update,
+            install_app_update,
+            open_issue_report,
+            open_releases
         ])
         .run(tauri::generate_context!())
         .expect("Worktree 실행 실패");

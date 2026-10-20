@@ -7,7 +7,7 @@ WBS 문서를 트리·칸반·작업 네트워크·간트 차트로 확인하는
 1. [최신 릴리즈](https://github.com/DevPumpkin0113/worktree/releases/latest)에서 `Worktree_버전_x64-setup.exe`를 다운로드해 설치합니다.
 2. Worktree를 실행하거나 연결된 `.wbs` 파일을 더블클릭합니다.
 
-Windows x64와 WebView2 런타임이 필요합니다. 업데이트는 새 버전의 설치 프로그램으로 진행합니다.
+Windows x64와 WebView2 런타임이 필요합니다. 설정 → 앱 정보에서 새 버전을 확인하고 다운로드·설치할 수 있습니다. 앱 시작 시 자동 확인을 끌 수도 있습니다. 0.4.0 사용자는 설치 프로그램으로 한 번 업데이트해 주세요.
 
 ## 사용 방법
 
@@ -27,6 +27,8 @@ Windows x64와 WebView2 런타임이 필요합니다. 업데이트는 새 버전
 - [예제 문서](examples/Visualization-demo.wbs)
 
 ## 변경 이력 및 문의
+
+앱 정보의 **문제 제보**는 버전·빌드 정보가 채워진 GitHub 작성 화면을 엽니다. 내용을 확인한 후 직접 제출하세요.
 
 - [버전별 변경 이력](CHANGELOG.md)
 - [오류 제보·개선 요청](https://github.com/DevPumpkin0113/worktree/issues)

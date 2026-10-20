@@ -1,18 +1,22 @@
+import {findWorkTable,isTableSeparator} from './work-table.mjs';
+
 export function parseWbs(markdown){
   const frontmatter=markdown.replace(/^\uFEFF/,'').match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1]||'';
   const meta=key=>{const value=frontmatter.match(new RegExp('^'+key+':[ \\t]*(.*)$','m'))?.[1]?.trim();if(!value)return undefined;return value.replace(/^(["'])(.*)\1$/,'$2');};
+  const effortSetting=frontmatter.match(/^use_effort:[ \t]*(.*)$/m);
+  if(effortSetting&&!/^(true|false)$/.test(effortSetting[1].trim()))throw Error('use_effort는 true 또는 false로 작성하세요.');
+  const useEffort=effortSetting?effortSetting[1].trim()==='true':true;
   const idPrefix=meta('id_prefix')??'W';
   if(!/^[A-Z]+$/.test(idPrefix))throw Error('id_prefix는 영문 대문자로 작성하세요. 예: W, OBS');
 
-  const section=markdown.split(/^## 작업 목록\s*$/m)[1]?.split(/^## /m)[0];
-  if(!section)throw Error('작업 목록 섹션이 없습니다.');
-  const lines=section.split(/\r?\n/).filter(x=>x.trim().startsWith('|'));
-  const cells=line=>line.trim().replace(/^\||\|$/g,'').split('|').map(x=>x.trim().replaceAll('&#124;','|'));
+  const {sectionFound,table}=findWorkTable(markdown);
+  if(!sectionFound)throw Error('작업 목록 섹션이 없습니다.');
   const expected=['ID','상위 ID','유형','작업명','산출물 / 완료 기준','담당자','상태','시작일','종료일','예상 공수(h)','선행 작업'];
-  if(JSON.stringify(cells(lines[0]||''))!==JSON.stringify(expected))throw Error('작업 표의 열 이름 또는 순서가 공통 규격과 다릅니다.');
+  if(JSON.stringify(table[0]?.cells)!==JSON.stringify(expected))throw Error('작업 표의 열 이름 또는 순서가 공통 규격과 다릅니다.');
+  if(!isTableSeparator(table[1]?.cells,expected.length))throw Error('작업 표의 구분선이 없거나 공통 규격과 다릅니다.');
   const keys=['id','parent','type','name','criteria','owner','status','start','end','effort','deps'];
-  const rows=lines.slice(2).map(line=>{
-    const values=cells(line);if(values.length!==11)throw Error('작업 표의 열 개수가 다릅니다.');
+  const rows=table.slice(2).map(({cells:values})=>{
+    if(values.length!==11)throw Error('작업 표의 열 개수가 다릅니다.');
     const row=Object.fromEntries(keys.map((k,i)=>[k,values[i]]));
     row.deps=row.deps==='-'?[]:row.deps.split(',').map(x=>x.trim());return row;
   });
@@ -41,5 +45,5 @@ export function parseWbs(markdown){
   if(errors.length)throw Error([...new Set(errors)].join('\n'));
   const leaves=id=>rows.filter(r=>r.parent===id).flatMap(r=>r.type==='group'?leaves(r.id):[r]);
   for(const r of rows.filter(r=>r.type==='group')){const children=leaves(r.id);r.status=children.every(x=>x.status==='done')?'done':children.some(x=>x.status==='blocked')?'blocked':children.every(x=>x.status==='todo')?'todo':'doing';}
-  return {title:meta('title')||'WBS',idPrefix,rows};
+  return {title:meta('title')||'WBS',idPrefix,useEffort,rows};
 }

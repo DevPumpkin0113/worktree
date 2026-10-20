@@ -4,6 +4,7 @@ schema_version: 1
 title: 프로젝트명
 project_id: PROJECT
 id_prefix: W
+use_effort: true
 timezone: Asia/Seoul
 updated: YYYY-MM-DD
 ---

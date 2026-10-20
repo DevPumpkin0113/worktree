@@ -1,3 +1,7 @@
+import {escapeHtml as esc} from '../src/views/html.mjs';
+import {summarizeWork} from '../src/domain/work-summary.mjs';
+import {renderMetrics,renderStatusNotice} from '../src/views/work-summary.mjs';
+import {renderTree,renderBoard} from '../src/views/list-views.mjs';
 import {createSettingsStorage} from '../src/platform/settings-storage.mjs';
 import {setupSettingsNavigation} from '../src/interactions/settings-navigation.mjs';
 import {copyText} from '../src/platform/clipboard.mjs';
@@ -21,7 +25,7 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  const source=fs.readFileSync(new URL('../planning/Worktree.wbs',import.meta.url),'utf8').replace('project_id: WORKTREE','project_id: WORKTREE\nid_prefix: OBS');
  const original=parseWbs(source);
  const script=fs.readFileSync(new URL('../src/main.mjs',import.meta.url),'utf8').split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
- const context={createSettingsStorage,setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async(command,args)=>command==='load_settings'?{settings:null,warning:''}:['initialize_settings','save_settings'].includes(command)?args.settings:[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
+ const context={esc,summarizeWork,renderMetrics,renderStatusNotice,renderTree,renderBoard,createSettingsStorage,setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async(command,args)=>command==='load_settings'?{settings:null,warning:''}:['initialize_settings','save_settings'].includes(command)?args.settings:[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
  await vm.runInNewContext(script+"\nsettingsReady.then(()=>load(source,'Worktree.wbs'));",context);
  assert.match(element('content').innerHTML,/OBS001/);
  element('settingsOpen').onclick();

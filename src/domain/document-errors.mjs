@@ -1,11 +1,10 @@
+import {findWorkTable} from './work-table.mjs';
+
 const fields={parent:'상위 ID',type:'유형',status:'상태',start:'시작일 / 종료일',effort:'예상 공수(h)',deps:'선행 작업',id:'ID'};
 
 export function describeDocumentErrors(error,markdown='',source='',kind='문서 오류'){
  const sourceLines=markdown.split(/\r?\n/).map((raw,index)=>({raw,line:index+1}));
- const sectionStart=sourceLines.findIndex(item=>/^## 작업 목록\s*$/.test(item.raw));
- const nextSection=sourceLines.findIndex((item,index)=>index>sectionStart&&/^## /.test(item.raw));
- const section=sectionStart<0?[]:sourceLines.slice(sectionStart+1,nextSection<0?undefined:nextSection);
- const table=section.filter(item=>item.raw.trim().startsWith('|')).map(item=>({...item,cells:item.raw.trim().replace(/^\||\|$/g,'').split('|').map(value=>value.trim().replaceAll('&#124;','|'))}));
+ const {table}=findWorkTable(markdown);
  const rows=table.slice(2);
  return [...new Set(String(error?.message??error).split('\n').filter(Boolean))].map(message=>{
   const match=message.match(/^([^:]+): (.+)$/);
@@ -35,7 +34,8 @@ export function describeDocumentErrors(error,markdown='',source='',kind='문서 
    if(key==='effort')hint='task의 공수는 0보다 큰 숫자 또는 -로 입력하세요.';
    if(/빈 그룹/.test(reason))hint='그룹 아래에 하위 작업을 추가하거나 사용하지 않는 그룹을 제거하세요.';
    if(/그룹 집계/.test(reason))hint='group의 시작일·종료일·예상 공수·선행 작업은 모두 -로 입력하세요.';
-  }else if(/열 이름|열 개수/.test(reason))hint='공용 템플릿의 11개 열과 순서를 유지하세요. 셀 안의 | 문자는 &#124;로 작성하세요.';
+  }else if(/구분선/.test(reason))hint='열 이름 바로 다음 행에 11개 열의 구분선(|---|---|…|)을 작성하세요.';
+  else if(/열 이름|열 개수/.test(reason))hint='공용 템플릿의 11개 열과 순서를 유지하세요. 셀 안의 | 문자는 &#124;로 작성하세요.';
   else if(/작업 목록 섹션/.test(reason))hint='원본에 ## 작업 목록 제목과 공용 양식의 작업 표를 추가하세요.';
   else if(/id_prefix/.test(reason))hint='문서 첫 메타데이터의 id_prefix에 W·OBS 같은 영문 대문자를 입력하세요.';
   else if(kind==='파일 읽기 오류')hint='파일의 위치·접근 권한·UTF-8 인코딩·5MB 크기 제한을 확인한 뒤 다시 열거나 새로고침하세요.';
@@ -43,6 +43,7 @@ export function describeDocumentErrors(error,markdown='',source='',kind='문서 
   let locations=matches;
   if(kind==='문서 오류'&&!locations.length){
    if(/열 이름/.test(message)&&table[0])locations=[table[0]];
+   else if(/구분선/.test(message)&&table[0])locations=[table[1]||table[0]];
    else if(/열 개수/.test(message))locations=rows.filter(item=>item.cells.length!==11).slice(0,1);
    else if(/id_prefix/.test(message)&&/^\uFEFF?---$/.test(sourceLines[0]?.raw||'')){
     const end=sourceLines.findIndex((item,index)=>index>0&&item.raw==='---');

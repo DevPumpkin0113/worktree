@@ -30,17 +30,17 @@ src-tauri/                Rust·앱 설정·배포 아이콘
 
 보기 아이콘은 SVG를 사용하고 생성 PNG는 참고 자료로 유지한다. WBS 배포 양식은 templates에 두며 규격 변경 시 공용 resources/templates/wbs의 원본과 함께 갱신한다.
 
-## 검증과 빌드
+## 로컬 검증
 
 ```powershell
 npm test
 npm run version:check
 npm run build
-npm run tauri build
 ```
 
-- 실행 파일: src-tauri/target/release/worktree.exe
-- 설치 프로그램: src-tauri/target/release/bundle/nsis/
+- Rust 변경은 src-tauri에서 cargo test로 검증한다.
+- 로컬에서는 관련 테스트·버전 검사·프런트엔드 빌드를 수행한다. 정식 Windows 설치 프로그램과 서명은 main 릴리즈 CI에서 한 번 생성한다.
+- 설치 파일이 필요한 특별한 검증에만 아래 서명 업데이트 절차의 로컬 설치 빌드를 사용한다. 일반 개발 검증에 설치 빌드를 반복하지 않는다.
 - 화면 연결 테스트는 DOM 대역을 사용하므로 실제 앱 조작 검증을 대체하지 않는다.
 - 릴리즈 전 파일 열기·드롭·문서 전환·자동 갱신·창 제어·설치 후 파일 연결을 확인하고 실제 검증 여부를 기록한다.
 
@@ -69,15 +69,14 @@ git push origin develop
 
 1. develop에서 목표 기능을 통합하고 사용자 확인을 받는다.
 2. CHANGELOG.md의 Unreleased 내용을 새 버전과 날짜 아래로 옮긴다.
-3. 앱 버전을 동기화하고 검사·테스트·빌드 및 필요한 실제 동작 검증을 수행해 develop에 커밋한다.
+3. 필요한 버전 변경은 `npm run version:set -- X.Y.Z`로 동기화한다. 로컬 검사·테스트·프런트엔드 빌드 및 필요한 실제 동작 검증을 수행하고 커밋 승인을 받아 develop에 통합한다.
 4. 배포가 승인되면 develop을 main에 병합하고 main을 푸시한다. 수동으로 릴리즈 태그를 만들 필요는 없다.
 
 ```powershell
 git switch develop
-npm run version:set -- 0.4.1
 npm run version:check
 npm test
-npm run tauri build
+npm run build
 # 변경 이력·문서를 갱신하고 검증 후 커밋·사용자 확인을 마친다.
 git push origin develop
 git switch main
@@ -100,7 +99,7 @@ Tauri 공식 updater를 Rust 명령에서 사용한다. GitHub 최신 정식 릴
 - 공개 키: src-tauri/tauri.conf.json의 plugins.updater.pubkey.
 - 로컬 암호화 개인 키와 암호: Git에서 제외한 .local/updater/worktree.key, .local/updater/password. 별도 안전한 장소에 백업하고 임의 재생성하지 않는다.
 - Actions secrets: TAURI_SIGNING_PRIVATE_KEY(키 파일 내용), TAURI_SIGNING_PRIVATE_KEY_PASSWORD(암호). 빌드 프로세스 환경에만 전달한다.
-- 로컬 확인 빌드도 같은 환경 변수를 설정해 npm run tauri build -- --ci --bundles nsis를 실행한다. 키나 암호를 명령문·로그에 직접 작성하지 않는다.
+- 실제 설치 검증을 위한 선택적 로컬 빌드는 같은 환경 변수를 설정해 npm run tauri build -- --ci --bundles nsis를 실행한다. 키나 암호를 명령문·로그에 직접 작성하지 않는다.
 - scripts/update-manifest.mjs가 설치 파일의 .sig와 현재 버전을 연결해 latest.json을 만든다. main 워크플로는 설치 exe·.sig·latest.json을 같은 Release에 게시한다.
 - 앱은 HTTPS 고정 저장소에서 확인하고 버전·설치 URL 일치를 검사한다. 다운로드 후 Tauri 공개 키 검증을 통과해야 설치한다. 설치 전 사용자 확인을 받고 진행률을 표시한다.
 - 문제 제보는 고정 저장소의 새 issue 작성 URL만 연다. 문서 내용·경로는 수집하지 않는다.

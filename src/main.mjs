@@ -1,3 +1,4 @@
+import {bindDocumentTabs,reorderDocumentTabs} from './interactions/document-tabs.mjs';
 import {workOwners,matchesWork} from './domain/work-filter.mjs';
 import {createSessionStorage,emptySession,MAX_RECENT_FILES,MAX_SESSION_TABS} from './platform/session-storage.mjs';
 import {createDocumentViewState} from './interactions/document-view-state.mjs';
@@ -54,7 +55,7 @@ function reportProblem(error,source='',kind='문서 오류',markdown=''){
 
 function tabs(){ $('reload').disabled=!activePath; $('tabs').innerHTML=[...documents.keys()].map((path,i)=>{
 let title=path.split(/[\\/]/).pop();try{title=parseWbs(documents.get(path)).title;}catch{}
-return `<div class="document-tab ${path===activePath?'selected':''}" title="${esc(path)}"><button data-tab="${i}" aria-pressed="${path===activePath}">${esc(title)}</button><button class="tab-close" data-close-tab="${i}" aria-label="${esc(title)} 문서 닫기">×</button></div>`;
+return `<div data-tab-index="${i}" class="document-tab ${path===activePath?'selected':''}" title="${esc(path)}"><button data-tab="${i}" title="${esc(path)} · 드래그로 탭 순서 변경 · Alt+Shift+←/→" aria-keyshortcuts="Alt+Shift+ArrowLeft Alt+Shift+ArrowRight" aria-pressed="${path===activePath}">${esc(title)}</button><button class="tab-close" data-close-tab="${i}" aria-label="${esc(title)} 문서 닫기">×</button></div>`;
 }).join('')||'<span class="dock-empty">열린 문서 없음</span>';saveSession(); }
 function sessionSnapshot(){
  const paths=[...documents.keys()].slice(-MAX_SESSION_TABS);
@@ -154,7 +155,13 @@ $('content').onclick=e=>{if(!chartPan.consumeClick())activateContent(e.target.cl
 $('content').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&(e.target.dataset.id||e.target.dataset.select)){e.preventDefault();activateContent(e.target);}};
 $('content').ondblclick=e=>{const target=e.target.closest('[data-select]');if(target?.dataset.select)show(target.dataset.select);};
 $('content').onchange=e=>{if(e.target.id==='ganttUnit'){ganttUnit=e.target.value;if(activePath)documentViews.set(activePath,{view,ganttUnit});render();saveSession();}};
-$('tabs').onclick=e=>{const close=e.target.closest('[data-close-tab]'),tab=e.target.closest('[data-tab]');if(close){const path=[...documents.keys()][Number(close.dataset.closeTab)];documents.delete(path);documentViews.delete(path);viewState.forget(path);if(path===activePath){activePath=[...documents.keys()].at(-1)||null;if(activePath)load(documents.get(activePath),activePath);else{if($('detail').open)$('detail').close();selectedDetailId=null;model=null;displayedPath=null;renderedView=null;refreshDetail=null;$('title').textContent='Worktree';setWindowTitle('Worktree');$('source').textContent='열린 문서 없음';$('source').title='';$('content').replaceChildren();$('metrics').replaceChildren();$('notice').textContent='문서를 열어 주세요.';$('notice').title='';clearProblems();}}tabs();}else if(tab){activePath=[...documents.keys()][Number(tab.dataset.tab)];load(documents.get(activePath),activePath);tabs();}};
+const tabDrag=bindDocumentTabs($('tabs'),{getPaths:()=>[...documents.keys()],isEnabled:()=>!restoringSession&&!$('settings').open,move(source,target,after){
+ const paths=reorderDocumentTabs([...documents.keys()],source,target,after);
+ const entries=paths.map(path=>[path,documents.get(path)]),scroll=$('tabs').scrollLeft;
+ documents.clear();for(const [path,text] of entries)documents.set(path,text);
+ tabs();$('tabs').scrollLeft=scroll;$('tabs').querySelector?.('[data-tab="'+paths.indexOf(source)+'"]')?.focus({preventScroll:true});
+}});
+$('tabs').onclick=e=>{if(tabDrag.consumeClick())return;const close=e.target.closest('[data-close-tab]'),tab=e.target.closest('[data-tab]');if(close){const path=[...documents.keys()][Number(close.dataset.closeTab)];documents.delete(path);documentViews.delete(path);viewState.forget(path);if(path===activePath){activePath=[...documents.keys()].at(-1)||null;if(activePath)load(documents.get(activePath),activePath);else{if($('detail').open)$('detail').close();selectedDetailId=null;model=null;displayedPath=null;renderedView=null;refreshDetail=null;$('title').textContent='Worktree';setWindowTitle('Worktree');$('source').textContent='열린 문서 없음';$('source').title='';$('content').replaceChildren();$('metrics').replaceChildren();$('notice').textContent='문서를 열어 주세요.';$('notice').title='';clearProblems();}}tabs();}else if(tab){activePath=[...documents.keys()][Number(tab.dataset.tab)];load(documents.get(activePath),activePath);tabs();}};
 $('recentOpen').onclick=()=>{const open=$('recentFiles').hidden;$('recentFiles').hidden=!open;$('recentOpen').setAttribute('aria-expanded',String(open));renderRecentFiles();};
 $('recentFiles').onclick=event=>{const button=event.target.closest('[data-recent]');if(!button)return;const path=recentFiles[Number(button.dataset.recent)];$('recentFiles').hidden=true;$('recentOpen').setAttribute('aria-expanded','false');if(path)openPath(path);};
 document.addEventListener?.('pointerdown',event=>{if(!event.target.closest?.('#recentFiles,#recentOpen')){$('recentFiles').hidden=true;$('recentOpen').setAttribute('aria-expanded','false');}});

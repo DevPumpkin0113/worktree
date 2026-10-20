@@ -1,3 +1,4 @@
+import {createSettingsStorage} from '../src/platform/settings-storage.mjs';
 import {setupSettingsNavigation} from '../src/interactions/settings-navigation.mjs';
 import {copyText} from '../src/platform/clipboard.mjs';
 import {describeDocumentErrors,formatDocumentProblem} from '../src/domain/document-errors.mjs';
@@ -20,21 +21,21 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  const source=fs.readFileSync(new URL('../planning/Worktree.wbs',import.meta.url),'utf8').replace('project_id: WORKTREE','project_id: WORKTREE\nid_prefix: OBS');
  const original=parseWbs(source);
  const script=fs.readFileSync(new URL('../src/main.mjs',import.meta.url),'utf8').split(String.fromCharCode(10)).filter(line=>!line.startsWith('import ')).join(String.fromCharCode(10));
- const context={setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async()=>[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
- vm.runInNewContext(script+"\nload(source,'Worktree.wbs');",context);
+ const context={createSettingsStorage,setupAppInfo(){},setupSettingsNavigation,copyText,formatDocumentProblem,describeDocumentErrors,renderDocumentErrors,markSelectedWork,readDetailMode,saveDetailMode,renderTaskDetail,bindChartPan,renderDependencies,renderGantt,getVersion:async()=>'0.3.5',parseWbs,createIdLabels,readSeparator,saveSeparator,source,console,document:{getElementById:element,querySelectorAll:()=>views},window:{localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)}},invoke:async(command,args)=>command==='load_settings'?{settings:null,warning:''}:['initialize_settings','save_settings'].includes(command)?args.settings:[],setWindowTitle(){},setupWindowFrame(){},setInterval(){}};
+ await vm.runInNewContext(script+"\nsettingsReady.then(()=>load(source,'Worktree.wbs'));",context);
  assert.match(element('content').innerHTML,/OBS001/);
  element('settingsOpen').onclick();
  assert.equal(element('settingsOpen').attributes['aria-pressed'],'true');assert.equal(element('workspace').inert,true);assert.equal(element('documentDock').inert,true);
  element('settingsOpen').onclick();assert.equal(element('settings').open,false);assert.equal(element('settingsOpen').attributes['aria-pressed'],'false');assert.equal(element('workspace').inert,false);element('settings').onclose();
- element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'버전 0.3.5');element('idSeparator').value='hyphen';element('idSeparator').onchange();assert.equal(element('settings').open,true);
- assert.equal(readSeparator(context.window.localStorage),'hyphen');element('settingsClose').onclick();assert.equal(element('settings').open,false);element('settingsOpen').onclick();assert.equal(element('idSeparator').value,'hyphen');
+ element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'버전 0.3.5');element('idSeparator').value='hyphen';await element('idSeparator').onchange();assert.equal(element('settings').open,true);
+ assert.equal(vm.runInNewContext('readSeparator(storage)',context),'hyphen');element('settingsClose').onclick();assert.equal(element('settings').open,false);element('settingsOpen').onclick();assert.equal(element('idSeparator').value,'hyphen');
  for(const view of views){view.onclick();assert.match(element('content').innerHTML,/OBS-00/);assert.match(element('content').innerHTML,/data-(id|select)="W00/);}
  views[0].onclick();element('content').onclick({target:{closest:()=>({dataset:{id:'W002'}})}});
  assert.match(element('detailTitle').textContent,/OBS-002/);assert.match(element('detailBody').innerHTML,/원본 ID/);assert.match(element('detailBody').innerHTML,/W002/);
  element('search').value='OBS-002';element('search').oninput();assert.match(element('content').innerHTML,/OBS-002/);
  element('search').value='W002';element('search').oninput();assert.match(element('content').innerHTML,/OBS-002/);
- element('settingsOpen').onclick();element('detailMode').value='sidebar';element('detailMode').onchange();
- assert.equal(readDetailMode(context.window.localStorage),'sidebar');assert.equal(element('detail').open,false);
+ element('settingsOpen').onclick();element('detailMode').value='sidebar';await element('detailMode').onchange();
+ assert.equal(vm.runInNewContext('readDetailMode(storage)',context),'sidebar');assert.equal(element('detail').open,false);
  element('settings').close();element('settings').onclose();assert.equal(element('detail').open,true);assert.equal(element('detail').shownAs,'sidebar');
  element('content').onclick({target:{closest:()=>({dataset:{id:'W003'}})}});assert.match(element('detailTitle').textContent,/OBS-003/);
  context.document.onkeydown({key:'Escape'});assert.equal(element('detail').open,false);

@@ -1,3 +1,4 @@
+import {createSettingsStorage} from './platform/settings-storage.mjs';
 import {setupAppInfo} from './interactions/app-info.mjs';
 import {setupSettingsNavigation} from './interactions/settings-navigation.mjs';
 import {copyText} from './platform/clipboard.mjs';
@@ -48,7 +49,9 @@ return `<div class="document-tab ${path===activePath?'selected':''}" title="${es
 async function openPath(path){try{const text=await invoke('read_document',{path});documents.set(path,text);activePath=path;load(text,path);tabs();}catch(e){reportProblem(e,path,'파일 읽기 오류');}}
 
 let model,view='tree',idLabels=new Map(),graphFocus=null,ganttUnit='day';
-const storage={getItem:key=>window.localStorage.getItem(key),setItem:(key,value)=>window.localStorage.setItem(key,value)};
+const storage=createSettingsStorage({invoke,legacyStorage:()=>window.localStorage});
+let settingsLoadError='';
+for(const id of ['idSeparator','detailMode','autoCheckUpdates'])document.getElementById(id).disabled=true;
 let separator=readSeparator(storage),detailMode=readDetailMode(storage),selectedDetailId=null,pendingDetailId=null;
 const label=id=>idLabels.get(id)||id;
 const $=id=>document.getElementById(id),labels={todo:'시작 전',doing:'진행 중',blocked:'막힘',done:'완료'},types={task:'작업',milestone:'마일스톤',group:'그룹'};
@@ -110,13 +113,13 @@ function syncSettingsState(){
 }
 $('settingsOpen').onclick=()=>{
  if($('settings').open){$('settings').close();syncSettingsState();return;}
- settingsNavigation.activate('display');$('detailMode').value=detailMode;updateAppVersion();$('idSeparator').value=separator;$('settingsError').textContent='';previewIds();
+ settingsNavigation.activate('display');$('detailMode').value=detailMode;updateAppVersion();$('idSeparator').value=separator;$('settingsError').textContent=settingsLoadError||storage.warning;previewIds();
  if($('detail').open){pendingDetailId=selectedDetailId;$('detail').close();}
  $('settings').show();syncSettingsState();
 };
-$('idSeparator').onchange=()=>{try{saveSeparator(storage,$('idSeparator').value);separator=$('idSeparator').value;$('settingsError').textContent='';previewIds();render();}catch(error){$('idSeparator').value=separator;previewIds();$('settingsError').textContent='설정을 저장하지 못했습니다: '+String(error);}};
+$('idSeparator').onchange=async()=>{const control=$('idSeparator');control.disabled=true;try{await saveSeparator(storage,control.value);separator=readSeparator(storage);$('settingsError').textContent='';previewIds();render();}catch(error){$('idSeparator').value=separator;previewIds();$('settingsError').textContent='설정을 저장하지 못했습니다: '+String(error);}finally{control.disabled=false;}};
 $('settingsClose').onclick=()=>{$('settings').close();syncSettingsState();};
-$('detailMode').onchange=()=>{try{saveDetailMode(storage,$('detailMode').value);detailMode=$('detailMode').value;$('settingsError').textContent='';if($('detail').open){pendingDetailId=selectedDetailId;$('detail').close();}}catch(error){$('detailMode').value=detailMode;$('settingsError').textContent='설정을 저장하지 못했습니다: '+String(error);}};
+$('detailMode').onchange=async()=>{const control=$('detailMode');control.disabled=true;try{await saveDetailMode(storage,control.value);detailMode=readDetailMode(storage);$('settingsError').textContent='';if($('detail').open){pendingDetailId=selectedDetailId;$('detail').close();}}catch(error){$('detailMode').value=detailMode;$('settingsError').textContent='설정을 저장하지 못했습니다: '+String(error);}finally{control.disabled=false;}};
 $('settings').onclose=()=>{syncSettingsState();if($('settings').open)return;const id=pendingDetailId;pendingDetailId=null;$('settingsOpen').focus?.({preventScroll:true});if(id)show(id);};
 document.onkeydown=e=>{
  if(e.key!=='Escape')return;
@@ -136,5 +139,15 @@ for(const dialog of [$('detail')]){
 
 
 
-setupAppInfo({document,storage,invoke,makeChannel:handler=>{const channel=new Channel();channel.onmessage=handler;return channel;}});
+function startAppInfo(settingsStorage=storage){
+ setupAppInfo({document,storage:settingsStorage,invoke,makeChannel:handler=>{const channel=new Channel();channel.onmessage=handler;return channel;}});
+}
+const settingsReady=storage.ready.then(()=>{
+ separator=readSeparator(storage);detailMode=readDetailMode(storage);$('idSeparator').value=separator;$('detailMode').value=detailMode;
+ for(const id of ['idSeparator','detailMode','autoCheckUpdates'])$(id).disabled=false;
+ $('settingsError').textContent=storage.warning;previewIds();render();startAppInfo();
+}).catch(error=>{
+ settingsLoadError='설정을 불러오지 못했습니다: '+String(error);$('settingsError').textContent=settingsLoadError;
+ startAppInfo({getItem:()=> 'false',setItem:()=>Promise.reject(error)});$('autoCheckUpdates').disabled=true;
+});
 poll();setInterval(poll,1500);

@@ -2,10 +2,12 @@
 use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
+mod settings;
 use app_updates::{
     check_app_update, get_build_info, install_app_update, open_issue_report, open_releases,
     UpdateState,
 };
+use settings::{initialize_settings, load_settings, save_settings};
 
 #[derive(Default)]
 struct OpenQueue(Mutex<Vec<String>>);
@@ -81,6 +83,7 @@ fn main() {
             }
         }))
         .setup(|app| {
+            settings::setup(app)?;
             enqueue(
                 &app.state::<OpenQueue>(),
                 std::env::args_os().skip(1).map(PathBuf::from),
@@ -100,7 +103,10 @@ fn main() {
             check_app_update,
             install_app_update,
             open_issue_report,
-            open_releases
+            open_releases,
+            load_settings,
+            initialize_settings,
+            save_settings
         ])
         .run(tauri::generate_context!())
         .expect("Worktree 실행 실패");

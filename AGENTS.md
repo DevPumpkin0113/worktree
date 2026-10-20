@@ -166,3 +166,11 @@ UI 변경 요청은 다음 구역 명칭을 기준으로 해석한다. 안내 �
 
 - 버전 관리는 공개 릴리즈 여부와 별개다. 기능 개발 규모에 따라 개발 버전도 올리고 Unreleased에 해당 개발 버전을 표시한다. 릴리즈·커밋·푸시 지시를 기다린다는 이유로 버전 갱신을 생략하지 않는다.
 - 업데이트 비밀 키와 암호는 .local/updater에 보관하고 커밋·로그 출력하지 않는다. 배포 공개 키는 Tauri 설정에 유지하고 키 교체는 기존 설치 앱의 업데이트 호환성에 영향을 주므로 임의 재생성하지 않는다.
+
+### 설정 파일과 앱 식별자
+
+- 앱 식별자는 io.github.devpumpkin0113.worktree, 게시자는 DevPumpkin0113이다. 업데이트 공개 키와 설치 앱 이름 Worktree는 유지한다.
+- 사용자 설정은 %LOCALAPPDATA%/Worktree/settings.json에 schemaVersion·idSeparator·detailMode·autoCheckUpdates로 저장한다. localStorage는 최초 이전 입력으로만 사용하며 새 설정을 기록하지 않는다.
+- JSON이 없고 기존 local.toothless.worktree/EBWebView가 있으면 최초 창만 이전 프로필을 사용해 세 설정을 읽고 JSON을 생성한다. 이후 Worktree/EBWebView 프로필을 사용한다. 이전 프로필을 복사·삭제하거나 LevelDB를 직접 해석하지 않는다.
+- 저장은 같은 폴더의 임시 파일에 쓰고 동기화 후 원자적으로 교체한다. 실패 시 화면과 메모리 값을 유지한다. 손상된 JSON은 별도 백업 후 기본값으로 복구하며 알 수 없는 schemaVersion은 보존하고 오류를 표시한다.
+- 검증은 관련 테스트를 먼저 마치고 Windows 정식 설치 빌드는 릴리즈 CI에서 한 번 수행한다. 같은 소스의 로컬 설치 빌드를 불필요하게 반복하지 않는다.

@@ -2,6 +2,22 @@ export function splitTableCells(line){
  return line.trim().replace(/^\||\|$/g,'').split('|').map(value=>value.trim().replaceAll('&#124;','|'));
 }
 
+// Columns are one-based Unicode character positions in the original line.
+export function tableCellPositions(raw){
+ const characters=Array.from(raw),pipes=[];
+ characters.forEach((character,index)=>{if(character==='|')pipes.push(index);});
+ if(!pipes.length)return [];
+ const ends=pipes.slice(1);
+ if(characters.slice(pipes.at(-1)+1).join('').trim())ends.push(characters.length);
+ return ends.map((end,index)=>{
+  const start=pipes[index]+1,text=characters.slice(start,end).join('');
+  const leading=Array.from(text.match(/^\s*/)[0]).length;
+  const length=Array.from(text.trim()).length;
+  const column=Math.min(start+leading,end)+1;
+  return {column,endColumn:column+Math.max(length-1,0)};
+ });
+}
+
 // Retain source positions so parsing and error details use the same table boundary.
 export function findWorkTable(markdown){
  const lines=markdown.replace(/^\uFEFF/,'').split(/\r?\n/);

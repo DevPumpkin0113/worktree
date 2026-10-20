@@ -121,3 +121,11 @@ Tauri 공식 updater를 Rust 명령에서 사용한다. GitHub 최신 정식 릴
 ### 0.5.0 공개 배포 결과
 
 2026-10-20 박대호 승인 후 기능 커밋 5b0dcc0을 develop에 통합하고 main 8e0e6a9에서 v0.5.0을 게시했다. GitHub 실행 39398800426의 테스트·버전 검사·정식 설치 빌드·서명과 변조 거부 검사·Release 게시가 통과했다. 공개 exe·.sig·latest.json의 존재와 manifest 서명 일치, 태그의 main 커밋 일치를 확인했다. 실제 사용자 설치·재실행과 다음 버전으로의 업그레이드는 배포 검증과 구분해 후속 확인한다.
+
+## 0.5.1 설정 저장과 프로필 이전
+
+앱 식별자 io.github.devpumpkin0113.worktree와 게시자 DevPumpkin0113을 사용한다. 설정 경로는 식별자와 독립적인 %LOCALAPPDATA%/Worktree/settings.json이다. schemaVersion 1, idSeparator(none/hyphen), detailMode(sidebar/modal), autoCheckUpdates(boolean)를 저장한다.
+
+창 자동 생성을 끄고 Rust setup에서 데이터 디렉터리를 선택한다. JSON이 없고 이전 local.toothless.worktree/EBWebView가 있으면 그 프로필로 한 번 실행하고 기존 origin의 localStorage를 읽어 initialize_settings로 저장한다. JSON이 있으면 이전 localStorage보다 우선하며 이후 Worktree/EBWebView를 사용한다. 이전 프로필을 복사하거나 삭제하지 않는다. 설치 EXE 이름과 NSIS의 Worktree 제거 프로그램 키는 동일해 기존 설치 위치를 유지한다. 식별자가 달라 구버전과 신버전의 단일 인스턴스 키는 다르므로 업데이트 전 기존 앱은 종료한다.
+
+설정 파일은 크기가 작은 serde JSON이며 tempfile을 이용해 같은 디렉터리에서 동기화 후 교체한다. UI는 저장 성공 후 상태를 반영하고 저장을 직렬화한다. 손상·잘못된 값은 settings.invalid-*.json으로 보관한 뒤 기본값으로 복구하고 안내한다. 지원하지 않는 schemaVersion이나 읽기 오류는 원본을 유지하며 설정 변경을 막는다. 수동 편집은 앱 종료 후 수행한다.

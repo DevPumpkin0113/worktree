@@ -49,9 +49,11 @@ export function setupAppInfo({document,storage,invoke,makeChannel,now=()=>new Da
   finally{setBusy(false);}
  }
  $('checkUpdates').onclick=check;$('installUpdate').onclick=install;
- $('autoCheckUpdates').onchange=()=>{
-  try{storage.setItem(AUTO_CHECK_KEY,String($('autoCheckUpdates').checked));auto=$('autoCheckUpdates').checked;$('updatePreferenceError').textContent='';}
+ $('autoCheckUpdates').onchange=async()=>{
+  $('autoCheckUpdates').disabled=true;
+  try{await storage.setItem(AUTO_CHECK_KEY,String($('autoCheckUpdates').checked));auto=$('autoCheckUpdates').checked;$('updatePreferenceError').textContent='';}
   catch{$('autoCheckUpdates').checked=auto;$('updatePreferenceError').textContent='자동 확인 설정을 저장하지 못했습니다.';}
+  finally{$('autoCheckUpdates').disabled=false;}
  };
  $('reportIssue').onclick=async()=>{
   $('reportIssue').disabled=true;$('issueFeedback').textContent='';

@@ -1,3 +1,5 @@
+import {summarizeGroups} from '../domain/group-summary.mjs';
+import {renderGroupSummary} from './group-summary.mjs';
 import {escapeHtml as escape} from './html.mjs';
 
 const states={todo:'시작 전',doing:'진행 중',blocked:'막힘',done:'완료'};
@@ -9,10 +11,11 @@ function renderCard(row,label){
 }
 
 export function renderTree(rows,matches,label){
+ const groups=summarizeGroups(rows);
  const branch=parent=>rows.filter(row=>row.parent===parent).map(row=>{
   if(row.type!=='group')return matches(row)?renderCard(row,label):'';
   const children=branch(row.id);
-  return children?`<details class="group" open><summary data-work-id="${escape(row.id)}">${escape(label(row.id))} · ${escape(row.name)} <span class="tag ${row.status}">${states[row.status]}</span></summary><div class="children">${children}</div></details>`:'';
+  return children?`<details class="group" open><summary data-work-id="${escape(row.id)}">${escape(label(row.id))} · ${escape(row.name)} <span class="tag ${row.status}">${states[row.status]}</span><button type="button" class="group-detail" data-id="${escape(row.id)}" aria-label="${escape(row.name)} 그룹 상세">상세</button>${renderGroupSummary(groups.get(row.id))}</summary><div class="children">${children}</div></details>`:'';
  }).join('');
  return branch('-');
 }

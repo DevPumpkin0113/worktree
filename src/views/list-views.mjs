@@ -1,4 +1,3 @@
-import {milestoneBadge,milestoneDescription} from './milestone.mjs';
 import {summarizeGroups} from '../domain/group-summary.mjs';
 import {renderGroupSummary} from './group-summary.mjs';
 import {escapeHtml as escape} from './html.mjs';
@@ -8,7 +7,7 @@ const types={task:'작업',milestone:'마일스톤',group:'그룹'};
 
 function renderCard(row,label){
  const badge=`<span class="tag ${row.status}">${states[row.status]}</span>`;
- return `<div class="task" tabindex="0" role="button" ${row.type==='milestone'?`aria-description="${milestoneDescription}"`:''} data-id="${escape(row.id)}"><span class="id">${escape(label(row.id))}</span><div>${row.type==='milestone'?'<span aria-hidden="true">◇</span> ':''}${escape(row.name)}${row.type==='milestone'?milestoneBadge():''}<div class="sub">${types[row.type]} · ${row.owner==='-'?'담당 미정':escape(row.owner)}</div></div>${badge}</div>`;
+ return `<div class="task" tabindex="0" role="button" data-id="${escape(row.id)}"><span class="id">${escape(label(row.id))}</span><div>${row.type==='milestone'?'<span aria-hidden="true">◇</span> ':''}${escape(row.name)}<div class="sub"><span class="work-type-badge work-type-${row.type}">${types[row.type]}</span> · ${row.owner==='-'?'담당 미정':escape(row.owner)}</div></div>${badge}</div>`;
 }
 
 export function renderTree(rows,matches,label){

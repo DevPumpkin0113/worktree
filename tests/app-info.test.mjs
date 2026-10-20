@@ -41,7 +41,7 @@ test('설치는 명시적 클릭만 실행하고 진행률·취소·서명 오�
  fail=true;await app.install();assert.match(element('updateTitle').textContent,/설치하지 못/);assert.equal(element('updateProgress').hidden,true);
 });
 test('설정 저장 실패 시 이전 자동 확인 선택으로 복구한다',async()=>{
- const {app,element}=fixture({failStorage:true});await app.ready;element('autoCheckUpdates').checked=true;element('autoCheckUpdates').onchange();assert.equal(element('autoCheckUpdates').checked,false);assert.match(element('updatePreferenceError').textContent,/저장하지 못/);
+ const {app,element}=fixture({failStorage:true});await app.ready;element('autoCheckUpdates').checked=true;await element('autoCheckUpdates').onchange();assert.equal(element('autoCheckUpdates').checked,false);assert.match(element('updatePreferenceError').textContent,/저장하지 못/);
 });
 test('문제 제보는 작성 화면 열기만 요청한다',async()=>{
  const {app,element,calls}=fixture();await app.ready;await element('reportIssue').onclick();assert.ok(calls.includes('open_issue_report'));assert.match(element('issueFeedback').textContent,/작성한 후 제출/);assert.equal(element('reportIssue').disabled,false);

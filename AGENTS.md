@@ -86,9 +86,9 @@
 
 ## Worktree 프로젝트 안내
 
-- Windows 데스크톱 앱이며 Tauri 2, Rust, Vite, JavaScript를 사용한다.
+- Windows 데스크톱 앱이며 Tauri 2, Rust, Vite, React, TypeScript를 사용한다. 프런트엔드 소스는 도메인·SVG 계산·저장·입력 모듈까지 TypeScript로 작성한다.
 - 먼저 `planning/Worktree.wbs`, `README.md`, `CHANGELOG.md`, `docs/DEVELOPMENT.md`를 읽는다.
-- `npm test`: 파서·ID 표시·화면 연결 테스트. 화면 연결 테스트는 DOM 대역을 사용하며 실제 앱 조작 검증을 대체하지 않는다.
+- `npm test`: 도메인·ID·세션과 React DOM 통합 테스트. jsdom 검증은 실제 WebView2의 배치·포인터·설치 검증을 대체하지 않는다. `npm run check:types`로 TypeScript를, `npm run format:check`로 신규 TS·TSX 파일 포맷을 검사한다.
 - `npm run tauri dev`: 개발 실행. `npm run tauri build`: Windows exe·NSIS 설치 프로그램 빌드.
 - `npm run version:set -- X.Y.Z`로 버전을 함께 변경하고 `npm run version:check`로 일치 여부를 검사한다.
 - WBS는 `프로젝트명.wbs`로 작성하고 공용 `C:/dev-workspace-vscode/resources/templates/wbs/README.md`와 `template.wbs`를 사용한다.
@@ -139,8 +139,8 @@ UI 변경 요청은 다음 구역 명칭을 기준으로 해석한다. 안내 �
 
 ### 프런트엔드 파일 위치
 
-- index.html은 화면 마크업·진입점이며 인라인 앱 스크립트와 공통 CSS는 src/main.mjs와 src/styles/main.css로 분리한다.
-- src/domain은 WBS·ID 규칙, src/views는 화면 렌더링, src/styles는 CSS, src/platform은 Tauri 창 제어, src/interactions는 입력 동작을 담당한다.
+- index.html은 root 컨테이너와 src/main.tsx 진입점만 둔다. src/App.tsx는 화면 조합, src/components는 React 화면, src/hooks는 생명주기, src/app은 타입과 상태 저장소, src/styles는 CSS를 담당한다.
+- src/domain은 WBS·ID·집계 규칙, src/views는 기존 SVG 생성·표시 문자열 도우미, src/platform은 Tauri 및 저장소 연결, src/interactions는 독립 포인터·스크롤 로직을 담당한다. React 소유 DOM은 이벤트·상태·ref로 관리하고 문자열 HTML 삽입은 ChartView의 SVG 어댑터 경계에만 한정한다.
 - 자동화 테스트는 tests에 두고 npm test로 실행한다. public 및 src-tauri의 에셋 위치는 유지한다.
 
 - 상세 정보는 설정에서 모달·우측 사이드 패널을 선택하며 같은 상세 렌더러를 재사용한다. 기본은 우측 사이드 패널이며 설정은 앱 전체에 저장한다. 사이드 패널은 목록 조작을 막지 않는다. 문서 전환 시 이전 상세를 닫는다.
@@ -187,3 +187,9 @@ UI 변경 요청은 다음 구역 명칭을 기준으로 해석한다. 안내 �
 - 0.14.2 UI 확인: 좌측 워크스페이스 영역은 보드·모든 작업·분석 메뉴로 메인 콘텐츠를 전환한다. 보드는 기존 시각화, 모든 작업은 평면 목록, 분석은 데이터 미연결 자리 표시다. 실제 프로젝트 파일 묶음은 아직 지원하지 않는다. 설정을 열면 좌측 영역도 비활성화한다.
 
 - 좌측 워크스페이스 하단의 Worktree 문구 오른쪽은 접기·펼치기 버튼이며 축소 시 64px 아이콘 메뉴로 표시한다. 이름·로컬 프로젝트 배너는 표시하지 않는다.
+
+### 컴포넌트·테스트 분류
+
+src/components는 layout·workspace·task-detail·documents·settings·problems·shared로 구분한다. tests는 domain·platform·interactions·visualizations·integration·scripts와 공통 helpers로 분류하며 npm test는 하위 폴더의 테스트를 실행한다. 나머지 소스 폴더 구조는 유지한다.
+
+- 컴포넌트 파일은 하나의 화면 또는 UI 책임을 담당한다. 독립된 보기·패널·입력 폼은 별도 파일로 두고 여러 기능을 하나의 파일에 모으지 않는다. 상태·브라우저 생명주기는 역할에 맞는 훅으로 분리하며, 기능 전용 훅과 타입은 해당 컴포넌트 폴더에 둔다.

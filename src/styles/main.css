@@ -79,3 +79,5 @@ body:has(#documentProblems:not([hidden])){--problems-panel-height:clamp(180px,32
  *::-webkit-scrollbar-track:vertical{margin-block:var(--scrollbar-end-gap)}
  *::-webkit-scrollbar-thumb:vertical{border:var(--scrollbar-edge-gap) solid transparent;background-clip:padding-box;border-radius:12px}
 }
+
+#root{display:contents}.chart-adapter{min-height:0}.chart-adapter:has(.diagram-scroll){display:flex;flex:1;flex-direction:column;height:100%}#content:has(>.chart-adapter:has(.diagram-scroll)){display:flex;flex-direction:column}

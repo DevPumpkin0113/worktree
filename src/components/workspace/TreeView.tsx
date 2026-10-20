@@ -1,0 +1,62 @@
+import { useMemo } from 'react';
+import { summarizeGroups } from '../../domain/group-summary';
+import { groupSchedule, groupEffort, groupProgress } from '../../views/group-summary';
+import { STATUS_NAMES, type WorkRow } from '../../app/types';
+import type { ListProps } from './types';
+import { TaskCard } from './TaskCard';
+export function TreeView({
+  rows,
+  visibleIds,
+  useEffort,
+  onToggle,
+  ...props
+}: ListProps & { visibleIds: Set<string>; useEffort: boolean; onToggle: () => void }) {
+  const summaries = useMemo(() => summarizeGroups(rows), [rows]);
+  const children = useMemo(() => {
+    const map = new Map<string, WorkRow[]>();
+    for (const row of rows) map.set(row.parent, [...(map.get(row.parent) ?? []), row]);
+    return map;
+  }, [rows]);
+  function branch(parent: string): React.ReactNode[] {
+    return (children.get(parent) ?? []).flatMap((row) => {
+      if (row.type !== 'group')
+        return visibleIds.has(row.id)
+          ? [<TaskCard key={row.id} row={row} {...props} selected={props.selectedId === row.id} />]
+          : [];
+      const content = branch(row.id);
+      if (!content.length) return [];
+      const summary = summaries.get(row.id)!;
+      return [
+        <details className="group" key={row.id} open onToggle={onToggle}>
+          <summary
+            data-work-id={row.id}
+            className={props.selectedId === row.id ? 'detail-selected' : undefined}
+            aria-current={props.selectedId === row.id ? 'true' : undefined}
+          >
+            {props.label(row.id)} · {row.name}{' '}
+            <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>
+            <button
+              type="button"
+              className="group-detail"
+              data-id={row.id}
+              aria-label={row.name + ' 그룹 상세'}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                props.onSelect(row.id);
+              }}
+            >
+              상세
+            </button>
+            <span className="group-summary">
+              {groupSchedule(summary)}
+              {useEffort ? ' · ' + groupEffort(summary) + ' · ' + groupProgress(summary) : ''}
+            </span>
+          </summary>
+          <div className="children">{content}</div>
+        </details>,
+      ];
+    });
+  }
+  return <>{branch('-')}</>;
+}

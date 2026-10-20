@@ -4,7 +4,7 @@
 
 ## 개발 환경과 실행
 
-Windows x64에서 Node.js 24, Rust stable, Visual Studio C++ 빌드 도구와 WebView2를 사용한다. 앱은 Tauri 2·Vite·JavaScript로 구성되어 있다.
+Windows x64에서 Node.js 24, Rust stable, Visual Studio C++ 빌드 도구와 WebView2를 사용한다. 앱은 Tauri 2·Vite·React·TypeScript로 구성되어 있다. 프런트엔드 전체를 TypeScript로 작성하고 strict 타입 검사에 포함한다. Node 실행용 개발 스크립트와 기존 단위 테스트는 .mjs를 유지한다.
 
 ```powershell
 npm ci
@@ -14,18 +14,18 @@ npm run tauri dev
 ## 코드 구조
 
 ```text
-index.html                화면 마크업·진입점
-src/
-  main.mjs                화면 상태와 이벤트 연결
-  domain/                 WBS 파싱·ID 표시 규칙
-  views/                  차트·작업 상세 렌더링
-  styles/                 공통 및 화면별 CSS
-  platform/               Tauri 창 제어
-  interactions/           차트 드래그 등 입력 처리
-tests/                    자동화 테스트
-scripts/                  버전 동기화·검사
-public/                   프런트엔드 에셋
-src-tauri/                Rust·앱 설정·배포 아이콘
+index.html                root 컨테이너
+src/main.tsx              React 진입점·CSS import
+src/App.tsx               화면 조합
+src/app/                  타입·문서 및 세션 상태 저장소
+src/components/           워크스페이스·목록·상세·댓글·설정·오류 UI
+src/hooks/                앱 초기화·polling·업데이트 상태
+src/domain/               기존 WBS 파싱·ID·집계
+src/views/                SVG 생성·표시 문자열 도우미
+src/platform/             Tauri·설정·세션·클립보드
+src/interactions/         드래그·선택·스크롤 로직
+src/styles/               공통 및 화면별 CSS
+tests/                    도메인·React DOM 통합 테스트
 ```
 
 보기 아이콘은 SVG를 사용하고 생성 PNG는 참고 자료로 유지한다. WBS 배포 양식은 templates에 두며 규격 변경 시 공용 resources/templates/wbs의 원본과 함께 갱신한다.
@@ -34,6 +34,8 @@ src-tauri/                Rust·앱 설정·배포 아이콘
 
 ```powershell
 npm test
+npm run check:types
+npm run format:check
 npm run version:check
 npm run build
 ```
@@ -260,3 +262,19 @@ Node 62개 테스트·버전 검사·Vite 빌드 통과. 문서별 공수 설정
 0.14.2 후속 조정: 접기·펼치기 버튼을 좌측 패널 하단 Worktree·계획에서 실행까지 문구 오른쪽으로 이동했다. 축소 상태에서도 하단 버튼은 유지한다. 박대호 요청에 따라 Playwright 검증은 생략하고 실사용 확인을 기다린다.
 
 2026-10-21: 박대호가 하단 접기 버튼을 포함한 0.14.2 커밋을 승인했다. 승인된 UI를 develop에 기록한 다음 0.15.0 React·TypeScript 전환을 별도 변경으로 진행한다.
+
+## 0.15.0 React·TypeScript 전환
+
+0.14.2를 2586a5f로 커밋한 후 develop에서 전환했다. UI·필터·상세·댓글·문서 탭·설정·오류·업데이트는 React 컴포넌트가 담당한다. 문서와 세션 상태는 DOM을 참조하지 않는 WorkspaceStore가 관리하고 useSyncExternalStore로 구독한다. 기존 파서·집계·JSON 저장 형식은 유지한다. 간트·네트워크는 계산 회귀를 줄이기 위해 ChartView 어댑터 내부에서 기존 SVG를 생성하며 다른 React 화면에서는 innerHTML을 사용하지 않는다. 타입·포맷 검사를 릴리즈 CI에 추가했다. 테스트는 직접 main 스크립트를 가공하는 VM 대역에서 실제 React를 jsdom에 마운트하는 방식으로 전환했다. 박대호 지시에 따라 Playwright를 실행하지 않으며 실제 WebView2 UI 확인은 박대호에게 남긴다.
+
+전환 검증: Node 63개 테스트(React DOM 통합 10개 포함), TypeScript strict·미사용 검사, Prettier 검사, 버전 일치 검사 및 Vite 프로덕션 빌드 통과. 새 통합 테스트는 설정 실패 후 재시도·손상 세션 보존·그룹 접힘·차트 스크롤·명시적 업데이트 설치와 서명 실패 표시도 검증한다. Playwright·실제 WebView2 UI·Windows 설치 빌드는 이번 전환 후 미수행이다. Rust 소스는 변경하지 않았으며 0.15.0 전환 및 책임 분리는 박대호의 커밋 지시에 따라 develop에 기록한다.
+
+## 컴포넌트·테스트 분류
+
+src/components는 layout·workspace·task-detail·documents·settings·problems·shared로 구분한다. tests는 domain·platform·interactions·visualizations·integration·scripts와 공통 helpers로 분류하며 npm test는 하위 폴더의 테스트를 실행한다. 나머지 소스 폴더 구조는 유지한다.
+
+### 컴포넌트 내부 책임 분리
+
+workspace는 TreeView·KanbanView·AllTasks·Analytics·TaskCard·Metrics·MetricsContent로 분리하고 Content는 화면을 조합한다. task-detail은 TaskInfo·DetailTabs·Comments·CommentList·CommentForm으로 구분하며 use-comment-threads는 임시 댓글 상태, use-detail-dialog는 상세 창 표시·크기·스크롤 생명주기를 관리한다. settings는 DisplaySettings·AboutSettings·BuildInformation·UpdateSettings·IssueReport로 분리한다. 각 컴포넌트는 직접 import하고 재노출용 통합 파일은 추가하지 않는다.
+
+책임 분리 후 기존 테스트 63개·strict 타입 검사·포맷 검사·Vite 빌드 통과. 실제 WebView2 화면 확인은 사용자 확인 대기다. 커밋 승인은 실제 UI 인수 완료와 구분한다.

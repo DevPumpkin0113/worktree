@@ -278,3 +278,17 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 workspace는 TreeView·KanbanView·AllTasks·Analytics·TaskCard·Metrics·MetricsContent로 분리하고 Content는 화면을 조합한다. task-detail은 TaskInfo·DetailTabs·Comments·CommentList·CommentForm으로 구분하며 use-comment-threads는 임시 댓글 상태, use-detail-dialog는 상세 창 표시·크기·스크롤 생명주기를 관리한다. settings는 DisplaySettings·AboutSettings·BuildInformation·UpdateSettings·IssueReport로 분리한다. 각 컴포넌트는 직접 import하고 재노출용 통합 파일은 추가하지 않는다.
 
 책임 분리 후 기존 테스트 63개·strict 타입 검사·포맷 검사·Vite 빌드 통과. 실제 WebView2 화면 확인은 사용자 확인 대기다. 커밋 승인은 실제 UI 인수 완료와 구분한다.
+
+## 0.15.1 좌측 메뉴 시안
+
+작업 보드·작업 목록·인사이트로 이름을 바꾸고 분할 화면·체크 목록·추세 그래프 SVG를 사용한다. 기존 페이지 키와 탐색 동작은 유지하고 펼친 메뉴·축소 툴팁·접근성 이름·본문 제목에 같은 이름을 사용한다. 실제 화면은 사용자 확인 대기다.
+
+담당자·상태 필터는 shared/FilterDropdown으로 선택 목록까지 렌더링한다. combobox·listbox·option 역할 및 활성 항목·선택 상태를 제공하고 방향키·Home·End·Enter·Space·Esc·Tab과 바깥 포인터 입력을 처리한다. 선택 확정 전 탐색은 필터 값을 변경하지 않는다. 설정·간트의 기본 select는 이번 변경 범위에 포함하지 않는다.
+
+키보드 포커스 기본 스타일은 src/styles/focus.css, 메인 색상 변수는 src/styles/theme.css에서 관리한다. :where(:focus-visible)로 새 UI에도 자동 적용하고 낮은 명시도로 기존 컴포넌트의 포커스·오류 표현을 유지한다. 검색 입력은 클릭 포커스도 같은 파일에서 정의한다.
+
+CSS 유지보수: 과거 네트워크·설정 레이아웃의 미사용 규칙과 같은 범위의 뒤쪽 선언으로 덮어쓴 속성을 제거했다. 반응형 및 모달·패널별 덮어쓰기는 유지한다. 기본 포커스는 focus.css에서 관리하고 화면별 규칙은 안쪽 간격·오류·리사이즈 표현만 정의한다. npm run format 및 format:check는 CSS도 검사한다.
+
+### 테마 기반
+
+src/styles/theme.css는 현재 라이트 색상을 유지하는 의미별 토큰을 정의하며 화면 CSS보다 먼저 로드한다. 배경·글자·입력 및 카드 테두리·선택·상태·스크롤바·포커스의 공용 색상을 사용한다. 새로운 테마는 :root[data-theme="테마명"]에서 같은 변수를 재정의한다. 실제 테마 선택 UI·설정 저장·OS 테마 연동은 아직 추가하지 않는다. 세부 장식·그림자·상태 배지까지 모든 프런트엔드 CSS의 고정 색상은 theme.css에서 정의한다. transparent·currentColor·none은 투명도·상속·비표시 의미이므로 유지한다. 네트워크·간트 SVG의 색상은 --color-chart-* 변수로 관리한다. 화살표 마커도 CSS 클래스로 연결하고 공용 아이콘은 currentColor를 통해 주변 테마 색상을 상속한다.

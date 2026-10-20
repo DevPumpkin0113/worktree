@@ -78,6 +78,16 @@ export function TaskDetail({
         <header ref={header} className="detail-header">
           <div className="detail-heading">
             <div id="detailMeta">
+              <button
+                id="detailHide"
+                type="button"
+                className="modal-close"
+                aria-label="상세 패널 숨기기"
+                title="상세 패널 숨기기"
+                onClick={onClose}
+              >
+                <Icon name="chevron-right" />
+              </button>
               {row ? (
                 <>
                   <span className="detail-type">{TYPE_NAMES[row.type]}</span>
@@ -87,16 +97,7 @@ export function TaskDetail({
             </div>
             <h2 id="detailTitle">{row ? label(row.id) + ' · ' + row.name : ''}</h2>
           </div>
-          <button
-            id="detailHide"
-            type="button"
-            className="modal-close"
-            aria-label="상세 패널 숨기기"
-            title="상세 패널 숨기기"
-            onClick={onClose}
-          >
-            ›
-          </button>
+
           <button
             id="close"
             className="modal-close"

@@ -150,10 +150,12 @@ test('React 워크스페이스는 세션·페이지·필터·ID 설정과 상세
     await f.value('#search', '댓글');
     assert.equal(f.host.querySelectorAll('.all-task-link').length, 1);
     await f.value('#search', '');
-    await f.value('#owner', 'owner:박대호');
+    await f.click('#owner');
+    await f.click('#owner-options [data-value="owner:박대호"]');
     assert.equal(f.host.querySelectorAll('.all-task-link').length, 1);
     assert.match(f.element('#content').textContent!, /UI 확인/);
-    await f.value('#owner', 'all');
+    await f.click('#owner');
+    await f.click('#owner-option-0');
     await f.click('.all-task-link[data-id="W002"]');
     assert.ok(f.element<HTMLDialogElement>('#detail').open);
     await f.click('#settingsOpen');
@@ -431,6 +433,41 @@ test('자동 업데이트 확인은 시작 시 한 번이며 서명 실패는 �
     assert.match(f.element('#updateTitle').textContent!, /설치하지 못했습니다/);
     assert.match(f.element('#updateDescription').textContent!, /서명 검증 실패/);
     assert.equal(f.calls.filter((call) => call.command === 'check_app_update').length, 1);
+  } finally {
+    await f.close();
+  }
+});
+
+test('커스텀 필터는 키보드 선택·취소·바깥 클릭과 선택 표시를 지원한다', async () => {
+  const f = await fixture();
+  const key = async (value: string) =>
+    act(async () => {
+      f.element('#status').dispatchEvent(
+        new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true }),
+      );
+    });
+  try {
+    await f.click('#status');
+    assert.equal(f.element('#status').getAttribute('aria-expanded'), 'true');
+    await key('End');
+    await key('Enter');
+    assert.equal(f.store.getSnapshot().status, 'done');
+    assert.equal(f.element('#status').getAttribute('aria-expanded'), 'false');
+    await f.click('#status');
+    assert.equal(f.element('#status-options [aria-selected="true"]').textContent, '완료✓');
+    await key('Home');
+    await key('Escape');
+    assert.equal(f.store.getSnapshot().status, 'done');
+    assert.equal(f.element('#status').getAttribute('aria-expanded'), 'false');
+    await f.click('#status');
+    await act(async () => {
+      document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    });
+    assert.equal(f.element('#status').getAttribute('aria-expanded'), 'false');
+    await key('ArrowDown');
+    await key('Home');
+    await key('Enter');
+    assert.equal(f.store.getSnapshot().status, 'all');
   } finally {
     await f.close();
   }

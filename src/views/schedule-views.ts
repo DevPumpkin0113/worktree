@@ -109,7 +109,7 @@ export function renderDependencies(
     : '<div class="notice">작업 간 선행·후속 관계를 표시합니다. 왼쪽에서 오른쪽으로 진행합니다. 작업을 선택하면 선행·후속 경로가 강조됩니다. 단계는 일정이나 작업 가능 상태를 뜻하지 않습니다.</div>';
   return (
     info +
-    `<div class="diagram-scroll" tabindex="0" aria-label="작업 네트워크"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="작업 의존 관계"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#81999e"/></marker></defs>${titles}${edges}${cards}</svg></div><p class="sub">필터와 일치하는 작업 외에도 연결 확인에 필요한 선행·후속 작업을 함께 표시합니다. 빈 공간을 드래그하면 화면이 이동합니다. 노드를 두 번 클릭하면 상세를 엽니다.</p>`
+    `<div class="diagram-scroll" tabindex="0" aria-label="작업 네트워크"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="작업 의존 관계"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${titles}${edges}${cards}</svg></div><p class="sub">필터와 일치하는 작업 외에도 연결 확인에 필요한 선행·후속 작업을 함께 표시합니다. 빈 공간을 드래그하면 화면이 이동합니다. 노드를 두 번 클릭하면 상세를 엽니다.</p>`
   );
 }
 

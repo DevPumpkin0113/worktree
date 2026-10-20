@@ -1,5 +1,22 @@
 import type { CSSProperties, ReactNode } from 'react';
 const icons: Record<string, ReactNode> = {
+  'chevron-right': <path d="m6 4 4 4-4 4" />,
+  workspace: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <path d="M3 9h18M10 9v12" />
+    </>
+  ),
+  'task-list': (
+    <>
+      <path d="m3 6 1.5 1.5L7 5M10 6h11M3 12h4m3 0h11M3 18h4m3 0h11" />
+    </>
+  ),
+  insights: (
+    <>
+      <path d="M3 3v18h18M7 15l4-5 4 2 5-7m-5 0h5v5" />
+    </>
+  ),
   reload: (
     <>
       <path d="M20 7v5h-5M4 17v-5h5" />
@@ -76,6 +93,7 @@ const icons: Record<string, ReactNode> = {
   ),
 };
 const viewBoxes: Record<string, string> = {
+  'chevron-right': '0 0 16 16',
   reload: '0 0 24 24',
   close: '0 0 16 16',
   minimize: '0 0 12 12',

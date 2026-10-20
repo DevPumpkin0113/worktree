@@ -1,3 +1,4 @@
+import { FilterDropdown } from '../shared/FilterDropdown';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { workOwners, matchesWork } from '../../domain/work-filter';
 import { createDocumentViewState } from '../../interactions/document-view-state';
@@ -93,37 +94,42 @@ export function Content({
             store.setFilters({ query: event.target.value });
           }}
         />
-        <select
+        <FilterDropdown
+          key={'owner:' + active?.path + state.page + state.settingsOpen}
           id="owner"
-          aria-label="담당자 필터"
+          label="담당자 필터"
           value={state.owner}
-          onChange={(event) => {
+          options={[
+            { value: 'all', label: '전체 담당자' },
+            ...owners.map((owner) => ({
+              value: 'owner:' + owner,
+              label: owner === '-' ? '담당 미정' : owner,
+            })),
+          ]}
+          disabled={state.settingsOpen}
+          onChange={(owner) => {
             capture();
-            store.setFilters({ owner: event.target.value });
+            store.setFilters({ owner });
           }}
-        >
-          <option value="all">전체 담당자</option>
-          {owners.map((owner) => (
-            <option value={'owner:' + owner} key={owner}>
-              {owner === '-' ? '담당 미정' : owner}
-            </option>
-          ))}
-        </select>
-        <select
+        />
+        <FilterDropdown
+          key={'status:' + active?.path + state.page + state.settingsOpen}
           id="status"
-          aria-label="상태 필터"
+          label="상태 필터"
           value={state.status}
-          onChange={(event) => {
+          options={[
+            { value: 'all', label: '전체 상태' },
+            { value: 'todo', label: '시작 전' },
+            { value: 'doing', label: '진행 중' },
+            { value: 'blocked', label: '막힘' },
+            { value: 'done', label: '완료' },
+          ]}
+          disabled={state.settingsOpen}
+          onChange={(status) => {
             capture();
-            store.setFilters({ status: event.target.value });
+            store.setFilters({ status });
           }}
-        >
-          <option value="all">전체 상태</option>
-          <option value="todo">시작 전</option>
-          <option value="doing">진행 중</option>
-          <option value="blocked">막힘</option>
-          <option value="done">완료</option>
-        </select>
+        />
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
         {state.page === 'analytics' ? (

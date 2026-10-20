@@ -1,6 +1,6 @@
 {
   "name": "worktree",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,8 +11,8 @@
     "version:set": "node scripts/version.mjs",
     "version:check": "node scripts/version.mjs --check",
     "check:types": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.{ts,tsx}\" vite.config.ts tsconfig.json",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.{ts,tsx}\" vite.config.ts tsconfig.json"
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" vite.config.ts tsconfig.json",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" vite.config.ts tsconfig.json"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

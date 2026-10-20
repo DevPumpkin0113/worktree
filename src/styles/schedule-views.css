@@ -1,3 +1,261 @@
-.schedule-toolbar,.dependency-focus{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.schedule-toolbar label{font-size:12px;color:#617184}.schedule-toolbar select{font-size:12px;padding:6px 10px;margin-left:8px}.gantt-scroll,.diagram-scroll{max-width:100%;max-height:65vh;overflow:auto;border:1px solid #dce4ec;border-radius:10px;background:#fcfdfd}.gantt-table{border-spacing:0;table-layout:fixed;width:max-content;font-size:12px}.gantt-table th,.gantt-table td{padding:0;text-align:left;border-bottom:1px solid #e7edf2;font-weight:400}.gantt-table th:first-child{position:sticky;left:0;z-index:2;width:240px;min-width:240px;max-width:240px;background:#fff;border-right:1px solid #dce4ec}.gantt-table thead th{position:sticky;top:0;z-index:3;background:#edf2f6;height:38px}.gantt-table thead th:first-child{z-index:4;font-weight:600;padding:0 14px;background:#edf2f6}.gantt-table svg{display:block}.gantt-label{display:flex;align-items:center;gap:9px;width:240px;height:48px;border:0;background:transparent;border-radius:0;font-size:12px;padding:0 12px;text-align:left}.gantt-label span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gantt-label .id{font-size:11px;flex-shrink:0}.gantt-label:hover{background:#eaf3f3;color:#245960}.date-label{font:11px Segoe UI,sans-serif;fill:#617184}.date-grid{stroke:#e5ebf0;stroke-width:1}.today-line{stroke:#d3685b;stroke-width:1.5;stroke-dasharray:4 3}.schedule-bar{fill:#74959c}.schedule-bar.state-done{fill:#4a9b78}.schedule-bar.state-doing{fill:#4e8eb8}.schedule-bar.state-blocked{fill:#c97969}.timeline-row{cursor:pointer}.timeline-row:hover{background:#eef6f6}.timeline-row:focus-visible,.graph-node:focus-visible{outline:2px solid #176b73;outline-offset:-2px}.unscheduled{margin-top:18px;border:1px solid #e1e7ee;border-radius:8px;overflow:hidden}.unscheduled summary{font-size:13px}.unscheduled-list{display:flex;flex-direction:column;padding:6px 12px}.unscheduled-list button{text-align:left;border:0;border-bottom:1px solid #edf1f5;border-radius:0;font-size:12px;padding:10px;background:white}.unscheduled-list button:hover{background:#edf5f5;color:#245960}.unscheduled-list .id{margin-right:8px}.dependency-focus{padding:12px 14px;background:#eaf3f3;border-radius:9px}.dependency-focus>div{flex:1;min-width:180px}.dependency-focus strong{font-size:13px}.dependency-focus button{font-size:12px;padding:7px 10px}.dependency-canvas{display:block}.stage-label{font:12px Segoe UI,Malgun Gothic,sans-serif;fill:#738195}.graph-edge{fill:none;stroke:#9aadb4;stroke-width:1.5}.graph-edge.related{stroke:#26777e;stroke-width:2.5}.graph-edge.dim{opacity:.15}.graph-node{cursor:pointer}.graph-node rect{fill:white;stroke:#cbd9e0;stroke-width:1.2}.graph-node:hover rect,.graph-node.selected rect{fill:#e6f1f2;stroke:#397e85;stroke-width:2}.graph-node.dim{opacity:.3}.graph-id{font:11px Segoe UI,sans-serif;fill:#557780}.graph-name{font:13px Segoe UI,Malgun Gothic,sans-serif;fill:#243249}.graph-status{font:10px Segoe UI,Malgun Gothic,sans-serif;fill:#718097}.dot-todo{fill:#9aabb5}.dot-doing{fill:#4e8eb8}.dot-done{fill:#4a9b78}.dot-blocked{fill:#c97969}
+.schedule-toolbar,
+.dependency-focus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.schedule-toolbar label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.schedule-toolbar select {
+  font-size: 12px;
+  padding: 6px 10px;
+  margin-left: 8px;
+}
+.gantt-scroll,
+.diagram-scroll {
+  max-width: 100%;
+  max-height: 65vh;
+  overflow: auto;
+  border: 1px solid var(--color-recent-files-border);
+  border-radius: 10px;
+  background: var(--color-gantt-scroll-background);
+  cursor: grab;
+  user-select: none;
+}
+.gantt-table {
+  border-spacing: 0;
+  table-layout: fixed;
+  width: max-content;
+  font-size: 12px;
+}
+.gantt-table th,
+.gantt-table td {
+  padding: 0;
+  text-align: left;
+  border-bottom: 1px solid var(--color-gantt-table-th-border-bottom);
+  font-weight: 400;
+}
+.gantt-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-recent-files-border);
+}
+.gantt-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--color-documentproblems-problems-heading-background);
+  height: 38px;
+}
+.gantt-table thead th:first-child {
+  z-index: 4;
+  font-weight: 600;
+  padding: 0 14px;
+  background: var(--color-documentproblems-problems-heading-background);
+}
+.gantt-table svg {
+  display: block;
+}
+.gantt-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 240px;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 12px;
+  padding: 0 12px;
+  text-align: left;
+}
+.gantt-label span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gantt-label .id {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.gantt-label:hover {
+  background: var(--color-gantt-label-hover-background);
+  color: var(--color-gantt-label-hover-color);
+}
+.date-label {
+  font:
+    11px Segoe UI,
+    sans-serif;
+  fill: var(--color-text-secondary);
+}
+.date-grid {
+  stroke: var(--color-chart-grid);
+  stroke-width: 1;
+}
+.today-line {
+  stroke: var(--color-chart-today);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.schedule-bar {
+  fill: var(--color-chart-bar);
+}
+.schedule-bar.state-done {
+  fill: var(--color-chart-done);
+}
+.schedule-bar.state-doing {
+  fill: var(--color-chart-doing);
+}
+.schedule-bar.state-blocked {
+  fill: var(--color-chart-blocked);
+}
+.timeline-row {
+  cursor: pointer;
+}
+.timeline-row:hover {
+  background: var(--color-timeline-row-hover-background);
+}
+.timeline-row:focus-visible,
+.graph-node:focus-visible {
+  outline-offset: -2px;
+}
+.unscheduled {
+  margin-top: 18px;
+  border: 1px solid var(--color-group-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.unscheduled summary {
+  font-size: 13px;
+}
+.unscheduled-list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px;
+}
+.unscheduled-list button {
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--color-tag-background);
+  border-radius: 0;
+  font-size: 12px;
+  padding: 10px;
+  background: var(--color-surface);
+}
+.unscheduled-list button:hover {
+  background: var(--color-recent-files-button-hover-background);
+  color: var(--color-gantt-label-hover-color);
+}
+.unscheduled-list .id {
+  margin-right: 8px;
+}
+.dependency-focus {
+  padding: 12px 14px;
+  background: var(--color-gantt-label-hover-background);
+  border-radius: 9px;
+}
+.dependency-focus > div {
+  flex: 1;
+  min-width: 180px;
+}
+.dependency-focus strong {
+  font-size: 13px;
+}
+.dependency-focus button {
+  font-size: 12px;
+  padding: 7px 10px;
+}
+.dependency-canvas {
+  display: block;
+}
+.stage-label {
+  font:
+    12px Segoe UI,
+    Malgun Gothic,
+    sans-serif;
+  fill: var(--color-chart-stage-text);
+}
+.graph-edge {
+  fill: none;
+  stroke: var(--color-chart-edge);
+  stroke-width: 1.5;
+}
+.graph-edge.related {
+  stroke: var(--color-chart-edge-highlight);
+  stroke-width: 2.5;
+}
+.graph-edge.dim {
+  opacity: 0.15;
+}
+.graph-node {
+  cursor: pointer;
+}
+.graph-node rect {
+  fill: var(--color-surface);
+  stroke: var(--color-chart-node-border);
+  stroke-width: 1.2;
+}
+.graph-node:hover rect,
+.graph-node.selected rect {
+  fill: var(--color-selection);
+  stroke: var(--color-chart-node-hover-border);
+  stroke-width: 2;
+}
+.graph-node.dim {
+  opacity: 0.3;
+}
+.graph-id {
+  font:
+    11px Segoe UI,
+    sans-serif;
+  fill: var(--color-chart-id-text);
+}
+.graph-name {
+  font:
+    13px Segoe UI,
+    Malgun Gothic,
+    sans-serif;
+  fill: var(--color-text);
+}
+.graph-status {
+  font:
+    10px Segoe UI,
+    Malgun Gothic,
+    sans-serif;
+  fill: var(--color-text-muted);
+}
+.dot-todo {
+  fill: var(--color-chart-todo);
+}
+.dot-doing {
+  fill: var(--color-chart-doing);
+}
+.dot-done {
+  fill: var(--color-chart-done);
+}
+.dot-blocked {
+  fill: var(--color-chart-blocked);
+}
+.gantt-scroll.panning,
+.diagram-scroll.panning {
+  cursor: grabbing;
+}
+.graph-node,
+.timeline-row,
+.gantt-label {
+  cursor: pointer;
+}
 
-.gantt-scroll,.diagram-scroll{cursor:grab;user-select:none}.gantt-scroll.panning,.diagram-scroll.panning{cursor:grabbing}.graph-node,.timeline-row,.gantt-label{cursor:pointer}
+.dependency-arrow {
+  fill: var(--color-chart-arrow);
+}

@@ -1,3 +1,4 @@
+import {createDocumentViewState} from './interactions/document-view-state.mjs';
 import {escapeHtml as esc} from './views/html.mjs';
 import {summarizeWork} from './domain/work-summary.mjs';
 import {renderMetrics,renderStatusNotice} from './views/work-summary.mjs';
@@ -19,6 +20,7 @@ import {invoke,Channel} from '@tauri-apps/api/core';
 import {getVersion} from '@tauri-apps/api/app';
 import {setupWindowFrame,setWindowTitle} from './platform/window-frame.mjs';
 const documents=new Map();let activePath=null,polling=false;
+const viewState=createDocumentViewState();let displayedPath=null,renderedView=null,refreshDetail=null;
 let validationProblems=[],operationProblems=[],renderedProblems='';
 function setProblemsOpen(open,focus=false){
  $('documentProblems').hidden=!open;$('error').setAttribute('aria-expanded',String(open));
@@ -62,7 +64,7 @@ const $=id=>document.getElementById(id);
 function matches(r){const q=$('search').value.trim().toLowerCase();return [r.id,label(r.id),r.name,r.owner].join(' ').toLowerCase().includes(q)&&($('status').value==='all'||r.status===$('status').value);}
 function syncWorkSelection(){markSelectedWork($('content'),detailMode==='sidebar'&&$('detail').open?selectedDetailId:null);}
 function show(id){if(!model)return;const result=renderTaskDetail(model,id,label);if(!result)return;selectedDetailId=id;$('detailTitle').textContent=result.title;$('detailMeta').innerHTML=result.meta;$('detailBody').innerHTML=result.body;const dialog=$('detail');const sidebar=detailMode==='sidebar';if(dialog.open&&dialog.classList.contains('sidebar')!==sidebar)dialog.close();dialog.classList.toggle('sidebar',sidebar);if(!dialog.open){if(sidebar)dialog.show();else dialog.showModal();}else dialog.scrollTop=0;syncWorkSelection();}
-function render(){if(!model)return;idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
+function render(capture=true){if(!model)return;if(capture&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
 const summary=summarizeWork(rows);
 $('metrics').innerHTML=renderMetrics(summary);
 $('notice').textContent=renderStatusNotice(summary);
@@ -73,8 +75,27 @@ if(view==='flow')html=renderDependencies(leaves,filtered,graphFocus,label);
 if(view==='gantt')html=renderGantt(filtered,label,ganttUnit,undefined,$('content').clientWidth||960);
 const collisions=model.rows.filter(r=>label(r.id).includes('[')).length;if(collisions)$('notice').textContent+=' 표시 ID 중복 '+collisions+'개: 원본 ID를 함께 표시합니다.';
 $('notice').title=$('notice').textContent;
-$('content').innerHTML=html||'<div class="empty">조건에 맞는 작업이 없습니다.</div>';syncWorkSelection();}
-function load(markdown,source){clearProblems();if($('detail').open)$('detail').close();selectedDetailId=null;pendingDetailId=null;graphFocus=null;$('title').textContent=source.split(/[\\/]/).pop();$('source').textContent=source;$('source').title=source;setWindowTitle($('title').textContent);try{model=parseWbs(markdown);$('title').textContent=model.title;setWindowTitle(model.title);tabs();$('source').textContent=source;render();if($('settings').open)previewIds();}catch(e){model=null;reportProblem(e,source,'문서 오류',markdown);$('content').innerHTML='<div class="document-unavailable"><strong>문서를 표시할 수 없습니다.</strong><p>하단 상태 표시줄의 오류를 눌러 원인과 수정 방법을 확인하세요.</p></div>';$('metrics').replaceChildren();}}
+$('content').innerHTML=html||'<div class="empty">조건에 맞는 작업이 없습니다.</div>';viewState.restore(displayedPath,view,$('content'),rows);renderedView=view;syncWorkSelection();}
+function load(markdown,source){
+ const same=displayedPath===source;
+ if(model&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));
+ if(!same){refreshDetail=null;graphFocus=null;}
+ else if(model)refreshDetail={id:$('detail').open?selectedDetailId:pendingDetailId,scroll:$('detail').scrollTop||0};
+ clearProblems();if($('detail').open)$('detail').close();selectedDetailId=null;pendingDetailId=null;
+ displayedPath=source;renderedView=null;
+ $('title').textContent=source.split(/[\\/]/).pop();$('source').textContent=source;$('source').title=source;setWindowTitle($('title').textContent);
+ try{
+  model=parseWbs(markdown);
+  if(!model.rows.some(row=>row.id===graphFocus))graphFocus=null;
+  $('title').textContent=model.title;setWindowTitle(model.title);tabs();render(false);
+  const detail=refreshDetail;
+  if(detail?.id&&model.rows.some(row=>row.id===detail.id)){
+   if($('settings').open)pendingDetailId=detail.id;
+   else{show(detail.id);$('detail').scrollTop=detail.scroll;}
+  }
+  refreshDetail=null;if($('settings').open)previewIds();
+ }catch(e){model=null;reportProblem(e,source,'문서 오류',markdown);$('content').innerHTML='<div class="document-unavailable"><strong>문서를 표시할 수 없습니다.</strong><p>하단 상태 표시줄의 오류를 눌러 원인과 수정 방법을 확인하세요.</p></div>';$('metrics').replaceChildren();}
+}
 async function reload(){if(activePath)await openPath(activePath);}
 async function poll(){if(polling)return;polling=true;try{const paths=await invoke('take_open_requests');for(const path of paths)await openPath(path);if(activePath){const path=activePath;try{const text=await invoke('read_document',{path});if(operationProblems[0]?.kind==='파일 읽기 오류'&&operationProblems[0]?.source===path){operationProblems=[];updateProblems();}if(path===activePath&&documents.get(path)!==text){documents.set(path,text);load(text,path);}}catch(e){reportProblem(e,path,'파일 읽기 오류');}}}catch(e){reportProblem(e,activePath||'','앱 오류');}finally{polling=false;}}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});render();});
@@ -100,7 +121,7 @@ $('content').onclick=e=>{if(!chartPan.consumeClick())activateContent(e.target.cl
 $('content').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&(e.target.dataset.id||e.target.dataset.select)){e.preventDefault();activateContent(e.target);}};
 $('content').ondblclick=e=>{const target=e.target.closest('[data-select]');if(target?.dataset.select)show(target.dataset.select);};
 $('content').onchange=e=>{if(e.target.id==='ganttUnit'){ganttUnit=e.target.value;render();}};
-$('tabs').onclick=e=>{const close=e.target.closest('[data-close-tab]'),tab=e.target.closest('[data-tab]');if(close){const path=[...documents.keys()][Number(close.dataset.closeTab)];documents.delete(path);if(path===activePath){activePath=[...documents.keys()].at(-1)||null;if(activePath)load(documents.get(activePath),activePath);else{if($('detail').open)$('detail').close();selectedDetailId=null;model=null;$('title').textContent='Worktree';setWindowTitle('Worktree');$('source').textContent='열린 문서 없음';$('source').title='';$('content').replaceChildren();$('metrics').replaceChildren();$('notice').textContent='문서를 열어 주세요.';$('notice').title='';clearProblems();}}tabs();}else if(tab){activePath=[...documents.keys()][Number(tab.dataset.tab)];load(documents.get(activePath),activePath);tabs();}};
+$('tabs').onclick=e=>{const close=e.target.closest('[data-close-tab]'),tab=e.target.closest('[data-tab]');if(close){const path=[...documents.keys()][Number(close.dataset.closeTab)];documents.delete(path);viewState.forget(path);if(path===activePath){activePath=[...documents.keys()].at(-1)||null;if(activePath)load(documents.get(activePath),activePath);else{if($('detail').open)$('detail').close();selectedDetailId=null;model=null;displayedPath=null;renderedView=null;refreshDetail=null;$('title').textContent='Worktree';setWindowTitle('Worktree');$('source').textContent='열린 문서 없음';$('source').title='';$('content').replaceChildren();$('metrics').replaceChildren();$('notice').textContent='문서를 열어 주세요.';$('notice').title='';clearProblems();}}tabs();}else if(tab){activePath=[...documents.keys()][Number(tab.dataset.tab)];load(documents.get(activePath),activePath);tabs();}};
 $('notice').textContent='우측 하단 + 버튼으로 문서를 열거나 파일을 끌어오세요.';
 setupWindowFrame(error=>reportProblem(error,activePath||'','창 제어 오류'));
 tabs();

@@ -1,13 +1,12 @@
 import {escapeHtml} from './html.mjs';
 
 export function renderMetrics(summary){
- const metrics=[
-  ['작업',summary.taskCount+'개'],
-  ['마일스톤',summary.completedMilestones+' / '+summary.milestoneCount],
-  ['완료 작업',summary.completedTasks+' / '+summary.taskCount],
-  ['공수 기준 진척도',summary.progress===null?'산정 불가':summary.progress+'%'],
- ];
- return metrics.map(([name,value])=>`<div class="metric"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
+ const metric=(name,value,detail='')=>`<div class="metric"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong>${detail?`<small class="metric-detail">${escapeHtml(detail)}</small>`:''}</div>`;
+ const progress=summary.taskProgress===null?'작업 없음':summary.taskProgress+'%';
+ return metric('작업',summary.completedTasks+' / '+summary.taskCount,'완료 / 전체')
+  +metric('마일스톤',summary.completedMilestones+' / '+summary.milestoneCount,'완료 / 전체')
+  +`<div class="metric metric-progress"><span>진행률</span><strong>${escapeHtml(progress)}</strong><progress max="100" value="${summary.taskProgress??0}" aria-label="작업 개수 기준 진행률" aria-valuetext="${escapeHtml(progress)}"></progress><small class="metric-detail">작업 개수 기준</small></div>`
+  +metric('공수 기준 진척도',summary.progress===null?'산정 불가':summary.progress+'%');
 }
 
 export function renderStatusNotice(summary){

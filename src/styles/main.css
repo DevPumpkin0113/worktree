@@ -62,3 +62,5 @@ body:has(#documentProblems:not([hidden])){--problems-panel-height:clamp(180px,32
 .work-type-badge{display:inline-block;padding:1px 6px;border:1px solid #d7e0e7;border-radius:4px;background:#f3f6f8;color:#617184;font-size:10px;font-weight:500;line-height:1.6;vertical-align:middle;white-space:nowrap}.work-type-milestone{border-color:#b7cdd4;background:#edf5f7;color:#3c6471}
 
 .document-tab [data-tab]{cursor:grab;touch-action:none;user-select:none}.document-tab.tab-dragging{opacity:.5}.document-tab.tab-drop-before{box-shadow:inset 3px 0 #176b73}.document-tab.tab-drop-after{box-shadow:inset -3px 0 #176b73}
+
+.metric-detail{display:block;margin-top:5px;font-size:10px;font-weight:400;line-height:1.4;color:#718097}.metric-progress progress{display:block;width:100%;height:7px;margin-top:7px;border:0;border-radius:5px;overflow:hidden;appearance:none;background:#e3ecef;accent-color:#267d83}.metric-progress progress::-webkit-progress-bar{background:#e3ecef;border-radius:5px}.metric-progress progress::-webkit-progress-value{background:#267d83;border-radius:5px}.metric-progress progress::-moz-progress-bar{background:#267d83;border-radius:5px}

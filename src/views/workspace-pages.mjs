@@ -1,0 +1,7 @@
+import {escapeHtml as esc} from './html.mjs';
+const states={todo:'시작 전',doing:'진행 중',blocked:'막힘',done:'완료'};
+export function renderAllTasks(rows,label){
+ if(!rows.length)return '<div class="empty">조건에 맞는 작업이 없습니다.</div>';
+ return `<div class="all-tasks"><table><thead><tr><th scope="col">작업</th><th scope="col">상태</th><th scope="col">담당자</th><th scope="col">종료일</th></tr></thead><tbody>${rows.map(row=>`<tr><td><button type="button" class="all-task-link" data-id="${esc(row.id)}"><span class="id">${esc(label(row.id))}</span><span>${esc(row.name)}</span>${row.type==='milestone'?'<span class="all-task-type">마일스톤</span>':''}</button></td><td><span class="tag ${row.status}">${states[row.status]}</span></td><td>${esc(row.owner==='-'?'담당 미정':row.owner)}</td><td>${esc(row.end==='-'?'미정':row.end)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+export function renderAnalyticsPlaceholder(){return `<section class="analytics-intro"><span class="workspace-eyebrow">PROJECT INSIGHTS</span><h2>진행 상황을 한눈에</h2><p>프로젝트의 흐름과 팀의 작업 현황을 확인할 공간입니다.</p><span class="analytics-preview-label">화면 구성 미리보기 · 분석 데이터 연결 전</span></section><div class="analytics-grid">${[['진행 추이','시간에 따른 작업 완료 흐름'],['작업 현황','상태별 작업과 병목 파악'],['팀 작업 분포','담당자별 진행 상황']].map(([title,description])=>`<section class="analytics-card"><h3>${title}</h3><p>${description}</p><div class="analytics-placeholder" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><small>분석 데이터가 연결되면 이곳에 표시됩니다.</small></section>`).join('')}</div>`;}

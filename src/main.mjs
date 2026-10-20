@@ -1,3 +1,4 @@
+import {renderAllTasks,renderAnalyticsPlaceholder} from './views/workspace-pages.mjs';
 import {bindDetailResize} from './interactions/detail-resize.mjs';
 import {createCommentsPreview} from './interactions/comments-preview.mjs';
 import {bindDocumentTabs,reorderDocumentTabs} from './interactions/document-tabs.mjs';
@@ -80,6 +81,7 @@ async function openPath(path,{quiet=false}={}){
  }catch(error){if(!quiet)reportProblem(error,path,'파일 읽기 오류');return {error,path};}
 }
 
+let workspacePage='board';
 let model,view='tree',idLabels=new Map(),graphFocus=null,ganttUnit='day';
 const storage=createSettingsStorage({invoke,legacyStorage:()=>window.localStorage});
 let settingsLoadError='';
@@ -95,7 +97,7 @@ function updateOwnerFilter(){
 }
 function syncWorkSelection(){markSelectedWork($('content'),detailMode==='sidebar'&&$('detail').open?selectedDetailId:null);}
 const commentsPreview=createCommentsPreview();
-bindDetailResize({handle:$('detailResize'),dialog:$('detail'),hide:()=>{$('detail').close();syncWorkSelection();}});
+const detailResize=bindDetailResize({handle:$('detailResize'),dialog:$('detail'),hide:()=>{$('detail').close();syncWorkSelection();}});
 $('detailHide').onclick=()=>{$('detail').close();syncWorkSelection();};
 // 제목 줄바꿈과 창 크기 변경에도 탭이 제목 바로 아래에 머물게 한다.
 if(typeof ResizeObserver!=='undefined'){
@@ -107,6 +109,10 @@ if(typeof ResizeObserver!=='undefined'){
 function show(id){if(!model)return;const result=renderTaskDetail(model,id,label);if(!result)return;selectedDetailId=id;$('detailTitle').textContent=result.title;$('detailMeta').innerHTML=result.meta;$('detailBody').innerHTML=commentsPreview.render(activePath,id,result.body);const dialog=$('detail');const sidebar=detailMode==='sidebar';if(dialog.open&&dialog.classList.contains('sidebar')!==sidebar)dialog.close();dialog.classList.toggle('sidebar',sidebar);if(!dialog.open){if(sidebar)dialog.show();else dialog.showModal();}else dialog.scrollTop=0;syncWorkSelection();}
 function render(capture=true){if(!model)return;if(capture&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
 updateOwnerFilter();
+const pageInfo={board:['보드','다양한 보기로 작업의 흐름을 확인하세요.'],tasks:['모든 작업','문서의 작업을 한 목록에서 확인하고 찾아보세요.'],analytics:['분석','프로젝트 진행 상황을 살펴볼 공간입니다.']}[workspacePage];
+$('workspacePageTitle').textContent=pageInfo[0];$('workspacePageDescription').textContent=pageInfo[1];
+$('workspaceTools').hidden=workspacePage==='analytics';$('metrics').hidden=workspacePage==='analytics';
+document.querySelectorAll('[data-view]').forEach(button=>button.hidden=workspacePage!=='board');
 const summary=summarizeWork(rows);
 $('metrics').innerHTML=renderMetrics(summary,model.useEffort);
 $('metrics').classList.toggle('without-effort',!model.useEffort);
@@ -118,7 +124,10 @@ if(view==='flow')html=renderDependencies(leaves,filtered,graphFocus,label);
 if(view==='gantt')html=renderGantt(filtered,label,ganttUnit,undefined,$('content').clientWidth||960);
 const collisions=model.rows.filter(r=>label(r.id).includes('[')).length;if(collisions)$('notice').textContent+=' 표시 ID 중복 '+collisions+'개: 원본 ID를 함께 표시합니다.';
 $('notice').title=$('notice').textContent;
-$('content').innerHTML=html||'<div class="empty">조건에 맞는 작업이 없습니다.</div>';viewState.restore(displayedPath,view,$('content'),rows);renderedView=view;syncWorkSelection();}
+if(workspacePage==='tasks')html=renderAllTasks(filtered,label);
+if(workspacePage==='analytics')html=renderAnalyticsPlaceholder();
+const contentView=workspacePage==='board'?view:workspacePage;
+$('content').innerHTML=html||'<div class="empty">조건에 맞는 작업이 없습니다.</div>';viewState.restore(displayedPath,contentView,$('content'),rows);renderedView=contentView;syncWorkSelection();}
 function load(markdown,source){
  const same=displayedPath===source;
  if(displayedPath&&documents.has(displayedPath))documentViews.set(displayedPath,{view,ganttUnit});
@@ -144,6 +153,20 @@ function load(markdown,source){
 }
 async function reload(){if(activePath)await openPath(activePath);}
 async function poll(){if(polling)return;polling=true;try{const paths=await invoke('take_open_requests');for(const path of paths)await openPath(path);if(activePath){const path=activePath;try{const text=await invoke('read_document',{path});if(operationProblems[0]?.kind==='파일 읽기 오류'&&operationProblems[0]?.source===path){operationProblems=[];updateProblems();}if(path===activePath&&documents.get(path)!==text){documents.set(path,text);load(text,path);}}catch(e){reportProblem(e,path,'파일 읽기 오류');}}}catch(e){reportProblem(e,activePath||'','앱 오류');}finally{polling=false;}}
+$('workspaceCollapse').onclick=()=>{
+ const collapsed=document.documentElement.classList.toggle('workspace-nav-collapsed');
+ const button=$('workspaceCollapse'),name=collapsed?'워크스페이스 펼치기':'워크스페이스 접기';
+ button.setAttribute('aria-expanded',String(!collapsed));button.setAttribute('aria-label',name);button.title=name;
+ detailResize?.fit();if(model)render();
+};
+$('workspaceNav').onclick=event=>{
+ const button=event.target.closest('[data-workspace-page]');if(!button)return;
+ const next=button.dataset.workspacePage;if(!['board','tasks','analytics'].includes(next)||next===workspacePage)return;
+ workspacePage=next;
+ for(const item of $('workspaceNav').querySelectorAll('[data-workspace-page]')){if(item===button)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current');}
+ if($('detail').open)$('detail').close();syncWorkSelection();
+ if(model)render();else{const info={board:['보드','문서를 열어 작업을 확인하세요.'],tasks:['모든 작업','문서를 열어 전체 작업을 확인하세요.'],analytics:['분석','프로젝트 진행 상황을 살펴볼 공간입니다.']}[workspacePage];$('workspacePageTitle').textContent=info[0];$('workspacePageDescription').textContent=info[1];$('metrics').hidden=next==='analytics';$('workspaceTools').hidden=next==='analytics';$('content').innerHTML=next==='analytics'?renderAnalyticsPlaceholder():'<div class="empty">문서를 열어 주세요.</div>';}
+};
 function syncViewButtons(){document.querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===view;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;syncViewButtons();if(activePath)documentViews.set(activePath,{view,ganttUnit});render();saveSession();});
 $('search').oninput=render;$('status').onchange=render;$('owner').onchange=render;$('reload').onclick=reload;$('dockOpen').onclick=async()=>{try{const path=await invoke('pick_document');if(path)await openPath(path);}catch(e){reportProblem(e,activePath||'','앱 오류');}};$('close').onclick=()=>{$('detail').close();syncWorkSelection();};
@@ -192,7 +215,7 @@ const settingsNavigation=setupSettingsNavigation(document);
 function syncSettingsState(){
  const open=$('settings').open;
  $('settingsOpen').classList.toggle('active',open);$('settingsOpen').setAttribute('aria-pressed',String(open));$('settingsOpen').setAttribute('aria-expanded',String(open));
- for(const id of ['workspace','documentDock','appStatusbar','documentProblems'])$(id).inert=open;
+ for(const id of ['workspaceNav','workspace','documentDock','appStatusbar','documentProblems'])$(id).inert=open;
 }
 $('settingsOpen').onclick=()=>{
  if($('settings').open){$('settings').close();syncSettingsState();return;}

@@ -3,6 +3,7 @@ use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
 mod settings;
+mod update_cleanup;
 use app_updates::{
     check_app_update, get_build_info, install_app_update, open_issue_report, open_releases,
     UpdateState,
@@ -84,6 +85,11 @@ fn main() {
         }))
         .setup(|app| {
             settings::setup(app)?;
+            tauri::async_runtime::spawn_blocking(|| {
+                if let Err(error) = update_cleanup::cleanup_previous_installers() {
+                    eprintln!("이전 업데이트 임시 파일 정리 실패: {error}");
+                }
+            });
             enqueue(
                 &app.state::<OpenQueue>(),
                 std::env::args_os().skip(1).map(PathBuf::from),

@@ -26,7 +26,7 @@ test('표시 설정이 모든 보기·상세·검색에 반영되고 원본 참�
  element('settingsOpen').onclick();
  assert.equal(element('settingsOpen').attributes['aria-pressed'],'true');assert.equal(element('workspace').inert,true);assert.equal(element('documentDock').inert,true);
  element('settingsOpen').onclick();assert.equal(element('settings').open,false);assert.equal(element('settingsOpen').attributes['aria-pressed'],'false');assert.equal(element('workspace').inert,false);element('settings').onclose();
- element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'Worktree · v0.3.5');element('idSeparator').value='hyphen';element('idSeparator').onchange();assert.equal(element('settings').open,true);
+ element('settingsOpen').onclick();await new Promise(resolve=>setImmediate(resolve));assert.equal(element('appVersion').textContent,'버전 0.3.5');element('idSeparator').value='hyphen';element('idSeparator').onchange();assert.equal(element('settings').open,true);
  assert.equal(readSeparator(context.window.localStorage),'hyphen');element('settingsClose').onclick();assert.equal(element('settings').open,false);element('settingsOpen').onclick();assert.equal(element('idSeparator').value,'hyphen');
  for(const view of views){view.onclick();assert.match(element('content').innerHTML,/OBS-00/);assert.match(element('content').innerHTML,/data-(id|select)="W00/);}
  views[0].onclick();element('content').onclick({target:{closest:()=>({dataset:{id:'W002'}})}});

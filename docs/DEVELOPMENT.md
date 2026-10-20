@@ -44,26 +44,76 @@ npm run tauri build
 - 화면 연결 테스트는 DOM 대역을 사용하므로 실제 앱 조작 검증을 대체하지 않는다.
 - 릴리즈 전 파일 열기·드롭·문서 전환·자동 갱신·창 제어·설치 후 파일 연결을 확인하고 실제 검증 여부를 기록한다.
 
+## 브랜치 운영
+
+작업 시작·재개 시 AGENTS.md와 관련 지침을 확인한다. 문서·작업 규칙만 변경하면 검증 후 바로 커밋할 수 있다. 기능 개발·수정·리팩터링 등 소스코드 작업은 박대호의 명시적인 커밋 지시를 기다린다. 문서와 코드가 섞인 변경은 코드의 커밋 지시를 따른다. 커밋 허가는 푸시·병합·배포의 자동 허가가 아니며 아래 예시는 해당 행위가 허용된 범위에서만 실행한다.
+
+- main: 검증을 마친 정식 배포 기준. 직접 기능을 개발하지 않는다.
+- develop: 완료한 기능을 모아 다음 목표를 확인하고 유지보수하는 상시 브랜치. main에 병합한 뒤에도 남겨 둔다.
+- feat/*·fix/*·chore/*: develop에서 분기하는 작업 단위 브랜치. 구현·검증 후 develop에 병합하고 임시 브랜치는 정리한다.
+
+기능 하나가 끝나면 develop에 모은다. 사용자가 원하는 목표에 도달하고 통합 확인을 마쳤을 때 develop을 main에 병합한다. 단순 문서 변경은 develop에 직접 커밋할 수 있다. 병합 완료 후에도 develop에서 다음 작업을 계속하며 별도 release 브랜치는 기본적으로 사용하지 않는다.
+
+```powershell
+git switch develop
+git switch -c feat/task-editing
+# 구현·검증·커밋 후
+git switch develop
+git merge --no-ff feat/task-editing
+git push origin develop
+```
+
 ## 버전 변경과 자동 배포
 
 버전 결정 기준과 변경 이력 운영 규칙은 [AGENTS의 버전과 릴리즈 운영](../AGENTS.md#버전과-릴리즈-운영)을 따른다. package.json을 기준으로 동기화 명령을 사용하며 앱 버전과 WBS schema_version은 별개다.
 
-1. CHANGELOG.md의 Unreleased 내용을 새 버전과 날짜 아래로 옮긴다.
-2. 버전을 동기화하고 검사·테스트·빌드 및 필요한 실제 동작 검증을 수행한다.
-3. 프로젝트 커밋 정책과 사용자의 게시 지시에 따라 커밋·푸시한다.
-4. 해당 커밋에 앱 버전과 같은 vX.Y.Z 태그를 만들어 푸시한다.
+1. develop에서 목표 기능을 통합하고 사용자 확인을 받는다.
+2. CHANGELOG.md의 Unreleased 내용을 새 버전과 날짜 아래로 옮긴다.
+3. 앱 버전을 동기화하고 검사·테스트·빌드 및 필요한 실제 동작 검증을 수행해 develop에 커밋한다.
+4. 배포가 승인되면 develop을 main에 병합하고 main을 푸시한다. 수동으로 릴리즈 태그를 만들 필요는 없다.
 
 ```powershell
+git switch develop
 npm run version:set -- 0.4.1
 npm run version:check
 npm test
 npm run tauri build
-# 변경 이력과 문서를 갱신하고 검증 결과를 확인한 뒤 커밋한다.
+# 변경 이력·문서를 갱신하고 검증 후 커밋·사용자 확인을 마친다.
+git push origin develop
+git switch main
+git merge --no-ff develop
 git push origin main
-git tag -a v0.4.1 -m "Worktree 0.4.1"
-git push origin v0.4.1
+git switch develop
 ```
 
-버전 변경 명령 자체는 커밋·태그·게시를 수행하지 않는다. 태그 푸시는 .github/workflows/release.yml을 실행하며 테스트·버전 및 태그 검사·Windows x64 NSIS 빌드가 모두 성공하면 설치 파일을 GitHub Release에 게시한다. 태그와 앱 버전이 다르면 중단된다.
+.github/workflows/release.yml은 main 갱신 시 실행된다. GitHub의 일반 병합·스쿼시 병합 모두 main push 이벤트로 처리된다. main 직접 푸시도 같은 이벤트이므로 운영 규칙상 main 직접 개발을 금지한다.
 
-진행 상태는 저장소 Actions에서 확인한다. 배포한 태그·설치 파일을 덮어쓰지 않고 새 버전으로 수정 배포한다. 앱 내부 자동 업데이트는 별도 기능이다.
+이미 공개 Release가 있는 버전이면 빌드와 게시를 건너뛴다. 새 버전이면 테스트·버전 검사·Windows x64 NSIS 빌드가 모두 성공한 뒤, 해당 main 커밋에 vX.Y.Z 태그와 GitHub Release를 생성한다. 같은 버전의 미게시 태그가 이미 있으면 잘못된 커밋 배포를 막기 위해 실패 처리한다. API·태그 조회 실패도 배포 생략으로 숨기지 않고 실패로 표시한다.
+
+develop·기능 브랜치 갱신이나 수동 태그 푸시는 정식 배포를 실행하지 않는다. 버전 변경 명령 자체는 커밋·병합·게시를 수행하지 않는다. 진행 상태는 저장소 Actions에서 확인한다. 게시한 태그·설치 파일은 덮어쓰지 않고 새 버전으로 수정 배포한다. 앱 내부 업데이트는 아래 서명 배포 절차를 사용한다.
+
+
+## 서명 업데이트
+
+Tauri 공식 updater를 Rust 명령에서 사용한다. GitHub 최신 정식 릴리즈를 SemVer로 비교하고 newer 버전의 latest.json이 있을 때만 설치를 준비한다. 개발 버전이 앞서면 다운그레이드하지 않는다. 구형 릴리즈에 manifest가 없으면 수동 설치로 안내하며 네트워크 실패는 최신 상태로 취급하지 않는다.
+
+- 공개 키: src-tauri/tauri.conf.json의 plugins.updater.pubkey.
+- 로컬 암호화 개인 키와 암호: Git에서 제외한 .local/updater/worktree.key, .local/updater/password. 별도 안전한 장소에 백업하고 임의 재생성하지 않는다.
+- Actions secrets: TAURI_SIGNING_PRIVATE_KEY(키 파일 내용), TAURI_SIGNING_PRIVATE_KEY_PASSWORD(암호). 빌드 프로세스 환경에만 전달한다.
+- 로컬 확인 빌드도 같은 환경 변수를 설정해 npm run tauri build -- --ci --bundles nsis를 실행한다. 키나 암호를 명령문·로그에 직접 작성하지 않는다.
+- scripts/update-manifest.mjs가 설치 파일의 .sig와 현재 버전을 연결해 latest.json을 만든다. main 워크플로는 설치 exe·.sig·latest.json을 같은 Release에 게시한다.
+- 앱은 HTTPS 고정 저장소에서 확인하고 버전·설치 URL 일치를 검사한다. 다운로드 후 Tauri 공개 키 검증을 통과해야 설치한다. 설치 전 사용자 확인을 받고 진행률을 표시한다.
+- 문제 제보는 고정 저장소의 새 issue 작성 URL만 연다. 문서 내용·경로는 수집하지 않는다.
+- 공개 릴리즈를 만들지 않는 로컬 검증으로 실제 배포 후 업그레이드 성공까지 주장하지 않는다. main 게시 후 구버전 설치 앱에서 조회→다운로드→서명→설치→재실행 인수를 수행한다.
+
+버전 증가와 릴리즈 게시를 분리한다. 개발 중 기능 추가에도 MINOR를 올리고 변경 내용은 Unreleased에 개발 버전과 함께 기록한다.
+
+### 0.5.0 로컬 검증 기록
+
+- 프런트엔드 테스트 35개, Rust 기본 테스트 4개 통과. GitHub 실조회 및 생성된 설치 파일 서명·변조 거부 테스트 2개를 별도로 실행해 통과했다.
+- 브라우저 대체 IPC 환경에서 자동 확인·수동 확인·개발/최신/수동 설치 상태·진행률·취소·실패 후 재시도·설정 재실행 유지·제보 작성 동작과 1280×850/760×560 배치를 검증했다. 실제 업데이트 설치는 실행하지 않았다.
+- 실제 GitHub 최신 정식 버전 v0.4.0과 현재 개발 버전 0.5.0 비교를 확인했다. 설치 파일·서명·latest.json 로컬 생성 완료.
+- 서명 키·암호의 GitHub Secrets 등록은 처음에 자동 승인 검토로 보류됐으며, 이후 박대호가 직접 등록했다. 2026-10-20 두 Secret 이름의 존재를 확인했고 커밋·main 병합·릴리즈 실행 승인을 받았다. Secret 값은 조회하거나 출력하지 않았다.
+- 이미 사용 중인 Worktree 프로세스는 종료하지 않았다. 실제 앱 UI 및 공개 배포를 통한 설치·재실행 인수는 박대호 확인 또는 후속 승인 범위로 남긴다.
+
+별도 검증: src-tauri에서 cargo test -- --ignored --nocapture. 이 검사는 GitHub 인터넷 접근과 먼저 빌드한 서명 NSIS 설치 파일이 필요하다. 일반 cargo test는 두 검사를 생략하며 CI는 빌드 후 서명 검사를 따로 실행한다.

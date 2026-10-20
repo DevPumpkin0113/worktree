@@ -1,3 +1,4 @@
+import {bindDetailResize} from './interactions/detail-resize.mjs';
 import {createCommentsPreview} from './interactions/comments-preview.mjs';
 import {bindDocumentTabs,reorderDocumentTabs} from './interactions/document-tabs.mjs';
 import {workOwners,matchesWork} from './domain/work-filter.mjs';
@@ -94,6 +95,8 @@ function updateOwnerFilter(){
 }
 function syncWorkSelection(){markSelectedWork($('content'),detailMode==='sidebar'&&$('detail').open?selectedDetailId:null);}
 const commentsPreview=createCommentsPreview();
+bindDetailResize({handle:$('detailResize'),dialog:$('detail'),hide:()=>{$('detail').close();syncWorkSelection();}});
+$('detailHide').onclick=()=>{$('detail').close();syncWorkSelection();};
 // 제목 줄바꿈과 창 크기 변경에도 탭이 제목 바로 아래에 머물게 한다.
 if(typeof ResizeObserver!=='undefined'){
  const detailHeader=$('detail').querySelector('.detail-header');

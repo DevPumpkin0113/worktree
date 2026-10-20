@@ -129,3 +129,7 @@ Tauri 공식 updater를 Rust 명령에서 사용한다. GitHub 최신 정식 릴
 창 자동 생성을 끄고 Rust setup에서 데이터 디렉터리를 선택한다. JSON이 없고 이전 local.toothless.worktree/EBWebView가 있으면 그 프로필로 한 번 실행하고 기존 origin의 localStorage를 읽어 initialize_settings로 저장한다. JSON이 있으면 이전 localStorage보다 우선하며 이후 Worktree/EBWebView를 사용한다. 이전 프로필을 복사하거나 삭제하지 않는다. 설치 EXE 이름과 NSIS의 Worktree 제거 프로그램 키는 동일해 기존 설치 위치를 유지한다. 식별자가 달라 구버전과 신버전의 단일 인스턴스 키는 다르므로 업데이트 전 기존 앱은 종료한다.
 
 설정 파일은 크기가 작은 serde JSON이며 tempfile을 이용해 같은 디렉터리에서 동기화 후 교체한다. UI는 저장 성공 후 상태를 반영하고 저장을 직렬화한다. 손상·잘못된 값은 settings.invalid-*.json으로 보관한 뒤 기본값으로 복구하고 안내한다. 지원하지 않는 schemaVersion이나 읽기 오류는 원본을 유지하며 설정 변경을 막는다. 수동 편집은 앱 종료 후 수행한다.
+
+## 0.5.1 배포·인수 확인
+
+0.5.1은 main edc62dc·태그 v0.5.1·GitHub 실행 39401688756에서 정식 배포를 완료했다. 박대호가 설치·설정 이전·재실행·파일 연결 확인을 완료했다고 응답했다. 전체 배율·접근성·대량 문서 검증과 구분한다.

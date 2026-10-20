@@ -8,7 +8,7 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .settings-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}#settings .settings-heading h2{margin:0}.modal-close{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;padding:0;border:0;background:transparent;border-radius:6px;color:#617184}.modal-close:hover{background:#edf1f5;color:#243249}.modal-close svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;pointer-events:none}
 .view-button{display:grid;place-items:center;width:42px;height:42px;padding:4px;border-radius:8px;flex-shrink:0}.view-button:hover{background:#edf3f4;border-color:#adc6c8}.view-button.active{background:#dfecef;border-color:#73969a;box-shadow:inset 0 0 0 1px #73969a}.view-button:focus-visible{outline:2px solid #176b73;outline-offset:2px}.view-button{color:#526d70}.view-button:hover,.view-button.active{color:#3f6267}.view-icon{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 
-*{scrollbar-width:thin;scrollbar-color:#a9b8c4 transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:#a9b8c4;border-radius:8px}*::-webkit-scrollbar-thumb:hover{background:#7e929f}*::-webkit-scrollbar-button{display:none;width:0;height:0}*::-webkit-scrollbar-corner{background:transparent}
+*{scrollbar-width:thin;scrollbar-color:#a9b8c4 transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:#a9b8c4;border-radius:8px}*::-webkit-scrollbar-thumb:hover{background-color:#7e929f}*::-webkit-scrollbar-button{display:none;width:0;height:0}*::-webkit-scrollbar-corner{background:transparent}
 .task.detail-selected,summary.detail-selected{background:#e6f1f2;box-shadow:inset 3px 0 #26777e}.lane .task.detail-selected{border-color:#73969a;background:#e6f1f2}.gantt-label.detail-selected,.unscheduled-list button.detail-selected{background:#e6f1f2;box-shadow:inset 3px 0 #26777e;color:#205d63}.timeline-row.detail-selected{background:#e6f1f2}.graph-node.detail-selected{opacity:1}.graph-node.detail-selected rect{fill:#dceef0;stroke:#176b73;stroke-width:3}
 
 /* Keep document controls fixed; scroll only the working surface. */
@@ -66,3 +66,16 @@ body:has(#documentProblems:not([hidden])){--problems-panel-height:clamp(180px,32
 .metric-detail{display:block;margin-top:5px;font-size:10px;font-weight:400;line-height:1.4;color:#718097}.metric-progress progress{display:block;width:100%;height:7px;margin-top:7px;border:0;border-radius:5px;overflow:hidden;appearance:none;background:#e3ecef;accent-color:#267d83}.metric-progress progress::-webkit-progress-bar{background:#e3ecef;border-radius:5px}.metric-progress progress::-webkit-progress-value{background:#267d83;border-radius:5px}.metric-progress progress::-moz-progress-bar{background:#267d83;border-radius:5px}
 
 @media(min-width:701px){.metrics.without-effort{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* WebView2에서는 표준 thin 설정이 네이티브 화살표를 되살리므로 커스텀 바를 우선한다. */
+@supports selector(::-webkit-scrollbar){
+ *,#tabs{scrollbar-width:auto;scrollbar-color:auto}
+ *::-webkit-scrollbar-button:single-button,*::-webkit-scrollbar-button:double-button,*::-webkit-scrollbar-button{display:none!important;width:0!important;height:0!important}
+}
+
+:root{--scrollbar-end-gap:8px;--scrollbar-edge-gap:4px}
+@supports selector(::-webkit-scrollbar){
+ *::-webkit-scrollbar:vertical{width:calc(6px + 2 * var(--scrollbar-edge-gap))}
+ *::-webkit-scrollbar-track:vertical{margin-block:var(--scrollbar-end-gap)}
+ *::-webkit-scrollbar-thumb:vertical{border:var(--scrollbar-edge-gap) solid transparent;background-clip:padding-box;border-radius:12px}
+}

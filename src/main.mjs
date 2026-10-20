@@ -1,3 +1,4 @@
+import {createCommentsPreview} from './interactions/comments-preview.mjs';
 import {bindDocumentTabs,reorderDocumentTabs} from './interactions/document-tabs.mjs';
 import {workOwners,matchesWork} from './domain/work-filter.mjs';
 import {createSessionStorage,emptySession,MAX_RECENT_FILES,MAX_SESSION_TABS} from './platform/session-storage.mjs';
@@ -92,7 +93,15 @@ function updateOwnerFilter(){
  control.value=owners.some(owner=>'owner:'+owner===previous)?previous:'all';
 }
 function syncWorkSelection(){markSelectedWork($('content'),detailMode==='sidebar'&&$('detail').open?selectedDetailId:null);}
-function show(id){if(!model)return;const result=renderTaskDetail(model,id,label);if(!result)return;selectedDetailId=id;$('detailTitle').textContent=result.title;$('detailMeta').innerHTML=result.meta;$('detailBody').innerHTML=result.body;const dialog=$('detail');const sidebar=detailMode==='sidebar';if(dialog.open&&dialog.classList.contains('sidebar')!==sidebar)dialog.close();dialog.classList.toggle('sidebar',sidebar);if(!dialog.open){if(sidebar)dialog.show();else dialog.showModal();}else dialog.scrollTop=0;syncWorkSelection();}
+const commentsPreview=createCommentsPreview();
+// 제목 줄바꿈과 창 크기 변경에도 탭이 제목 바로 아래에 머물게 한다.
+if(typeof ResizeObserver!=='undefined'){
+ const detailHeader=$('detail').querySelector('.detail-header');
+ new ResizeObserver(()=>{
+  $('detail').style.setProperty('--detail-header-height',detailHeader.getBoundingClientRect().height+'px');
+ }).observe(detailHeader);
+}
+function show(id){if(!model)return;const result=renderTaskDetail(model,id,label);if(!result)return;selectedDetailId=id;$('detailTitle').textContent=result.title;$('detailMeta').innerHTML=result.meta;$('detailBody').innerHTML=commentsPreview.render(activePath,id,result.body);const dialog=$('detail');const sidebar=detailMode==='sidebar';if(dialog.open&&dialog.classList.contains('sidebar')!==sidebar)dialog.close();dialog.classList.toggle('sidebar',sidebar);if(!dialog.open){if(sidebar)dialog.show();else dialog.showModal();}else dialog.scrollTop=0;syncWorkSelection();}
 function render(capture=true){if(!model)return;if(capture&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
 updateOwnerFilter();
 const summary=summarizeWork(rows);
@@ -145,7 +154,10 @@ $('problemsBody').onclick=e=>{
  const problem=[...validationProblems,...operationProblems][Number(source?button.dataset.copySource:button.dataset.copyProblem)];
  if(problem)copyProblems(source?problem.raw:formatDocumentProblem(problem));
 };
-$('detailBody').onclick=e=>{const target=e.target.closest('[data-detail]');if(target)show(target.dataset.detail);};
+$('detailBody').oninput=e=>commentsPreview.input(e);
+$('detailBody').onsubmit=e=>commentsPreview.submit(e,$('detailBody'));
+$('detailBody').onkeydown=e=>commentsPreview.keydown(e,$('detailBody'));
+$('detailBody').onclick=e=>{if(commentsPreview.click(e,$('detailBody')))return;const target=e.target.closest('[data-detail]');if(target)show(target.dataset.detail);};
 function activateContent(target){
  if(target?.dataset.select){const scroll=$('content').querySelector?.('.diagram-scroll');const left=scroll?.scrollLeft||0,top=scroll?.scrollTop||0;graphFocus=target.dataset.select;render();const next=$('content').querySelector?.('.diagram-scroll');if(next){next.scrollLeft=left;next.scrollTop=top;}}
  else if(target&&'clearFocus' in target.dataset){graphFocus=null;render();}

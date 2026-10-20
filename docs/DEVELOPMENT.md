@@ -226,3 +226,5 @@ Node 62개 테스트·버전 검사·Vite 빌드 통과. 문서별 공수 설정
 ## 0.13.0 정식 릴리즈 승인 (2026-10-20)
 
 박대호가 누적 변경의 정식 릴리즈를 승인했다. 버전 0.13.0을 유지하고 develop의 릴리즈 문서 정리 후 main에 병합·푸시하여 CI에서 정식 설치 파일·업데이트 서명·manifest를 생성한다. 로컬 0.13.0 NSIS 설치 빌드는 성공했으며 bundle/nsis 내부만 정리하고 빌드 캐시는 유지했다. R05는 계속 보류이며 미수행 실제 설치·파일 연결·배포 후 자동 업데이트 인수를 완료로 처리하지 않는다.
+
+릴리즈 결과: main 병합 커밋 29999be 기준 [v0.13.0](https://github.com/DevPumpkin0113/worktree/releases/tag/v0.13.0) 게시 완료. [CI 39441144062](https://github.com/DevPumpkin0113/worktree/actions/runs/39441144062) 전체 성공. Node 62개·Rust 19개 테스트, 버전 검사, Windows NSIS 빌드, 서명 검증·변조 거부 통과. 공개 latest.json의 버전·설치 URL·서명과 게시 자산의 일치를 확인했다. 실제 설치·자동 업데이트 인수는 별도다. develop은 릴리즈된 main으로 fast-forward한 뒤 이 결과를 기록한다.

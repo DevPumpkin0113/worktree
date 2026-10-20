@@ -100,7 +100,7 @@ setupWindowFrame(error=>reportProblem(error,activePath||'','창 제어 오류'))
 tabs();
 
 function previewIds(){const prefix=model?.idPrefix||'W';$('idPreview').textContent='미리보기: '+prefix+($('idSeparator').value==='hyphen'?'-':'')+'001';}
-async function updateAppVersion(){try{$('appVersion').textContent='Worktree · v'+await getVersion();}catch{$('appVersion').textContent='Worktree · 버전 정보를 불러오지 못했습니다.';}}
+async function updateAppVersion(){try{$('appVersion').textContent='버전 '+await getVersion();}catch{$('appVersion').textContent='버전 정보를 불러오지 못했습니다.';}}
 const settingsNavigation=setupSettingsNavigation(document);
 function syncSettingsState(){
  const open=$('settings').open;

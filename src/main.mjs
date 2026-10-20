@@ -1,3 +1,4 @@
+import {workOwners,matchesWork} from './domain/work-filter.mjs';
 import {createSessionStorage,emptySession,MAX_RECENT_FILES,MAX_SESSION_TABS} from './platform/session-storage.mjs';
 import {createDocumentViewState} from './interactions/document-view-state.mjs';
 import {escapeHtml as esc} from './views/html.mjs';
@@ -83,10 +84,16 @@ for(const id of ['idSeparator','detailMode','autoCheckUpdates'])document.getElem
 let separator=readSeparator(storage),detailMode=readDetailMode(storage),selectedDetailId=null,pendingDetailId=null;
 const label=id=>idLabels.get(id)||id;
 const $=id=>document.getElementById(id);
-function matches(r){const q=$('search').value.trim().toLowerCase();return [r.id,label(r.id),r.name,r.owner].join(' ').toLowerCase().includes(q)&&($('status').value==='all'||r.status===$('status').value);}
+function matches(row){return matchesWork(row,{query:$('search').value,status:$('status').value,owner:$('owner').value},label);}
+function updateOwnerFilter(){
+ const owners=workOwners(model.rows),control=$('owner'),previous=control.value||'all';
+ control.innerHTML='<option value="all">전체 담당자</option>'+owners.map(owner=>`<option value="${esc('owner:'+owner)}">${esc(owner==='-'?'담당 미정':owner)}</option>`).join('');
+ control.value=owners.some(owner=>'owner:'+owner===previous)?previous:'all';
+}
 function syncWorkSelection(){markSelectedWork($('content'),detailMode==='sidebar'&&$('detail').open?selectedDetailId:null);}
 function show(id){if(!model)return;const result=renderTaskDetail(model,id,label);if(!result)return;selectedDetailId=id;$('detailTitle').textContent=result.title;$('detailMeta').innerHTML=result.meta;$('detailBody').innerHTML=result.body;const dialog=$('detail');const sidebar=detailMode==='sidebar';if(dialog.open&&dialog.classList.contains('sidebar')!==sidebar)dialog.close();dialog.classList.toggle('sidebar',sidebar);if(!dialog.open){if(sidebar)dialog.show();else dialog.showModal();}else dialog.scrollTop=0;syncWorkSelection();}
 function render(capture=true){if(!model)return;if(capture&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
+updateOwnerFilter();
 const summary=summarizeWork(rows);
 $('metrics').innerHTML=renderMetrics(summary);
 $('notice').textContent=renderStatusNotice(summary);
@@ -101,7 +108,7 @@ $('content').innerHTML=html||'<div class="empty">조건에 맞는 작업이 없�
 function load(markdown,source){
  const same=displayedPath===source;
  if(displayedPath&&documents.has(displayedPath))documentViews.set(displayedPath,{view,ganttUnit});
- const savedView=documentViews.get(source);if(!same){view=savedView?.view||'tree';ganttUnit=savedView?.ganttUnit||'day';}
+ const savedView=documentViews.get(source);if(!same){view=savedView?.view||'tree';ganttUnit=savedView?.ganttUnit||'day';$('owner').value='all';}
  syncViewButtons();
  if(model&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));
  if(!same){refreshDetail=null;graphFocus=null;}
@@ -125,7 +132,7 @@ async function reload(){if(activePath)await openPath(activePath);}
 async function poll(){if(polling)return;polling=true;try{const paths=await invoke('take_open_requests');for(const path of paths)await openPath(path);if(activePath){const path=activePath;try{const text=await invoke('read_document',{path});if(operationProblems[0]?.kind==='파일 읽기 오류'&&operationProblems[0]?.source===path){operationProblems=[];updateProblems();}if(path===activePath&&documents.get(path)!==text){documents.set(path,text);load(text,path);}}catch(e){reportProblem(e,path,'파일 읽기 오류');}}}catch(e){reportProblem(e,activePath||'','앱 오류');}finally{polling=false;}}
 function syncViewButtons(){document.querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===view;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;syncViewButtons();if(activePath)documentViews.set(activePath,{view,ganttUnit});render();saveSession();});
-$('search').oninput=render;$('status').onchange=render;$('reload').onclick=reload;$('dockOpen').onclick=async()=>{try{const path=await invoke('pick_document');if(path)await openPath(path);}catch(e){reportProblem(e,activePath||'','앱 오류');}};$('close').onclick=()=>{$('detail').close();syncWorkSelection();};
+$('search').oninput=render;$('status').onchange=render;$('owner').onchange=render;$('reload').onclick=reload;$('dockOpen').onclick=async()=>{try{const path=await invoke('pick_document');if(path)await openPath(path);}catch(e){reportProblem(e,activePath||'','앱 오류');}};$('close').onclick=()=>{$('detail').close();syncWorkSelection();};
 $('detail').onclose=syncWorkSelection;
 $('error').onclick=()=>{if(validationProblems.length||operationProblems.length)setProblemsOpen($('documentProblems').hidden,true);};
 $('problemsClose').onclick=()=>setProblemsOpen(false,true);

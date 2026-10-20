@@ -3,6 +3,9 @@ import {findWorkTable,isTableSeparator} from './work-table.mjs';
 export function parseWbs(markdown){
   const frontmatter=markdown.replace(/^\uFEFF/,'').match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1]||'';
   const meta=key=>{const value=frontmatter.match(new RegExp('^'+key+':[ \\t]*(.*)$','m'))?.[1]?.trim();if(!value)return undefined;return value.replace(/^(["'])(.*)\1$/,'$2');};
+  const effortSetting=frontmatter.match(/^use_effort:[ \t]*(.*)$/m);
+  if(effortSetting&&!/^(true|false)$/.test(effortSetting[1].trim()))throw Error('use_effort는 true 또는 false로 작성하세요.');
+  const useEffort=effortSetting?effortSetting[1].trim()==='true':true;
   const idPrefix=meta('id_prefix')??'W';
   if(!/^[A-Z]+$/.test(idPrefix))throw Error('id_prefix는 영문 대문자로 작성하세요. 예: W, OBS');
 
@@ -42,5 +45,5 @@ export function parseWbs(markdown){
   if(errors.length)throw Error([...new Set(errors)].join('\n'));
   const leaves=id=>rows.filter(r=>r.parent===id).flatMap(r=>r.type==='group'?leaves(r.id):[r]);
   for(const r of rows.filter(r=>r.type==='group')){const children=leaves(r.id);r.status=children.every(x=>x.status==='done')?'done':children.some(x=>x.status==='blocked')?'blocked':children.every(x=>x.status==='todo')?'todo':'doing';}
-  return {title:meta('title')||'WBS',idPrefix,rows};
+  return {title:meta('title')||'WBS',idPrefix,useEffort,rows};
 }

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {summarizeWork} from '../src/domain/work-summary.mjs';
-import {renderMetrics} from '../src/views/work-summary.mjs';
+import {renderMetrics,renderStatusNotice} from '../src/views/work-summary.mjs';
 
 test('공수 가중 진척도는 그룹·마일스톤과 중복 합산하지 않는다',()=>{
  const rows=[{type:'group'}, {type:'task',effort:'2',status:'done',start:'-'}, {type:'task',effort:'6',status:'doing',start:'2026-10-20'}, {type:'milestone',effort:'0',status:'done',start:'-'}];
@@ -21,4 +21,13 @@ test('작업 개수 진행률은 공수 미정과 무관하며 작업 없음·0%
  assert.equal(summarizeWork([tasks[0]]).taskProgress,100);
  assert.equal(summarizeWork([]).taskProgress,null);
  assert.match(renderMetrics(summarizeWork([])),/작업 없음/);
+});
+
+test('공수 미사용 문서는 공수 지표를 숨기고 개수 게이지를 유지한다',()=>{
+ const summary=summarizeWork([{type:'task',effort:'-',status:'done',start:'-'}]);
+ assert.doesNotMatch(renderMetrics(summary,false),/공수/);
+ assert.equal((renderMetrics(summary,false).match(/class="metric(?: |")/g)||[]).length,3);
+ assert.match(renderMetrics(summary,false),/value="100"/);
+ assert.doesNotMatch(renderStatusNotice(summary,false),/공수/);
+ assert.match(renderStatusNotice(summary),/공수 미정/);
 });

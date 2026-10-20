@@ -26,3 +26,10 @@ test('미정·일부 일정·소수 공수·마일스톤 전용 그룹의 표시
  const only=summarizeGroups([row('W001','-','group'),row('W002','W001','milestone','0')]).get('W001');
  assert.equal(groupSchedule(only),'일정 미정');assert.equal(groupEffort(only),'0 h');assert.equal(only.progress,null);assert.equal(only.missingEfforts,0);
 });
+
+test('문서 공수 숨김은 트리와 그룹·작업 상세에 함께 적용된다',()=>{
+ const rows=[row('W001','-','group'),row('W002','W001','task','4')];
+ assert.doesNotMatch(renderTree(rows,()=>true,id=>id,false),/공수|진척도/);
+ for(const id of ['W001','W002'])assert.doesNotMatch(renderTaskDetail({rows,useEffort:false},id,id=>id).body,/집계 공수|예상 공수|진척도/);
+ assert.match(renderTaskDetail({rows,useEffort:true},'W002',id=>id).body,/예상 공수/);
+});

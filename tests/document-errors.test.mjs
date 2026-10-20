@@ -105,3 +105,10 @@ test('헤더·구분선·메타데이터 위치와 구조 오류의 열 미확�
  const [external]=describeDocumentErrors('W003: 상태 오류',fixture,'','앱 오류');
  assert.equal(external.id,'');assert.deepEqual(external.positions,[]);
 });
+
+test('공수 사용 메타데이터 오류의 원본 행과 수정 값을 안내한다',()=>{
+ const text='---\nuse_effort: yes\n---\n';let error;
+ try{parseWbs(text);}catch(e){error=e;}
+ const [problem]=describeDocumentErrors(error,text);
+ assert.equal(problem.field,'use_effort');assert.equal(problem.value,'yes');assert.deepEqual(problem.lineNumbers,[2]);assert.equal(problem.example,'use_effort: false');
+});

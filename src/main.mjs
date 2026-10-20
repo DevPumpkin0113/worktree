@@ -96,10 +96,11 @@ function show(id){if(!model)return;const result=renderTaskDetail(model,id,label)
 function render(capture=true){if(!model)return;if(capture&&displayedPath&&renderedView)viewState.capture(displayedPath,renderedView,$('content'));idLabels=createIdLabels(model,separator);const rows=model.rows,leaves=rows.filter(r=>r.type!=='group');
 updateOwnerFilter();
 const summary=summarizeWork(rows);
-$('metrics').innerHTML=renderMetrics(summary);
-$('notice').textContent=renderStatusNotice(summary);
+$('metrics').innerHTML=renderMetrics(summary,model.useEffort);
+$('metrics').classList.toggle('without-effort',!model.useEffort);
+$('notice').textContent=renderStatusNotice(summary,model.useEffort);
 const filtered=leaves.filter(matches);let html='';
-if(view==='tree')html=renderTree(rows,matches,label);
+if(view==='tree')html=renderTree(rows,matches,label,model.useEffort);
 if(view==='board')html=renderBoard(filtered,label);
 if(view==='flow')html=renderDependencies(leaves,filtered,graphFocus,label);
 if(view==='gantt')html=renderGantt(filtered,label,ganttUnit,undefined,$('content').clientWidth||960);

@@ -52,6 +52,7 @@ export function describeDocumentErrors(error,markdown='',source='',kind='문서 
   }else if(/구분선/.test(reason))hint='열 이름 바로 다음 행에 11개 열의 구분선(|---|---|…|)을 작성하세요.';
   else if(/열 이름|열 개수/.test(reason))hint='공용 템플릿의 11개 열과 순서를 유지하세요. 셀 안의 | 문자는 &#124;로 작성하세요.';
   else if(/작업 목록 섹션/.test(reason))hint='원본에 ## 작업 목록 제목과 공용 양식의 작업 표를 추가하세요.';
+  else if(/use_effort/.test(reason))hint='문서 첫 메타데이터의 use_effort에 true(공수 표시) 또는 false(공수 숨김)를 입력하세요.';
   else if(/id_prefix/.test(reason))hint='문서 첫 메타데이터의 id_prefix에 W·OBS 같은 영문 대문자를 입력하세요.';
   else if(kind==='파일 읽기 오류')hint='파일의 위치·접근 권한·UTF-8 인코딩·5MB 크기 제한을 확인한 뒤 다시 열거나 새로고침하세요.';
   else if(kind!=='문서 오류')hint='작업을 다시 시도하세요. 문제가 계속되면 오류 메시지와 재현 순서를 기록해 주세요.';
@@ -60,9 +61,9 @@ export function describeDocumentErrors(error,markdown='',source='',kind='문서 
    if(/열 이름/.test(message)&&table[0])locations=[table[0]];
    else if(/구분선/.test(message)&&table[0])locations=[table[1]||table[0]];
    else if(/열 개수/.test(message))locations=rows.filter(item=>item.cells.length!==11).slice(0,1);
-   else if(/id_prefix/.test(message)&&/^\uFEFF?---$/.test(sourceLines[0]?.raw||'')){
+   else if(/id_prefix|use_effort/.test(message)&&/^\uFEFF?---$/.test(sourceLines[0]?.raw||'')){
     const end=sourceLines.findIndex((item,index)=>index>0&&item.raw==='---');
-    const prefix=sourceLines.slice(1,end<0?1:end).find(item=>/^id_prefix:/.test(item.raw));if(prefix)locations=[prefix];
+    const prefix=sourceLines.slice(1,end<0?1:end).find(item=>new RegExp('^'+(/use_effort/.test(message)?'use_effort':'id_prefix')+':').test(item.raw));if(prefix)locations=[prefix];
    }
   }
   const lineNumbers=locations.map(item=>item.line);
@@ -81,11 +82,11 @@ export function describeDocumentErrors(error,markdown='',source='',kind='문서 
     if(locations.length){field='열 개수';value=String(locations[0].cells.length);}
     example='한 행에 11개 셀. 셀 안의 | 문자는 &#124;로 입력';
    }
-   else if(/id_prefix/.test(reason)&&locations.length){
-    const item=locations[0],prefix=item.raw.match(/^id_prefix:\s*/)[0];
+   else if(/id_prefix|use_effort/.test(reason)&&locations.length){
+    const item=locations[0],key=/use_effort/.test(reason)?'use_effort':'id_prefix',prefix=item.raw.match(new RegExp('^'+key+':[ \t]*'))[0];
     const column=Array.from(prefix).length+1;
     positions=[{line:item.line,column,endColumn:Math.max(column,Array.from(item.raw.trimEnd()).length)}];
-    field='id_prefix';value=item.raw.slice(prefix.length);example='id_prefix: OBS';
+    field=key;value=item.raw.slice(prefix.length);example=key==='use_effort'?'use_effort: false':'id_prefix: OBS';
    }
   }
   return {kind,source,message,id,name:row?.cells[3]||'',reason,field,value,hint,example,positions,lineNumbers,raw:locations.map(item=>item.raw).join('\n')};

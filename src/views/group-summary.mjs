@@ -10,6 +10,6 @@ export function groupEffort(summary){
  return summary.missingEfforts?'입력된 공수 소계 '+effort+' + 미정 '+summary.missingEfforts+'개':effort;
 }
 export function groupProgress(summary){return summary.progress===null?'진척도 산정 불가':'공수 진척도 '+summary.progress+'%';}
-export function renderGroupSummary(summary){
- return `<span class="group-summary">${escapeHtml(groupSchedule(summary)+' · '+groupEffort(summary)+' · '+groupProgress(summary))}</span>`;
+export function renderGroupSummary(summary,useEffort=true){
+ return `<span class="group-summary">${escapeHtml(groupSchedule(summary)+(useEffort?' · '+groupEffort(summary)+' · '+groupProgress(summary):''))}</span>`;
 }

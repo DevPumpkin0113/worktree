@@ -25,3 +25,12 @@ test('작업 표 뒤 같은 섹션의 설명 표는 작업에 포함하지 않�
  const aligned=header.replaceAll('---',':---:');
  assert.equal(parseWbs(aligned+row).rows.length,1);
 });
+
+test('문서별 공수 사용은 생략 시 true이며 true·false만 허용한다',()=>{
+ const body=header+task('W001','-','-');
+ assert.equal(parseWbs(body).useEffort,true);
+ for(const value of ['true','false'])assert.equal(parseWbs('---\nuse_effort: '+value+'\n---\n'+body).useEffort,value==='true');
+ for(const value of ['', 'yes','0','"false"'])assert.throws(()=>parseWbs('---\nuse_effort: '+value+'\n---\n'+body),/use_effort/);
+ assert.equal(parseWbs(body+'\nuse_effort: false').useEffort,true);
+ assert.throws(()=>parseWbs('---\nuse_effort: false\n---\n'+body.replace('| - | - | - | - |\n','| - | - | 0 | - |\n')),/공수/);
+});

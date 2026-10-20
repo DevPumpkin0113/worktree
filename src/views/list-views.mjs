@@ -10,12 +10,12 @@ function renderCard(row,label){
  return `<div class="task" tabindex="0" role="button" data-id="${escape(row.id)}"><span class="id">${escape(label(row.id))}</span><div>${row.type==='milestone'?'<span aria-hidden="true">◇</span> ':''}${escape(row.name)}<div class="sub"><span class="work-type-badge work-type-${row.type}">${types[row.type]}</span> · ${row.owner==='-'?'담당 미정':escape(row.owner)}</div></div>${badge}</div>`;
 }
 
-export function renderTree(rows,matches,label){
+export function renderTree(rows,matches,label,useEffort=true){
  const groups=summarizeGroups(rows);
  const branch=parent=>rows.filter(row=>row.parent===parent).map(row=>{
   if(row.type!=='group')return matches(row)?renderCard(row,label):'';
   const children=branch(row.id);
-  return children?`<details class="group" open><summary data-work-id="${escape(row.id)}">${escape(label(row.id))} · ${escape(row.name)} <span class="tag ${row.status}">${states[row.status]}</span><button type="button" class="group-detail" data-id="${escape(row.id)}" aria-label="${escape(row.name)} 그룹 상세">상세</button>${renderGroupSummary(groups.get(row.id))}</summary><div class="children">${children}</div></details>`:'';
+  return children?`<details class="group" open><summary data-work-id="${escape(row.id)}">${escape(label(row.id))} · ${escape(row.name)} <span class="tag ${row.status}">${states[row.status]}</span><button type="button" class="group-detail" data-id="${escape(row.id)}" aria-label="${escape(row.name)} 그룹 상세">상세</button>${renderGroupSummary(groups.get(row.id),useEffort)}</summary><div class="children">${children}</div></details>`:'';
  }).join('');
  return branch('-');
 }

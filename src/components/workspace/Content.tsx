@@ -5,7 +5,8 @@ import { FilterDropdown } from '../shared/FilterDropdown';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { workOwners, matchesWork } from '../../domain/work-filter';
 import { createDocumentViewState } from '../../interactions/document-view-state';
-import { CompactProgress } from './CompactProgress';
+import { useWorkspaceHeadingHeight } from '../../hooks/use-workspace-heading-height';
+import { WorkspaceProgressActions } from './WorkspaceProgressActions';
 import { TreeView } from './TreeView';
 import { KanbanView } from './KanbanView';
 import { AllTasks } from './AllTasks';
@@ -52,6 +53,8 @@ export function Content({
     state.settings.detailMode === 'sidebar' && !state.settingsOpen ? state.selectedId : null;
   const rows = model?.rows;
   const root = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLDivElement>(null);
+  useWorkspaceHeadingHeight(heading);
   const viewState = useRef(createDocumentViewState());
   const pageKey =
     state.page === 'board'
@@ -81,13 +84,17 @@ export function Content({
   }, [active?.path, pageKey, rows, filtered, label]);
   return (
     <main id="workspace" data-page={state.page} inert={state.settingsOpen}>
-      <div className="workspace-page-heading">
+      <div className="workspace-page-heading" ref={heading}>
         <div>
           <h2 id="workspacePageTitle">{PAGES[state.page][0]}</h2>
           <p id="workspacePageDescription">{PAGES[state.page][1]}</p>
         </div>
         {(state.page === 'board' || state.page === 'tasks') && model ? (
-          <CompactProgress rows={model.rows} />
+          <WorkspaceProgressActions
+            rows={model.rows}
+            onAddTask={onAddTask}
+            onAddMilestone={onAddMilestone}
+          />
         ) : null}
       </div>
       <div
@@ -114,70 +121,44 @@ export function Content({
             <Icon className="view-icon" name={view} />
           </button>
         ))}
-        <input
-          autoComplete="off"
-          id="search"
-          aria-label={messages.searchTasks}
-          placeholder={messages.searchPlaceholder}
-          value={state.query}
-          onChange={(event) => {
-            capture();
-            store.setFilters({ query: event.target.value });
-          }}
-        />
-        <FilterDropdown
-          key={'owner:' + active?.path + state.page + state.settingsOpen}
-          id="owner"
-          label={messages.ownerFilter}
-          value={state.owner}
-          options={[
-            { value: 'all', label: messages.allOwners },
-            ...owners.map((owner) => ({
-              value: 'owner:' + owner,
-              label: owner === '-' ? messages.unassigned : owner,
-            })),
-          ]}
-          disabled={state.settingsOpen}
-          onChange={(owner) => {
-            capture();
-            store.setFilters({ owner });
-          }}
-        />
-        <FilterDropdown
-          key={'status:' + active?.path + state.page + state.settingsOpen}
-          id="status"
-          label={messages.statusFilter}
-          value={state.status}
-          options={[
-            { value: 'all', label: messages.allStatuses },
-            { value: 'todo', label: messages.todo },
-            { value: 'doing', label: messages.doing },
-            { value: 'blocked', label: messages.blocked },
-            { value: 'done', label: messages.done },
-          ]}
-          disabled={state.settingsOpen}
-          onChange={(status) => {
-            capture();
-            store.setFilters({ status });
-          }}
-        />
-        {model ? (
-          <div className="workspace-create-actions">
-            <button
-              id="milestoneAddOpen"
-              className="task-add-button"
-              type="button"
-              onClick={onAddMilestone}
-            >
-              <Icon name="plus" />
-              <span>{messages.addMilestone}</span>
-            </button>
-            <button id="taskAddOpen" className="task-add-button" type="button" onClick={onAddTask}>
-              <Icon name="plus" />
-              <span>{messages.addTask}</span>
-            </button>
-          </div>
-        ) : null}
+        <div className="workspace-filter-actions">
+          <FilterDropdown
+            key={'owner:' + active?.path + state.page + state.settingsOpen}
+            id="owner"
+            label={messages.ownerFilter}
+            value={state.owner}
+            options={[
+              { value: 'all', label: messages.allOwners },
+              ...owners.map((owner) => ({
+                value: 'owner:' + owner,
+                label: owner === '-' ? messages.unassigned : owner,
+              })),
+            ]}
+            disabled={state.settingsOpen}
+            onChange={(owner) => {
+              capture();
+              store.setFilters({ owner });
+            }}
+          />
+          <FilterDropdown
+            key={'status:' + active?.path + state.page + state.settingsOpen}
+            id="status"
+            label={messages.statusFilter}
+            value={state.status}
+            options={[
+              { value: 'all', label: messages.allStatuses },
+              { value: 'todo', label: messages.todo },
+              { value: 'doing', label: messages.doing },
+              { value: 'blocked', label: messages.blocked },
+              { value: 'done', label: messages.done },
+            ]}
+            disabled={state.settingsOpen}
+            onChange={(status) => {
+              capture();
+              store.setFilters({ status });
+            }}
+          />
+        </div>
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
         {store.activeProject && store.activeProject.files.length === 0 ? (

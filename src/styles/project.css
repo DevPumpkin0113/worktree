@@ -3,7 +3,7 @@
   align-items: center;
   gap: 8px;
   padding: 0;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 .project-entry-title {
   flex: 1;
@@ -104,14 +104,20 @@
 }
 
 .project-tree {
-  padding: 0 4px 4px;
+  display: flex;
+  align-items: center;
+  height: var(--workspace-heading-height, auto);
+  padding: 0 4px 12px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--color-border);
   margin-bottom: 10px;
 }
 
 .workspace-nav-collapsed .project-tree {
-  padding: 0 0 4px;
+  padding: 0 0 12px;
+}
+.project-tree .project-entry {
+  width: 100%;
 }
 .project-entry > .project-entry-title {
   padding: 8px 4px;

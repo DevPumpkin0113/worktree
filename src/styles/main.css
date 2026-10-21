@@ -555,15 +555,12 @@ main {
 .view-button:hover {
   background: var(--color-view-button-hover-background);
   border-color: var(--color-view-button-hover-border-color);
-}
-.view-button.active {
-  background: var(--color-view-button-active-background);
-  border-color: var(--color-view-button-active-border-color);
-  box-shadow: inset 0 0 0 1px var(--color-view-button-active-border-color);
-}
-.view-button:hover,
-.view-button.active {
   color: var(--color-view-button-hover-color);
+}
+.view-button.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
 }
 .view-icon {
   display: block;

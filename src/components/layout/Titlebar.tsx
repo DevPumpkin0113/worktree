@@ -1,15 +1,20 @@
 import { messages } from '../../i18n/messages';
 import { useEffect, useState } from 'react';
 import { Icon } from '../shared/Icon';
+import { TitlebarSearch } from './TitlebarSearch';
 import type { WorkspaceStore } from '../../app/workspace-store';
 export function Titlebar({
   store,
   settingsOpen,
   collapsed,
+  query,
+  searchEnabled,
 }: {
   store: WorkspaceStore;
   settingsOpen: boolean;
   collapsed: boolean;
+  query: string;
+  searchEnabled: boolean;
 }) {
   const [maximized, setMaximized] = useState(false);
   useEffect(() => {
@@ -65,7 +70,7 @@ export function Titlebar({
         className="title-drag"
         aria-label={messages.dragWindow}
         onMouseDown={(event) => {
-          if (event.button !== 0) return;
+          if (event.button !== 0 || (event.target as Element).closest('input, label')) return;
           event.preventDefault();
           control(event.detail === 2 ? 'maximize' : 'drag');
         }}
@@ -73,6 +78,11 @@ export function Titlebar({
         <h1 id="title" hidden>
           {store.active?.model?.title ?? 'Worktree'}
         </h1>
+        <TitlebarSearch
+          query={query}
+          disabled={settingsOpen || !searchEnabled}
+          onChange={(query) => store.setFilters({ query })}
+        />
       </div>
       <div className="header-actions" role="group" aria-label={messages.documentTools}>
         <button

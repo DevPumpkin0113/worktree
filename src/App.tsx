@@ -77,7 +77,13 @@ export function App({ store }: { store: WorkspaceStore }) {
   return (
     <ProjectTaskTypeContext.Provider value={model?.taskTypeColors ?? EMPTY_TASK_TYPE_COLORS}>
       <ProjectDateFormatProvider dateFormat={model?.dateFormat} timeFormat={model?.timeFormat}>
-        <Titlebar store={store} settingsOpen={state.settingsOpen} collapsed={collapsed} />
+        <Titlebar
+          store={store}
+          settingsOpen={state.settingsOpen}
+          collapsed={collapsed}
+          query={state.query}
+          searchEnabled={!!model && (page === 'board' || page === 'tasks')}
+        />
         <WorkspaceNav
           initializationStep={initializationStep}
           projectTitle={

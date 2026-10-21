@@ -81,6 +81,7 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .workspace-page-heading {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 15px;
@@ -327,9 +328,21 @@ body:has(#detail.sidebar[open]) main#workspace {
   stroke-linejoin: round;
 }
 
+.workspace-progress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  flex: 0 1 440px;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: auto;
+}
+.workspace-progress-actions .compact-progress {
+  flex: 1 1 150px;
+  min-width: 0;
+}
 .compact-progress {
-  flex: 0 1 190px;
-  min-width: 145px;
   font-size: 11px;
   color: var(--color-text-secondary);
 }
@@ -371,17 +384,21 @@ body:has(#detail.sidebar[open]) main#workspace {
   background: var(--color-primary);
   border-radius: 4px;
 }
-@media (max-width: 600px) {
-  .workspace-page-heading {
-    flex-wrap: wrap;
-  }
-  .compact-progress {
-    flex-basis: 170px;
-  }
-}
 
 #workspaceTools {
   align-items: center;
+  min-height: 42px;
+}
+#workspaceTools .filter-trigger {
+  min-height: 42px;
+}
+.workspace-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+  max-width: 100%;
 }
 .task-add-button {
   display: inline-flex;
@@ -400,13 +417,24 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 
 .workspace-create-actions {
-  margin-left: auto;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  flex: 1 1 180px;
+  min-width: 0;
 }
 .workspace-create-actions .task-add-button {
+  width: 100%;
+  min-width: 0;
   margin-left: 0;
+  padding-inline: 8px;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+.workspace-create-actions .task-add-button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 .milestone-label {
   font-size: 10px;
@@ -450,6 +478,42 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 
 /* Share the sidebar width and colors while keeping the titlebar a separate region. */
+.titlebar .title-drag {
+  justify-content: flex-start;
+  padding-inline: 16px;
+}
+.titlebar-search {
+  position: relative;
+  display: block;
+  flex: 0 1 300px;
+  min-width: 0;
+  max-width: 100%;
+}
+.titlebar-search input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 3px 10px 3px 28px;
+  border-radius: 6px;
+  background: var(--color-nav-selected);
+  font-size: 12px;
+  user-select: text;
+}
+.titlebar-search > svg {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+.titlebar-search input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .titlebar-workspace {
   display: flex;
   align-items: center;

@@ -36,14 +36,12 @@
   transform: rotate(-90deg);
 }
 .filter-options {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  min-width: 100%;
-  width: max-content;
-  max-width: min(300px, calc(100vw - 48px));
+  position: fixed;
+  inset: auto;
+  margin: 0;
   max-height: 240px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 5px;
   background: var(--color-surface);
   border: 1px solid var(--color-filter-options-border);

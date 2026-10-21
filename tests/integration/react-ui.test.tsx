@@ -720,3 +720,73 @@ test('프로젝트별 페이지는 갱신·탭 닫기에도 해당 프로젝트�
     await f.close();
   }
 });
+
+test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정하고 키보드·바깥 클릭으로 닫힌다', async () => {
+  const f = await fixture();
+  const prototype = HTMLElement.prototype;
+  const originalShow = Object.getOwnPropertyDescriptor(prototype, 'showPopover');
+  const originalHide = Object.getOwnPropertyDescriptor(prototype, 'hidePopover');
+  let shown = 0;
+  Object.defineProperty(prototype, 'showPopover', {
+    configurable: true,
+    value() {
+      shown++;
+    },
+  });
+  Object.defineProperty(prototype, 'hidePopover', { configurable: true, value() {} });
+  try {
+    const trigger = f.element<HTMLButtonElement>('#status');
+    let top = 600;
+    trigger.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        top,
+        bottom: top + 40,
+        right: 242,
+        width: 142,
+        height: 40,
+        x: 100,
+        y: top,
+        toJSON() {
+          return {};
+        },
+      }) as DOMRect;
+    await f.click('#status');
+    const popup = f.element<HTMLElement>('#status-options');
+    assert.equal(popup.getAttribute('popover'), 'manual');
+    assert.equal(shown, 1);
+    assert.equal(popup.style.top, '354px');
+    top = 100;
+    await act(() => window.dispatchEvent(new Event('resize')));
+    assert.equal(popup.style.top, '146px');
+    await act(() =>
+      trigger.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }),
+      ),
+    );
+    await act(() =>
+      trigger.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      ),
+    );
+    assert.equal(f.store.getSnapshot().status, 'done');
+    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.equal(document.activeElement, trigger);
+    await f.click('#status');
+    await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+    assert.equal(f.host.querySelector('#status-options'), null);
+    await f.click('#status');
+    await act(() =>
+      trigger.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      ),
+    );
+    assert.equal(f.host.querySelector('#status-options'), null);
+  } finally {
+    await f.close();
+    if (originalShow) Object.defineProperty(prototype, 'showPopover', originalShow);
+    else Reflect.deleteProperty(prototype, 'showPopover');
+    if (originalHide) Object.defineProperty(prototype, 'hidePopover', originalHide);
+    else Reflect.deleteProperty(prototype, 'hidePopover');
+  }
+});

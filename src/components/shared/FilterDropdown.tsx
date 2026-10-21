@@ -1,3 +1,4 @@
+import { useFloatingList } from '../../hooks/use-floating-list';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Icon } from './Icon';
 export interface FilterOption {
@@ -23,11 +24,13 @@ export function FilterDropdown({
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLDivElement>(null);
   const selected = Math.max(
     0,
     options.findIndex((option) => option.value === value),
   );
   const expanded = open && !disabled;
+  const position = useFloatingList(expanded, trigger, list);
   useEffect(() => {
     if (!expanded) return;
     const outside = (event: PointerEvent) => {
@@ -37,8 +40,13 @@ export function FilterDropdown({
     return () => document.removeEventListener('pointerdown', outside);
   }, [expanded]);
   useEffect(() => {
-    if (expanded)
-      document.getElementById(`${id}-option-${active}`)?.scrollIntoView?.({ block: 'nearest' });
+    if (!expanded) return;
+    const option = document.getElementById(`${id}-option-${active}`),
+      popup = list.current;
+    if (!option || !popup) return;
+    if (option.offsetTop < popup.scrollTop) popup.scrollTop = option.offsetTop;
+    else if (option.offsetTop + option.offsetHeight > popup.scrollTop + popup.clientHeight)
+      popup.scrollTop = option.offsetTop + option.offsetHeight - popup.clientHeight;
   }, [expanded, active, id]);
   function choose(index: number) {
     const option = options[index];
@@ -113,7 +121,15 @@ export function FilterDropdown({
         <Icon name="chevron-right" className="filter-chevron" />
       </button>
       {expanded ? (
-        <div id={`${id}-options`} className="filter-options" role="listbox" aria-label={label}>
+        <div
+          ref={list}
+          id={`${id}-options`}
+          popover="manual"
+          style={position}
+          className="filter-options"
+          role="listbox"
+          aria-label={label}
+        >
           {options.map((option, index) => (
             <div
               id={`${id}-option-${index}`}

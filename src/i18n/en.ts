@@ -1,6 +1,32 @@
 import type { ko } from './ko';
 
 export const en = {
+  requiredField: 'Required',
+  requiredFieldsHint: 'Required fields',
+  searchPredecessors: 'Search by task name or ID',
+  selectedItems: 'Selected items',
+  noSearchResults: 'No results found.',
+  removeSelection: (name: string | number) => `Remove ${name}`,
+
+  automatic: 'Automatic',
+  taskName: 'Task name',
+  localDocument: 'Local document',
+  editTaskMissing: 'The task no longer exists. Reload the document.',
+  taskRequiredFields: 'Enter a task name and acceptance criteria.',
+  taskSingleLine:
+    'Use a single line for each field. Enter | instead of the literal &#124; sequence.',
+  taskTypeLocked: 'Existing task types cannot be changed. Create a task or milestone.',
+  taskSaveConflict:
+    'The document changed externally and was not saved. Copy your draft, cancel, and edit the latest document.',
+  addTask: 'Add task',
+  editTask: 'Edit task',
+  saveTask: 'Save',
+  savingTask: 'Saving…',
+  cancelEdit: 'Cancel',
+  taskIdAutomatic: 'Source ID · assigned automatically for new tasks',
+  taskEditHint: 'Saving updates the source WBS file.',
+  taskSaveFailed: 'Could not save: ',
+
   resizeProjectTree: 'Resize project explorer',
   resizeProjectTreeHint: 'Drag or use Up/Down to resize · Home minimum · End maximum',
   projects: 'Projects',

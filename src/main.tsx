@@ -15,3 +15,5 @@ createRoot(document.getElementById('root')!).render(<App store={store} />);
 import './styles/filters.css';
 
 import './styles/project.css';
+
+import './styles/task-editor.css';

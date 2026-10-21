@@ -388,3 +388,11 @@ pub fn open_project() -> &'static str {
         ko::OPEN_PROJECT
     }
 }
+
+pub fn document_readonly() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::DOCUMENT_READONLY
+    } else {
+        ko::DOCUMENT_READONLY
+    }
+}

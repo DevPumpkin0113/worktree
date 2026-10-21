@@ -16,6 +16,7 @@ export function TaskDetail({
   label,
   onSelect,
   onClose,
+  onEdit,
 }: {
   model: WorkModel | null;
   path: string | null;
@@ -26,6 +27,7 @@ export function TaskDetail({
   label: (id: string) => string;
   onSelect: (id: string) => void;
   onClose: () => void;
+  onEdit: (id: string) => void;
 }) {
   const comments = useCommentThreads();
   const visible = !!model && !!id && !settingsOpen;
@@ -99,6 +101,16 @@ export function TaskDetail({
             <h2 id="detailTitle">{row ? label(row.id) + ' · ' + row.name : ''}</h2>
           </div>
 
+          {row ? (
+            <button
+              id="taskEditOpen"
+              type="button"
+              className="task-edit-open"
+              onClick={() => onEdit(row.id)}
+            >
+              {messages.editTask}
+            </button>
+          ) : null}
           <button
             id="close"
             className="modal-close"

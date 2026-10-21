@@ -2,6 +2,7 @@
 use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
+mod document_write;
 mod i18n;
 mod projects;
 mod session;
@@ -100,6 +101,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             take_open_requests,
             read_document,
+            document_write::save_document,
             projects::pick_project,
             projects::scan_project,
             get_build_info,

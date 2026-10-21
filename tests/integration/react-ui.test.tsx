@@ -31,6 +31,7 @@ async function fixture(
   ]);
   const calls: { command: string; args?: Record<string, unknown> }[] = [];
   let saveFailure = options.saveFailure ?? false;
+  let documentSaveFailure = false;
   let updateKind = options.updateKind ?? 'latest';
   const platform: Platform = {
     setTitle() {},
@@ -68,6 +69,14 @@ async function fixture(
         const path = String(args?.path);
         if (!files.has(path)) throw Error('파일 없음');
         result = files.get(path);
+      } else if (command === 'save_document') {
+        if (documentSaveFailure) throw Error('디스크 쓰기 오류');
+        const path = String(args?.path);
+        if (files.get(path) !== args?.expected) result = 'conflict';
+        else {
+          files.set(path, String(args?.text));
+          result = 'saved';
+        }
       } else if (command === 'scan_project') {
         const path = String(args?.path).replaceAll('/', '\\');
         const selectedPath = /\.(wbs|md|markdown)$/i.test(path) ? path : null;
@@ -143,6 +152,9 @@ async function fixture(
     element,
     click,
     value,
+    setDocumentSaveFailure(value: boolean) {
+      documentSaveFailure = value;
+    },
     setSaveFailure(value: boolean) {
       saveFailure = value;
     },
@@ -853,6 +865,103 @@ test('문서를 전환해도 관리·작업 목록·인사이트 화면을 유�
       await f.click('#projectFiles button[aria-label="first.wbs"]');
       assert.equal(f.store.getSnapshot().page, page);
     }
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업 수정은 원본 ID·문서 설명을 유지하고 저장 실패 및 외부 변경 시 입력을 보존한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('[data-id="W002"]');
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-deps', 'W002');
+    assert.equal(f.host.querySelector('#taskEditor-deps-options [data-value="W002"]'), null);
+    assert.match(f.element('#taskEditor-deps-options').textContent!, /검색 결과가 없습니다/);
+    await f.value('#taskEditor-deps', '');
+    await f.value('#taskEditor-name', '수정한 작업');
+    await f.click('#taskEditorSave');
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+    assert.equal(f.files.get(first), source.replace('댓글 구현', '수정한 작업'));
+    assert.equal(f.store.active?.model?.rows.find((row) => row.id === 'W002')?.name, '수정한 작업');
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '저장 실패 초안');
+    f.setDocumentSaveFailure(true);
+    await f.click('#taskEditorSave');
+    assert.match(f.element('#taskEditorError').textContent!, /디스크 쓰기 오류/);
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '저장 실패 초안');
+    f.setDocumentSaveFailure(false);
+    f.files.set(first, f.files.get(first)!.replace('수정한 작업', '외부 수정'));
+    await f.click('#taskEditorSave');
+    assert.match(f.element('#taskEditorError').textContent!, /외부에서 문서가 변경/);
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '저장 실패 초안');
+    assert.match(f.files.get(first)!, /외부 수정/);
+    await f.click('#taskEditorCancel');
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업 추가는 자동 ID로 검증·저장하고 취소는 원본을 변경하지 않는다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#taskAddOpen');
+    await f.value('#taskEditor-name', '새 작업');
+    await f.value('#taskEditor-criteria', '완료 확인');
+    await f.click('#taskEditorSave');
+    const added = f.store.active?.model?.rows.find((row) => row.id === 'OBS004');
+    assert.equal(added?.name, '새 작업');
+    assert.equal(added?.criteria, '완료 확인');
+    assert.equal(f.store.getSnapshot().selectedId, 'OBS004');
+    const saved = f.files.get(first);
+    await f.click('#taskAddOpen');
+    await f.value('#taskEditor-name', '취소할 작업');
+    await f.click('#taskEditorCancel');
+    assert.equal(f.files.get(first), saved);
+  } finally {
+    await f.close();
+  }
+});
+
+test('선행 작업은 이름·ID 검색으로 여러 개 선택·해제하고 원본 ID로 저장한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#taskAddOpen');
+    await f.value('#taskEditor-name', '후속 작업');
+    await f.value('#taskEditor-criteria', '완료 확인');
+    await f.value('#taskEditor-deps', '댓글');
+    assert.equal(f.host.querySelectorAll('#taskEditor-deps-options [role="option"]').length, 1);
+    await f.click('#taskEditor-deps-options [data-value="W002"]');
+    assert.match(f.element('.search-multi-selected').textContent!, /W002 · 댓글 구현/);
+    await f.value('#taskEditor-deps', 'W003');
+    await act(async () => {
+      f.element('#taskEditor-deps').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+      );
+      f.element('#taskEditor-deps').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      );
+    });
+    assert.equal(f.host.querySelectorAll('.search-multi-selected li').length, 2);
+    await act(async () => {
+      f.element('#taskEditor-deps').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+    });
+    assert.equal(f.host.querySelector('#taskEditor-deps-options'), null);
+    assert.ok(f.host.querySelector('#taskEditor'));
+    await f.click('.search-multi-selected li:first-child button');
+    assert.equal(f.host.querySelectorAll('.search-multi-selected li').length, 1);
+    await f.value('#taskEditor-deps', 'W001');
+    assert.equal(f.host.querySelector('#taskEditor-deps-options [data-value="W001"]'), null);
+    await f.value('#taskEditor-deps', 'W002');
+    await f.click('#taskEditor-deps-options [data-value="W002"]');
+    await f.click('#taskEditorSave');
+    const added = f.store.active?.model?.rows.find((row) => row.id === 'OBS004');
+    assert.deepEqual(added?.deps, ['W003', 'W002']);
+    await f.click('#taskEditOpen');
+    assert.equal(f.host.querySelectorAll('.search-multi-selected li').length, 2);
+    await f.click('#taskEditorCancel');
   } finally {
     await f.close();
   }

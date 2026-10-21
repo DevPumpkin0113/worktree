@@ -106,3 +106,5 @@ pub const PROJECT_FOLDER_REQUIRED: &str = "프로젝트 폴더를 선택하세�
 pub const PROJECT_SCAN_LIMIT: &str =
     "프로젝트 검색 범위를 초과했습니다. 더 작은 폴더를 선택하세요.";
 pub const OPEN_PROJECT: &str = "프로젝트 폴더 열기";
+
+pub const DOCUMENT_READONLY: &str = "읽기 전용 문서에는 저장할 수 없습니다.";

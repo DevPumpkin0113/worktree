@@ -72,3 +72,5 @@ pub const PROJECT_FOLDER_REQUIRED: &str = "Select a project folder.";
 pub const PROJECT_SCAN_LIMIT: &str =
     "The project scan limit was exceeded. Select a smaller folder.";
 pub const OPEN_PROJECT: &str = "Open project folder";
+
+pub const DOCUMENT_READONLY: &str = "Cannot save a read-only document.";

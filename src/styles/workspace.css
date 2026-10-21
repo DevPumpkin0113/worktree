@@ -79,7 +79,9 @@ body:has(#detail.sidebar[open]) main#workspace {
   justify-content: space-between;
   align-items: center;
   gap: 15px;
-  margin-bottom: 20px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .workspace-page-heading h2 {
@@ -371,4 +373,23 @@ body:has(#detail.sidebar[open]) main#workspace {
   .compact-progress {
     flex-basis: 170px;
   }
+}
+
+#workspaceTools {
+  align-items: center;
+}
+.task-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.task-add-button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }

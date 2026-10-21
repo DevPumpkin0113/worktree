@@ -1,3 +1,4 @@
+import { TaskEditor, type TaskEditorSession } from './components/task-detail/TaskEditor';
 import { messages } from './i18n/messages';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { createIdLabels } from './domain/id-display';
@@ -15,6 +16,11 @@ import type { WorkspaceStore } from './app/workspace-store';
 export function App({ store }: { store: WorkspaceStore }) {
   const state = useWorkspace(store),
     model = store.active?.model ?? null;
+  const [editor, setEditor] = useState<TaskEditorSession | null>(null);
+  const openEditor = (id?: string) => {
+    const doc = store.active;
+    if (doc?.model) setEditor({ path: doc.path, text: doc.text, id });
+  };
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     document.documentElement.lang = state.settings.language;
@@ -76,7 +82,7 @@ export function App({ store }: { store: WorkspaceStore }) {
         onCollapse={() => setCollapsed((value) => !value)}
         inert={state.settingsOpen}
       />
-      <Content store={store} state={state} label={label} />
+      <Content store={store} state={state} label={label} onAddTask={() => openEditor()} />
       <Problems
         problems={problems}
         open={state.problemsOpen}
@@ -125,20 +131,30 @@ export function App({ store }: { store: WorkspaceStore }) {
         <span id="source" className="source-status" title={state.activePath ?? ''}>
           {state.activePath ?? state.activeProjectPath ?? messages.noOpenProject}
         </span>
-        <span className="statusbar-mode">{messages.readOnly}</span>
+        <span className="statusbar-mode">{messages.localDocument}</span>
       </footer>
       <TaskDetail
         model={model}
         path={state.activePath}
         id={state.selectedId}
         mode={state.settings.detailMode}
-        settingsOpen={state.settingsOpen}
+        settingsOpen={state.settingsOpen || !!editor}
         collapsed={collapsed}
         label={label}
         onSelect={(id) => store.selectWork(id)}
+        onEdit={(id) => openEditor(id)}
         onClose={() => store.selectWork(null)}
       />
       <Settings store={store} state={state} />
+      {editor ? (
+        <TaskEditor
+          session={editor}
+          onSave={async (draft) => {
+            await store.saveTask(editor.path, editor.text, draft, editor.id);
+          }}
+          onClose={() => setEditor(null)}
+        />
+      ) : null}
     </>
   );
 }

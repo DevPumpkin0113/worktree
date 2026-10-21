@@ -1,4 +1,30 @@
 export const ko = {
+  requiredField: '필수 입력',
+  requiredFieldsHint: '필수 입력 항목',
+  searchPredecessors: '작업명 또는 ID로 검색',
+  selectedItems: '선택한 항목',
+  noSearchResults: '검색 결과가 없습니다.',
+  removeSelection: (name: string | number) => `${name} 선택 해제`,
+
+  automatic: '자동 집계',
+  taskName: '작업명',
+  localDocument: '로컬 문서',
+  editTaskMissing: '수정할 작업을 찾을 수 없습니다. 문서를 다시 확인해 주세요.',
+  taskRequiredFields: '작업명과 완료 기준을 입력해 주세요.',
+  taskSingleLine: '각 항목은 한 줄로 작성해 주세요. &#124; 문자열 대신 | 문자를 사용하세요.',
+  taskTypeLocked:
+    '기존 작업 유형은 변경할 수 없습니다. 새 항목은 작업·마일스톤으로 추가할 수 있습니다.',
+  taskSaveConflict:
+    '외부에서 문서가 변경되어 저장하지 않았습니다. 입력 내용을 복사한 뒤 취소하고 최신 문서에서 다시 수정해 주세요.',
+  addTask: '작업 추가',
+  editTask: '작업 수정',
+  saveTask: '저장',
+  savingTask: '저장 중…',
+  cancelEdit: '취소',
+  taskIdAutomatic: '원본 ID · 새 작업은 자동 발급',
+  taskEditHint: '저장하면 원본 WBS 파일에 반영됩니다.',
+  taskSaveFailed: '저장하지 못했습니다: ',
+
   resizeProjectTree: '프로젝트 탐색기 높이 조절',
   resizeProjectTreeHint: '드래그 또는 위·아래 화살표로 높이 조절 · Home 최소 · End 최대',
   projects: '프로젝트',

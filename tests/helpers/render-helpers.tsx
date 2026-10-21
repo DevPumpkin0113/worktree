@@ -35,6 +35,7 @@ export const renderTaskDetail = (model: WorkModel, id: string, label: (id: strin
       collapsed={false}
       label={label}
       onSelect={() => {}}
+      onEdit={() => {}}
       onClose={() => {}}
     />,
   ),

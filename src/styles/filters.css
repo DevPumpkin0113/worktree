@@ -79,3 +79,60 @@
   flex-shrink: 0;
   color: var(--color-primary);
 }
+
+.search-multi-select {
+  min-width: 0;
+}
+.search-multi-options {
+  margin-top: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--color-filter-options-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+.search-multi-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.search-multi-selected li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 4px 5px 4px 9px;
+  background: var(--color-option-selected);
+  color: var(--color-primary);
+  border-radius: 6px;
+}
+.search-multi-selected li > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-multi-selected button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  flex-shrink: 0;
+}
+.search-multi-selected svg {
+  width: 12px;
+  height: 12px;
+}
+.search-multi-empty {
+  padding: 8px 10px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}

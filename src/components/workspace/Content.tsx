@@ -32,10 +32,12 @@ export function Content({
   store,
   state,
   label,
+  onAddTask,
 }: {
   store: WorkspaceStore;
   state: WorkspaceSnapshot;
   label: (id: string) => string;
+  onAddTask: () => void;
 }) {
   const active = store.active,
     model = active?.model;
@@ -143,6 +145,12 @@ export function Content({
             store.setFilters({ status });
           }}
         />
+        {model ? (
+          <button id="taskAddOpen" className="task-add-button" type="button" onClick={onAddTask}>
+            <Icon name="plus" />
+            <span>{messages.addTask}</span>
+          </button>
+        ) : null}
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
         {state.page === 'project' && store.activeProject ? (

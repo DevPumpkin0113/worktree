@@ -6,12 +6,14 @@ export function IdSeparatorInput({
   value,
   prefix,
   disabled,
+  showPreview = true,
   onChange,
 }: {
   id: string;
   value: 'none' | 'hyphen';
   prefix: string;
   disabled?: boolean;
+  showPreview?: boolean;
   onChange: (value: 'none' | 'hyphen') => void;
 }) {
   return (
@@ -29,10 +31,12 @@ export function IdSeparatorInput({
           if (value === 'none' || value === 'hyphen') onChange(value);
         }}
       />
-      <small>
-        {messages.previewPrefix} {prefix}
-        {value === 'hyphen' ? '-' : ''}001
-      </small>
+      {showPreview ? (
+        <small>
+          {messages.previewPrefix} {prefix}
+          {value === 'hyphen' ? '-' : ''}001
+        </small>
+      ) : null}
     </div>
   );
 }

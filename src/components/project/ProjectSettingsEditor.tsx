@@ -37,19 +37,21 @@ export function ProjectSettingsEditor({
         if (await form.save()) onSaved();
       }}
     >
-      <fieldset disabled={form.saving} className="project-settings-fields">
-        <ProjectOverview
-          model={model}
-          project={project}
-          draft={form.draft}
-          onChange={form.change}
-        />
-      </fieldset>
-      {form.error ? (
-        <p id="projectSettings-error" className="task-editor-error" role="alert">
-          {form.error}
-        </p>
-      ) : null}
+      <div className="project-management-scroll">
+        <fieldset disabled={form.saving} className="project-settings-fields">
+          <ProjectOverview
+            model={model}
+            project={project}
+            draft={form.draft}
+            onChange={form.change}
+          />
+        </fieldset>
+        {form.error ? (
+          <p id="projectSettings-error" className="task-editor-error" role="alert">
+            {form.error}
+          </p>
+        ) : null}
+      </div>
       <div className="project-settings-actions">
         <button id="projectSettings-reset" type="button" disabled={form.saving} onClick={onCancel}>
           {messages.resetProjectSettings}

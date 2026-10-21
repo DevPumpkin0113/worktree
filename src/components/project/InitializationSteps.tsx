@@ -1,12 +1,7 @@
 import { messages } from '../../i18n/messages';
 
 export function initializationTitles() {
-  return [
-    messages.initializationBasic,
-    messages.initializationStorage,
-    messages.workRules,
-    messages.initializationReview,
-  ];
+  return [messages.initializationBasic, messages.workRules, messages.initializationReview];
 }
 
 export function InitializationSteps({ step }: { step: number }) {

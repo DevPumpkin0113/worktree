@@ -1,7 +1,5 @@
-import { validPriorities } from '../../domain/project-priorities';
-import { defaultPriorities } from '../../domain/project-priorities';
+import { validPriorities, defaultPriorities } from '../../domain/project-priorities';
 import { DEFAULT_TASK_TYPES, defaultTaskTypeColors } from '../../domain/default-task-types';
-import { DateTimeFormatInput } from '../shared/DateTimeFormatInput';
 import { InitializationWorkRules } from './InitializationWorkRules';
 import { InitializationReview } from './InitializationReview';
 import {
@@ -76,7 +74,7 @@ export function ProjectInitialization({
       return false;
     }
     if (
-      step === 2 &&
+      step === 1 &&
       (!validProjectRuleValues(draft.taskTypes, true) || !validProjectRuleValues(draft.labels))
     ) {
       form.current
@@ -93,15 +91,16 @@ export function ProjectInitialization({
 
   const validStep = () => {
     if (nameError) return 0;
-    if (!validInitializationDirectory(directory) || !validTaskPrefix(prefix)) return 1;
+    if (!validInitializationDirectory(directory)) return 0;
+    if (!validTaskPrefix(prefix)) return 1;
     if (
       !validProjectRuleValues(draft.taskTypes, true) ||
       !validProjectRuleValues(draft.labels) ||
       !validProjectRuleValues(draft.assignees) ||
       !validPriorities(draft.priorities)
     )
-      return 2;
-    return 3;
+      return 1;
+    return 2;
   };
   return (
     <form
@@ -113,7 +112,7 @@ export function ProjectInitialization({
         event.preventDefault();
         if (busy || !onInitialize || !validateCurrent()) return;
         const target = validStep();
-        if (target !== 3) {
+        if (target !== initializationTitles().length - 1) {
           onStep(target);
           return;
         }
@@ -158,24 +157,16 @@ export function ProjectInitialization({
                   </span>
                 ) : null}
               </label>
-              <DateTimeFormatInput
-                id="initialization-format"
-                dateFormat={draft.dateFormat}
-                timeFormat={draft.timeFormat}
-                disabled={busy}
+              <InitializationStorageFields
+                root={project.path}
+                draft={draft}
+                busy={busy}
                 onChange={change}
+                onPickParent={onPickParent}
               />
             </div>
           ) : step === 1 ? (
-            <InitializationStorageFields
-              root={project.path}
-              draft={draft}
-              busy={busy}
-              onChange={change}
-              onPickParent={onPickParent}
-            />
-          ) : step === 2 ? (
-            <InitializationWorkRules draft={draft} onChange={change} />
+            <InitializationWorkRules draft={draft} busy={busy} onChange={change} />
           ) : (
             <InitializationReview draft={draft} root={project.path} />
           )}

@@ -1,3 +1,6 @@
+import { InitializationIdFields } from './InitializationIdFields';
+import { DateTimeFormatInput } from '../shared/DateTimeFormatInput';
+import { ProjectEffortSetting } from './ProjectEffortSetting';
 import { PriorityListEditor } from './PriorityListEditor';
 import { messages } from '../../i18n/messages';
 import type { ProjectInitializationDraft } from '../../domain/project-initialization';
@@ -6,12 +9,28 @@ import { BadgeInput } from '../shared/BadgeInput';
 export function InitializationWorkRules({
   draft,
   onChange,
+  busy = false,
 }: {
   draft: ProjectInitializationDraft;
+  busy?: boolean;
   onChange: (change: Partial<ProjectInitializationDraft>) => void;
 }) {
   return (
     <div className="milestone-editor-fields">
+      <div className="task-editor-field">
+        <span>{messages.idFormat}</span>
+        <InitializationIdFields draft={draft} busy={busy} onChange={onChange} />
+      </div>
+      <div className="task-editor-field">
+        <span>{messages.dateTimeDisplay}</span>
+        <DateTimeFormatInput
+          id="initialization-format"
+          dateFormat={draft.dateFormat}
+          timeFormat={draft.timeFormat}
+          disabled={busy}
+          onChange={onChange}
+        />
+      </div>
       <div className="task-editor-field">
         <span>{messages.priorities}</span>
         <PriorityListEditor
@@ -63,18 +82,12 @@ export function InitializationWorkRules({
         />
       </div>
       <div className="task-editor-field">
-        <label className="project-effort-toggle">
-          <span>{messages.useEffort}</span>
-          <input
-            type="checkbox"
-            aria-describedby="initialization-effort-hint"
-            checked={draft.useEffort}
-            onChange={(event) => onChange({ useEffort: event.target.checked })}
-          />
-        </label>
-        <small id="initialization-effort-hint" className="project-label-examples">
-          {messages.effortHint}
-        </small>
+        <span>{messages.useEffort}</span>
+        <ProjectEffortSetting
+          id="initialization"
+          value={draft.useEffort}
+          onChange={(useEffort) => onChange({ useEffort })}
+        />
       </div>
     </div>
   );

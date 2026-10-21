@@ -190,7 +190,7 @@ test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 
     await act(() => f.store.selectProject('C:/QB'));
     assert.equal(f.store.getSnapshot().page, 'analytics');
     await f.click('#projectManageOpen');
-    assert.ok(f.host.textContent?.includes('docs/worktree'));
+    assert.ok(f.host.textContent?.includes('docs\\worktree'));
     assert.equal(f.host.querySelector('#projectSettingsForm'), null);
     assert.equal(f.host.querySelector('#projectManagement dialog'), null);
     await f.click('#workspaceCollapse');
@@ -206,16 +206,15 @@ test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위�
     assert.ok(f.host.querySelector('.initialization-steps'));
     assert.equal(f.element('#workspace').getAttribute('data-page'), 'initialize');
     await f.value('#initialization-name', '신규 프로젝트');
+    await f.value('#initialization-directory-name', 'custom');
+    await f.click('#initializationNext');
     await f.click('#initialization-format-date-separator');
     await f.click('#initialization-format-date-separator-option-1');
     await f.click('#initialization-format-time');
     await f.click('#initialization-format-time-option-1');
-    await f.click('#initializationNext');
-    await f.value('#initialization-directory-name', 'custom');
     await f.value('#initialization-prefix', 'DEV');
     await f.click('#initialization-idSeparator');
     await f.click('#initialization-idSeparator-option-1');
-    await f.click('#initializationNext');
     await f.clearBadges('#initialization-taskTypes');
     await f.addBadge('#initialization-taskTypes', '개발, 검토');
     await f.click('#initialization-taskTypes-badges [data-value="개발"] .badge-color-control');
@@ -254,7 +253,6 @@ test('초기화 실패 시 입력을 유지하고 재시도한다', async () => 
     await f.value('#initialization-name', '유지할 이름');
     await f.click('#initializationNext');
     await f.click('#initializationNext');
-    await f.click('#initializationNext');
     f.setSaveFailure(true);
     await act(async () => {
       f.element('.initialization-preview').dispatchEvent(
@@ -262,9 +260,8 @@ test('초기화 실패 시 입력을 유지하고 재시도한다', async () => 
       );
     });
     assert.match(f.element('[role="alert"]').textContent ?? '', /disk failure/);
-    for (let i = 0; i < 3; i++) await f.click('#initializationPrevious');
+    for (let i = 0; i < 2; i++) await f.click('#initializationPrevious');
     assert.equal(f.element<HTMLInputElement>('#initialization-name').value, '유지할 이름');
-    await f.click('#initializationNext');
     await f.click('#initializationNext');
     assert.equal(f.store.active, null);
     f.setSaveFailure(false);
@@ -575,9 +572,8 @@ test('프로젝트 관리는 조회·수정의 항목 순서를 유지하고 고
     const overviewFields = [...f.host.querySelectorAll('#projectManagement dt')].map(
       (node) => node.textContent,
     );
-    await f.click('#projectInitializePreview');
+    await f.click('#projectResetOpen');
     assert.ok(f.host.querySelector('.initialization-steps'));
-    await f.click('#initializationNext');
     assert.ok(f.host.querySelector('#initialization-directory-name'));
     await f.click('#initializationNext');
     await f.click('#initializationNext');
@@ -827,7 +823,6 @@ test('초기화 작업 규칙은 빈 유형·중복 라벨을 막고 단계 이�
   try {
     await act(() => f.store.open('C:/NEW'));
     await f.click('#initializationNext');
-    await f.click('#initializationNext');
     await f.clearBadges('#initialization-taskTypes');
     await f.click('#initializationNext');
     assert.ok(f.host.querySelector('#initialization-taskTypes'));
@@ -927,7 +922,6 @@ test('상위 폴더 찾기는 선택·취소·실패 시 새 폴더 이름과 �
       return invoke<T>(command, args);
     };
     await act(() => f.store.open('C:/NEW'));
-    await f.click('#initializationNext');
     await f.value('#initialization-directory-name', 'plan');
     await f.click('#initialization-browse');
     assert.equal(f.element<HTMLInputElement>('#initialization-parent').value, 'docs/custom');
@@ -978,7 +972,6 @@ test('초기화는 기본 검증 말풍선 없이 오류를 안내하고 상하�
     await f.click('#initializationNext');
     assert.equal(document.activeElement, f.element('#initialization-prefix'));
     await f.value('#initialization-prefix', 'W');
-    await f.click('#initializationNext');
     await f.clearBadges('#initialization-taskTypes');
     await f.click('#initializationNext');
     assert.ok(f.element('#initialization-taskTypes-error').textContent);
@@ -1063,7 +1056,6 @@ test('상위 폴더와 새 폴더 오류는 해당 입력 바로 아래에 표�
   const f = await fixture();
   try {
     await act(() => f.store.open('C:/NEW'));
-    await f.click('#initializationNext');
     await f.value('#initialization-parent', '../outside');
     assert.equal(f.element('#initialization-parent').getAttribute('aria-invalid'), 'true');
     assert.equal(f.element('#initialization-directory-name').getAttribute('aria-invalid'), 'false');
@@ -1103,7 +1095,7 @@ test('초기화 좌측 단계는 읽기 전용이며 하단 이전·다음만 �
     await act(() => f.store.open('C:/NEW'));
     assert.equal(f.host.querySelector('.initialization-steps button'), null);
     assert.equal(f.host.querySelector('.initialization-steps [tabindex]'), null);
-    assert.equal(f.host.querySelectorAll('.initialization-step').length, 4);
+    assert.equal(f.host.querySelectorAll('.initialization-step').length, 3);
     await f.click('.initialization-step:last-child');
     assert.ok(f.host.querySelector('#initialization-name'));
     assert.equal(
@@ -1111,9 +1103,9 @@ test('초기화 좌측 단계는 읽기 전용이며 하단 이전·다음만 �
       true,
     );
     await f.click('#initializationNext');
-    assert.ok(f.host.querySelector('#initialization-parent'));
+    assert.ok(f.host.querySelector('#initialization-prefix'));
     assert.equal(
-      f.element('.initialization-step[aria-current="step"]').textContent?.includes('저장 위치'),
+      f.element('.initialization-step[aria-current="step"]').textContent?.includes('작업 규칙'),
       true,
     );
     await f.click('#initializationPrevious');
@@ -1186,7 +1178,6 @@ test('초기화 기본 유형은 영문 7종·기본색이며 라벨 예시는 �
   const f = await fixture();
   try {
     await act(() => f.store.open('C:/NEW'));
-    await f.click('#initializationNext');
     await f.click('#initializationNext');
     const types = [
       ...f.host.querySelectorAll<HTMLElement>('#initialization-taskTypes-badges li'),
@@ -1473,17 +1464,14 @@ test('초기화 최종 확인은 경로 표기·짝지은 항목·작업 규칙 
     await act(() => f.store.open('C:/NEW'));
     await f.click('#initializationNext');
     await f.click('#initializationNext');
-    await f.click('#initializationNext');
     const review = f.element('.initialization-review');
     const labels = [...review.querySelectorAll('dt')].map((node) => node.textContent);
     assert.deepEqual(labels, [
       '프로젝트 이름',
       '프로젝트 폴더',
       '데이터 저장 위치',
-      'ID 접두어',
-      'ID 구분자',
-      '날짜 형식',
-      '시간 형식',
+      'ID 형식',
+      '날짜·시간 형식',
       '작업 유형',
       '라벨',
       '담당자 목록',
@@ -1493,15 +1481,140 @@ test('초기화 최종 확인은 경로 표기·짝지은 항목·작업 규칙 
     const values = [...review.querySelectorAll('dd')];
     assert.equal(values[1].textContent, 'C:\\NEW');
     assert.equal(values[2].textContent, 'docs\\worktree');
-    assert.equal(values[8].textContent, '없음');
-    assert.equal(values[9].textContent, '없음');
-    assert.equal(review.querySelectorAll('.initialization-review-pair').length, 2);
+    assert.equal(values[6].textContent, '없음');
+    assert.equal(values[7].textContent, '없음');
+    assert.equal(review.querySelectorAll('.project-effort-options input:disabled').length, 2);
     assert.equal(
       f.element<HTMLInputElement>('.initialization-review .priority-unassigned input').disabled,
       true,
     );
     await f.click('#initializationPrevious');
     assert.ok(f.host.textContent?.includes('예상 작업 시간 사용'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 관리 조회와 편집은 최종 확인 기준의 순서·경로·짝지은 행을 공유한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    assert.equal(
+      f.element('.project-management-actions').parentElement,
+      f.element('#projectManagement'),
+    );
+    assert.ok(
+      f.host.querySelector('#projectManagement > .project-management-scroll .project-overview'),
+    );
+    assert.ok(f.element('#projectResetOpen').closest('.project-management-scroll'));
+    assert.equal(f.host.querySelectorAll('.project-management-actions button').length, 1);
+    assert.ok(f.host.querySelector('.project-management-actions #projectEditOpen'));
+    const labels = () =>
+      [...f.host.querySelectorAll('#projectManagement dt')].map((node) => node.textContent);
+    const expected = [
+      '프로젝트 이름',
+      '프로젝트 폴더',
+      '데이터 저장 위치',
+      'ID 형식',
+      '날짜·시간 형식',
+      '작업 유형',
+      '라벨',
+      '담당자 목록',
+      '우선순위 목록',
+      '예상 작업 시간',
+      '작업 상태',
+    ];
+    assert.deepEqual(labels(), expected);
+    const fields = [...f.host.querySelectorAll('#projectManagement dd')];
+    assert.equal(fields[1].textContent, 'C:\\QA');
+    assert.equal(fields[2].textContent, 'docs\\worktree');
+    assert.equal(fields[7].textContent, '없음');
+    assert.equal(
+      f.host.querySelectorAll('.project-effort-options input[type="radio"]:disabled').length,
+      2,
+    );
+    await f.click('#projectEditOpen');
+    assert.equal(
+      f.element('.project-settings-actions').parentElement,
+      f.element('#projectSettingsForm'),
+    );
+    assert.ok(
+      f.host.querySelector(
+        '#projectSettingsForm > .project-management-scroll .project-settings-fields',
+      ),
+    );
+    assert.deepEqual(labels(), expected);
+    assert.equal(f.element<HTMLInputElement>('#projectFixed-0').value, 'C:\\QA');
+    assert.equal(f.element<HTMLInputElement>('#projectFixed-1').value, 'docs\\worktree');
+    for (let i = 0; i < 4; i++)
+      assert.equal(f.element<HTMLInputElement>('#projectFixed-' + i).disabled, true);
+    assert.ok(f.host.querySelector('#projectSettings-format-date-order'));
+    assert.ok(f.host.querySelector('#projectSettings-format-time'));
+    await f.click('#projectSettings-useEffort');
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-useEffort').checked, true);
+    await f.click('#projectSettings-noEffort');
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-useEffort').checked, false);
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-noEffort').checked, true);
+  } finally {
+    await f.close();
+  }
+});
+
+test('초기화 예상 작업 시간은 작업 규칙 라디오 선택을 최종 확인과 저장까지 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.open('C:/NEW'));
+    await f.click('#initializationNext');
+    assert.equal(f.element<HTMLInputElement>('#initialization-noEffort').checked, true);
+    await f.click('#initialization-useEffort');
+    await f.click('#initializationNext');
+    assert.equal(f.element<HTMLInputElement>('#initializationReview-useEffort').checked, true);
+    assert.equal(f.element<HTMLInputElement>('#initializationReview-useEffort').disabled, true);
+    assert.ok(f.element('.initialization-review').textContent?.includes('ID 형식'));
+    assert.ok(f.element('.initialization-review').textContent?.includes('날짜·시간 형식'));
+    await f.click('#initializationPrevious');
+    assert.equal(f.element<HTMLInputElement>('#initialization-useEffort').checked, true);
+    await f.click('#initialization-noEffort');
+    await f.click('#initializationNext');
+    assert.equal(f.element<HTMLInputElement>('#initializationReview-noEffort').checked, true);
+    await f.click('#initializationSubmit');
+    assert.equal(f.store.active?.model?.useEffort, false);
+  } finally {
+    await f.close();
+  }
+});
+
+test('초기화는 기본 정보에 이름·저장 위치를 묶고 ID·날짜시간은 작업 규칙에서 검증한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.open('C:/NEW'));
+    assert.equal(f.host.querySelectorAll('.initialization-step').length, 3);
+    assert.match(f.element('.initialization-step-count').textContent ?? '', /1 \/ 3/);
+    assert.ok(f.host.querySelector('#initialization-name'));
+    assert.ok(f.host.querySelector('#initialization-parent'));
+    assert.equal(f.host.querySelector('#initialization-prefix'), null);
+    assert.equal(f.host.querySelector('#initialization-format-date-order'), null);
+    await f.value('#initialization-directory-name', 'custom');
+    await f.click('#initializationNext');
+    assert.match(f.element('.initialization-step-count').textContent ?? '', /2 \/ 3/);
+    assert.ok(f.host.querySelector('#initialization-prefix'));
+    assert.ok(f.host.querySelector('#initialization-format-date-order'));
+    assert.equal(f.host.querySelector('#initialization-parent'), null);
+    await f.value('#initialization-prefix', 'MS');
+    await f.click('#initializationPrevious');
+    assert.equal(f.element<HTMLInputElement>('#initialization-directory-name').value, 'custom');
+    await act(async () => {
+      f.element('.initialization-preview').dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true }),
+      );
+    });
+    assert.ok(f.host.querySelector('#initialization-prefix'));
+    assert.equal(f.element('#initialization-prefix').getAttribute('aria-invalid'), 'true');
+    assert.equal(f.calls.filter((call) => call.command === 'initialize_project').length, 0);
+    await f.value('#initialization-prefix', 'DEV');
+    await f.click('#initializationNext');
+    assert.match(f.element('.initialization-step-count').textContent ?? '', /3 \/ 3/);
+    assert.ok(f.host.querySelector('#initializationSubmit'));
   } finally {
     await f.close();
   }

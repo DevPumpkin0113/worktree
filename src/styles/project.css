@@ -61,7 +61,8 @@
 .project-management {
   width: 100%;
   max-width: none;
-  min-height: 100%;
+  min-height: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   color: var(--color-text);
@@ -169,6 +170,9 @@
   align-items: center;
 }
 .project-settings-actions {
+  flex-shrink: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -184,16 +188,23 @@
 
 .project-management-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
-  margin-top: auto;
-  padding-top: 24px;
+  flex-shrink: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
 }
-.project-initialize-preview,
-.project-initialize-preview:hover {
+.project-reset-button,
+.project-reset-button:hover:not(:disabled) {
   background: var(--color-error-focus);
   border-color: var(--color-error-focus);
   color: var(--color-text-inverse);
+}
+.project-reset-button:disabled {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
 }
 
 .initialization-steps {
@@ -298,6 +309,10 @@
   margin-top: 6px;
 }
 
+.date-time-format-container {
+  container: date-time-fields / inline-size;
+  min-width: 0;
+}
 .date-time-format-input {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -309,10 +324,14 @@
   font-size: 11px;
   line-height: 1.6;
 }
-@media (max-width: 600px) {
+@container date-time-fields (max-width: 450px) {
   .date-time-format-input {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.date-time-format-input .filter-dropdown,
+.date-time-format-input .filter-trigger {
+  min-width: 0;
 }
 
 .initialization-id-row {
@@ -757,20 +776,6 @@
   border-color: color-mix(in srgb, var(--priority-color) 30%, var(--color-border));
 }
 
-.project-effort-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.project-effort-toggle input[type='checkbox'] {
-  flex: none;
-  margin: 0;
-}
-
-.initialization-review dl > .initialization-review-pair {
-  grid-template-columns: 110px minmax(0, 1fr) 110px minmax(0, 1fr);
-}
 .initialization-review dd {
   min-width: 0;
   margin: 0;
@@ -780,7 +785,93 @@
   padding-inline: 0;
 }
 @media (max-width: 600px) {
-  .initialization-review dl > .initialization-review-pair {
-    grid-template-columns: 110px minmax(0, 1fr);
+}
+
+.project-overview-review .priority-summary .priority-unassigned {
+  padding-inline: 0;
+}
+.project-effort-setting {
+  display: grid;
+  gap: 10px;
+}
+.project-effort-setting > p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.project-effort-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+.project-effort-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.project-effort-options input[type='radio'] {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  flex: none;
+  accent-color: var(--color-primary);
+}
+.project-format-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.project-format-fields .task-editor-field > :first-child {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .project-format-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.project-id-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.project-id-preview {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+.project-settings-fields .project-id-preview {
+  margin-top: 0;
+}
+@media (max-width: 600px) {
+  .project-id-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+#content:has(> .project-management) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.project-settings-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.project-management-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 4px 6px 12px;
+}
+
+.project-initialize-content-actions {
+  margin: 16px 4px 4px;
 }

@@ -1,10 +1,12 @@
+import { ProjectDateTimeFormat } from './ProjectDateTimeFormat';
+import { ProjectEffortSetting } from './ProjectEffortSetting';
 import { PriorityList } from './PriorityList';
 import { PriorityListEditor } from './PriorityListEditor';
 import { BadgeInput } from '../shared/BadgeInput';
 import { BadgeList } from '../shared/BadgeList';
 import { projectRuleValues } from '../../domain/project-initialization';
 import { DateTimeFormatInput } from '../shared/DateTimeFormatInput';
-import { IdSeparatorInput } from '../shared/IdSeparatorInput';
+import { ProjectIdFormat } from './ProjectIdFormat';
 import type { ReactNode } from 'react';
 import { messages } from '../../i18n/messages';
 import { STATUS_NAMES, type OpenProject, type WorkModel } from '../../app/types';
@@ -31,7 +33,7 @@ export function ProjectOverview({
     </div>
   );
   return (
-    <div className="project-overview">
+    <div className="project-overview project-overview-review">
       <section className="project-management-section">
         <h3>{messages.basicInfo}</h3>
         <dl>
@@ -50,28 +52,23 @@ export function ProjectOverview({
             ),
             'projectSettings-name',
           )}
-          {row(messages.projectFolder, fixed(0, project.path), 'projectFixed-0')}
-          {row(messages.dataDirectory, fixed(1, model?.dataDirectory ?? '—'), 'projectFixed-1')}
-          {row(messages.idPrefix, fixed(2, model?.idPrefix ?? '—'), 'projectFixed-2')}
           {row(
-            messages.idSeparator,
-            editing ? (
-              <IdSeparatorInput
-                id="projectSettings-idSeparator"
-                prefix={model?.idPrefix ?? 'W'}
-                value={draft!.idSeparator}
-                onChange={(idSeparator) => onChange!({ idSeparator })}
-              />
-            ) : model ? (
-              model.idSeparator === 'hyphen' ? (
-                messages.hyphen
-              ) : (
-                messages.none
-              )
-            ) : (
-              '—'
-            ),
-            'projectSettings-idSeparator',
+            messages.projectFolder,
+            fixed(0, project.path.replaceAll('/', '\\')),
+            'projectFixed-0',
+          )}
+          {row(
+            messages.dataDirectory,
+            fixed(1, model?.dataDirectory?.replaceAll('/', '\\') ?? '—'),
+            'projectFixed-1',
+          )}
+          {row(
+            messages.idFormat,
+            <ProjectIdFormat
+              prefix={model?.idPrefix ?? '—'}
+              separator={draft?.idSeparator ?? model?.idSeparator ?? 'none'}
+              onChange={editing ? (idSeparator) => onChange!({ idSeparator }) : undefined}
+            />,
           )}
           {row(
             messages.dateTimeDisplay,
@@ -83,71 +80,16 @@ export function ProjectOverview({
                 onChange={onChange!}
               />
             ) : model ? (
-              `${model.dateFormat ?? 'yyyy-MM-dd'} · ${model.timeFormat === '12h' ? messages.time12Hour : messages.time24Hour}`
+              <ProjectDateTimeFormat dateFormat={model.dateFormat} timeFormat={model.timeFormat} />
             ) : (
               '—'
             ),
-          )}
-          {row(
-            <span>
-              {messages.useEffort}
-              <small className="project-label-examples" id="projectSettings-effort-hint">
-                {messages.effortHint}
-              </small>
-            </span>,
-            editing ? (
-              <input
-                id="projectSettings-useEffort"
-                aria-describedby="projectSettings-effort-hint"
-                type="checkbox"
-                checked={draft!.useEffort}
-                onChange={(event) => onChange!({ useEffort: event.target.checked })}
-              />
-            ) : model ? (
-              model.useEffort ? (
-                messages.enabled
-              ) : (
-                messages.disabled
-              )
-            ) : (
-              '—'
-            ),
-            'projectSettings-useEffort',
           )}
         </dl>
       </section>
       <section className="project-management-section">
         <h3>{messages.workRules}</h3>
         <dl>
-          {row(
-            messages.priorities,
-            editing ? (
-              <PriorityListEditor
-                id="projectSettings-priorities"
-                value={draft!.priorities}
-                locked={model?.rows.filter((r) => !r.milestone).map((r) => r.priority ?? '-') ?? []}
-                onChange={(priorities) => onChange!({ priorities })}
-              />
-            ) : (
-              <PriorityList values={model?.priorities ?? []} />
-            ),
-            'projectSettings-priorities',
-          )}
-          {row(
-            messages.assignees,
-            editing ? (
-              <BadgeInput
-                id="projectSettings-assignees"
-                label={messages.assignees}
-                values={projectRuleValues(draft!.assignees)}
-                onChange={(values) => onChange!({ assignees: values.join(', ') })}
-              />
-            ) : (
-              <BadgeList values={model?.assignees ?? []} />
-            ),
-            'projectSettings-assignees',
-          )}
-
           {row(
             messages.workTypes,
             editing ? (
@@ -180,10 +122,7 @@ export function ProjectOverview({
             'projectSettings-taskTypes',
           )}
           {row(
-            <span>
-              {messages.labels}
-              <small className="project-label-examples">{messages.commonLabelExamples}</small>
-            </span>,
+            messages.labels,
             editing ? (
               <BadgeInput
                 id="projectSettings-labels"
@@ -191,10 +130,54 @@ export function ProjectOverview({
                 values={projectRuleValues(draft!.labels)}
                 onChange={(values) => onChange!({ labels: values.join(', ') })}
               />
+            ) : model?.commonLabels?.length ? (
+              <BadgeList values={model.commonLabels} />
             ) : (
-              <BadgeList values={model?.commonLabels ?? model?.labels ?? []} />
+              messages.none
             ),
             'projectSettings-labels',
+          )}
+          {row(
+            messages.assignees,
+            editing ? (
+              <BadgeInput
+                id="projectSettings-assignees"
+                label={messages.assignees}
+                values={projectRuleValues(draft!.assignees)}
+                onChange={(values) => onChange!({ assignees: values.join(', ') })}
+              />
+            ) : model?.assignees?.length ? (
+              <BadgeList values={model.assignees} />
+            ) : (
+              messages.none
+            ),
+            'projectSettings-assignees',
+          )}
+          {row(
+            messages.priorities,
+            editing ? (
+              <PriorityListEditor
+                id="projectSettings-priorities"
+                value={draft!.priorities}
+                locked={model?.rows.filter((r) => !r.milestone).map((r) => r.priority ?? '-') ?? []}
+                onChange={(priorities) => onChange!({ priorities })}
+              />
+            ) : (
+              <PriorityList values={model?.priorities ?? []} />
+            ),
+            'projectSettings-priorities',
+          )}
+          {row(
+            messages.effort,
+            editing || model ? (
+              <ProjectEffortSetting
+                value={draft?.useEffort ?? model?.useEffort ?? false}
+                onChange={editing ? (useEffort) => onChange!({ useEffort }) : undefined}
+              />
+            ) : (
+              '—'
+            ),
+            'projectSettings-useEffort',
           )}
           {row(
             messages.workStatuses,

@@ -3,10 +3,8 @@ import { messages } from '../../i18n/messages';
 import {
   splitInitializationDirectory,
   validInitializationDirectory,
-  validTaskPrefix,
   type ProjectInitializationDraft,
 } from '../../domain/project-initialization';
-import { IdSeparatorInput } from '../shared/IdSeparatorInput';
 
 export function InitializationStorageFields({
   root,
@@ -24,18 +22,13 @@ export function InitializationStorageFields({
   const { parent, name } = splitInitializationDirectory(draft.directory);
   const [picking, setPicking] = useState(false);
   const [browseError, setBrowseError] = useState('');
-  const prefixInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const parentInput = useRef<HTMLInputElement>(null);
-  const prefixError = validTaskPrefix(draft.prefix) ? '' : messages.initializationPrefixInvalid;
   const parentError =
     parent && !validInitializationDirectory(parent) ? messages.initializationParentInvalid : '';
   const folderError = validInitializationDirectory(name)
     ? ''
     : messages.initializationFolderNameInvalid;
-  useEffect(() => {
-    prefixInput.current?.setCustomValidity(prefixError);
-  }, [prefixError]);
   useEffect(() => {
     folderInput.current?.setCustomValidity(folderError);
   }, [folderError]);
@@ -131,39 +124,6 @@ export function InitializationStorageFields({
           {root.replaceAll('\\', '/').replace(/\/+$/, '')}/{draft.directory}
         </strong>
       </p>
-      <div className="initialization-id-row">
-        <label className="task-editor-field">
-          <span>{messages.idPrefix} *</span>
-          <input
-            id="initialization-prefix"
-            ref={prefixInput}
-            required
-            maxLength={20}
-            value={draft.prefix}
-            aria-invalid={!!prefixError}
-            aria-describedby="initialization-prefix-hint"
-            onChange={(e) =>
-              onChange({ prefix: e.target.value.replace(/[a-z]/g, (value) => value.toUpperCase()) })
-            }
-          />
-          <small
-            id="initialization-prefix-hint"
-            className={prefixError ? 'task-editor-error' : undefined}
-          >
-            {prefixError || messages.taskPrefixHint}
-          </small>
-        </label>
-        <div className="task-editor-field">
-          <span>{messages.idSeparator}</span>
-          <IdSeparatorInput
-            id="initialization-idSeparator"
-            value={draft.idSeparator}
-            prefix={draft.prefix}
-            disabled={busy}
-            onChange={(idSeparator) => onChange({ idSeparator })}
-          />
-        </div>
-      </div>
     </div>
   );
 }

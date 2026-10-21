@@ -43,21 +43,26 @@ export function ProjectManagement({
         />
       ) : (
         <>
-          {saved ? (
-            <p className="project-settings-feedback" role="status">
-              {messages.projectSettingsSaved}
-            </p>
-          ) : null}
-          <ProjectOverview model={model ?? source?.model ?? null} project={project} />
+          <div className="project-management-scroll">
+            {saved ? (
+              <p className="project-settings-feedback" role="status">
+                {messages.projectSettingsSaved}
+              </p>
+            ) : null}
+            <ProjectOverview model={model ?? source?.model ?? null} project={project} />
+            <div className="project-initialize-content-actions">
+              <button
+                id="projectResetOpen"
+                disabled={!model || !source}
+                onClick={() => store.setPage('initialize')}
+                className="project-reset-button"
+                type="button"
+              >
+                {messages.initializeProject}
+              </button>
+            </div>
+          </div>
           <div className="project-management-actions">
-            <button
-              id="projectInitializePreview"
-              onClick={() => store.setPage('initialize')}
-              className="project-initialize-preview"
-              type="button"
-            >
-              {messages.initializeProject}
-            </button>
             <button
               id="projectEditOpen"
               type="button"

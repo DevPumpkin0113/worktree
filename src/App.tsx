@@ -80,7 +80,6 @@ export function App({ store }: { store: WorkspaceStore }) {
         <Titlebar store={store} settingsOpen={state.settingsOpen} collapsed={collapsed} />
         <WorkspaceNav
           initializationStep={initializationStep}
-          onInitializationStep={setInitializationStep}
           projectTitle={
             model?.title ?? (state.activeProjectPath ? folderName(state.activeProjectPath) : null)
           }

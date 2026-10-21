@@ -102,3 +102,5 @@ pub const OPEN_PROJECT: &str = "프로젝트 폴더 열기";
 
 pub const INVALID_PROJECT: &str = "프로젝트 설정·경로 또는 문서 규격을 확인해 주세요.";
 pub const PROJECT_RECOVERY_CONFLICT: &str = "중단된 저장 이후 외부 변경이 발견되어 복구를 중단했습니다. 데이터를 보존하고 충돌을 확인하세요.";
+
+pub const SELECT_PROJECT_PARENT: &str = "프로젝트 내부의 상위 폴더를 선택하세요.";

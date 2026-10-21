@@ -375,3 +375,11 @@ pub fn project_recovery_conflict() -> &'static str {
         ko::PROJECT_RECOVERY_CONFLICT
     }
 }
+
+pub fn select_project_parent() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::SELECT_PROJECT_PARENT
+    } else {
+        ko::SELECT_PROJECT_PARENT
+    }
+}

@@ -70,3 +70,5 @@ pub const OPEN_PROJECT: &str = "Open project folder";
 
 pub const INVALID_PROJECT: &str = "Check the project configuration, paths, and document format.";
 pub const PROJECT_RECOVERY_CONFLICT: &str = "Recovery stopped because files were edited after an interrupted save. Resolve the conflict before continuing.";
+
+pub const SELECT_PROJECT_PARENT: &str = "Select a parent folder inside the project.";

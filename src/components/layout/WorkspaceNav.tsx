@@ -30,7 +30,6 @@ const PAGE_ICONS: Record<Page, string> = {
 };
 export function WorkspaceNav({
   initializationStep,
-  onInitializationStep,
   projectTitle,
   onManage,
   page,
@@ -40,7 +39,6 @@ export function WorkspaceNav({
   inert,
 }: {
   initializationStep: number;
-  onInitializationStep: (step: number) => void;
   projectTitle: string | null;
   onManage: () => void;
   page: Page;
@@ -59,7 +57,7 @@ export function WorkspaceNav({
     >
       <ProjectEntry title={projectTitle} onManage={onManage} active={page === 'project'} />
       {page === 'initialize' ? (
-        <InitializationSteps step={initializationStep} onStep={onInitializationStep} />
+        <InitializationSteps step={initializationStep} />
       ) : (
         <>
           <p className="workspace-nav-label">{messages.workspace}</p>

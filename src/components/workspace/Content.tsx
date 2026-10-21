@@ -194,6 +194,12 @@ export function Content({
             step={initializationStep}
             onStep={onInitializationStep}
             onCancel={() => store.setPage('project')}
+            onPickParent={(parent) =>
+              store.platform.invoke<string | null>('pick_project_parent', {
+                path: store.activeProject!.path,
+                parent,
+              })
+            }
             project={store.activeProject}
             model={model ?? null}
           />

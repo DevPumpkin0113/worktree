@@ -1,3 +1,7 @@
+import {
+  projectRuleValues,
+  type ProjectInitializationDraft,
+} from '../domain/project-initialization';
 import { updateProjectSettings, type ProjectSettingsDraft } from '../domain/project-settings';
 import { deleteProjectTask } from '../domain/task-deletion';
 import type { DeleteOptions } from '../domain/task-deletion';
@@ -314,20 +318,25 @@ export class WorkspaceStore {
       this.report(error);
     }
   }
-  async initializeProject(
-    name: string,
-    dataDirectory: string,
-    taskPrefix: string,
-    useEffort: boolean,
-  ) {
+  async initializeProject(draft: ProjectInitializationDraft) {
     const project = this.activeProject;
     if (!project) return;
     await this.platform.invoke('initialize_project', {
       path: project.path,
-      name,
-      dataDirectory,
-      taskPrefix,
-      useEffort,
+      name: draft.name,
+      dataDirectory: draft.directory,
+      taskPrefix: draft.prefix,
+      useEffort: draft.useEffort,
+      idSeparator: draft.idSeparator,
+      rules: {
+        dateFormat: draft.dateFormat,
+        timeFormat: draft.timeFormat,
+        taskTypes: projectRuleValues(draft.taskTypes),
+        taskTypeColors: draft.taskTypeColors,
+        priorities: draft.priorities,
+        assignees: projectRuleValues(draft.assignees),
+        labels: projectRuleValues(draft.labels),
+      },
     });
     if (this.state.activeProjectPath === project.path) await this.open(project.path);
   }

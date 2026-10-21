@@ -19,18 +19,24 @@ export function ProjectInitializer({
     <ProjectInitialization
       project={store.activeProject!}
       model={null}
+      onPickParent={(parent) =>
+        store.platform.invoke<string | null>('pick_project_parent', {
+          path: store.activeProject!.path,
+          parent,
+        })
+      }
       step={step}
       onStep={onStep}
       busy={busy}
       error={error}
-      onInitialize={async (name, directory, prefix, effort) => {
+      onInitialize={async (draft) => {
         if (saving.current) return;
         saving.current = true;
         setBusy(true);
         setError('');
         const path = store.activeProject?.path;
         try {
-          await store.initializeProject(name, directory, prefix, effort);
+          await store.initializeProject(draft);
           if (store.activeProject?.path === path) store.setPage('board');
         } catch (error) {
           setError(

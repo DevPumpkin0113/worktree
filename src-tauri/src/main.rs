@@ -89,6 +89,7 @@ fn main() {
             projects::save_project,
             projects::initialize_project,
             projects::pick_project,
+            projects::pick_project_parent,
             projects::scan_project,
             get_build_info,
             check_app_update,

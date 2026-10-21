@@ -41,5 +41,8 @@
   "assignees": [
     "codex",
     "박대호"
-  ]
+  ],
+  "dateFormat": "yyyy-MM-dd",
+  "timeFormat": "24h",
+  "idSeparator": "hyphen"
 }

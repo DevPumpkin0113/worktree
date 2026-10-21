@@ -4,7 +4,7 @@
 
 ## 개발 환경과 실행
 
-Windows x64에서 Node.js 24, Rust stable, Visual Studio C++ 빌드 도구와 WebView2를 사용한다. 앱은 Tauri 2·Vite·JavaScript로 구성되어 있다.
+Windows x64에서 Node.js 24, Rust stable, Visual Studio C++ 빌드 도구와 WebView2를 사용한다. 앱은 Tauri 2·Vite·React·TypeScript로 구성되어 있다. 프런트엔드 전체를 TypeScript로 작성하고 strict 타입 검사에 포함한다. Node 실행용 개발 스크립트와 기존 단위 테스트는 .mjs를 유지한다.
 
 ```powershell
 npm ci
@@ -14,18 +14,18 @@ npm run tauri dev
 ## 코드 구조
 
 ```text
-index.html                화면 마크업·진입점
-src/
-  main.mjs                화면 상태와 이벤트 연결
-  domain/                 WBS 파싱·ID 표시 규칙
-  views/                  차트·작업 상세 렌더링
-  styles/                 공통 및 화면별 CSS
-  platform/               Tauri 창 제어
-  interactions/           차트 드래그 등 입력 처리
-tests/                    자동화 테스트
-scripts/                  버전 동기화·검사
-public/                   프런트엔드 에셋
-src-tauri/                Rust·앱 설정·배포 아이콘
+index.html                root 컨테이너
+src/main.tsx              React 진입점·CSS import
+src/App.tsx               화면 조합
+src/app/                  타입·문서 및 세션 상태 저장소
+src/components/           워크스페이스·목록·상세·댓글·설정·오류 UI
+src/hooks/                앱 초기화·polling·업데이트 상태
+src/domain/               기존 WBS 파싱·ID·집계
+src/views/                SVG 생성·표시 문자열 도우미
+src/platform/             Tauri·설정·세션·클립보드
+src/interactions/         드래그·선택·스크롤 로직
+src/styles/               공통 및 화면별 CSS
+tests/                    도메인·React DOM 통합 테스트
 ```
 
 보기 아이콘은 SVG를 사용하고 생성 PNG는 참고 자료로 유지한다. WBS 배포 양식은 templates에 두며 규격 변경 시 공용 resources/templates/wbs의 원본과 함께 갱신한다.
@@ -34,6 +34,8 @@ src-tauri/                Rust·앱 설정·배포 아이콘
 
 ```powershell
 npm test
+npm run check:types
+npm run format:check
 npm run version:check
 npm run build
 ```
@@ -122,7 +124,7 @@ Tauri 공식 updater를 Rust 명령에서 사용한다. GitHub 최신 정식 릴
 
 ## 0.5.1 설정 저장과 프로필 이전
 
-앱 식별자 io.github.devpumpkin0113.worktree와 게시자 DevPumpkin0113을 사용한다. 설정 경로는 식별자와 독립적인 %LOCALAPPDATA%/Worktree/settings.json이다. schemaVersion 1, idSeparator(none/hyphen), detailMode(sidebar/modal), autoCheckUpdates(boolean)를 저장한다.
+앱 식별자 io.github.devpumpkin0113.worktree와 게시자 DevPumpkin0113을 사용한다. 설정 경로는 식별자와 독립적인 %LOCALAPPDATA%/Worktree/settings.json이다. schemaVersion 2, language(ko/en), idSeparator(none/hyphen), detailMode(sidebar/modal), autoCheckUpdates(boolean)를 저장한다. 기존 v1은 한국어 기본값으로 읽고 다음 저장에서 v2로 기록한다.
 
 창 자동 생성을 끄고 Rust setup에서 데이터 디렉터리를 선택한다. JSON이 없고 이전 local.toothless.worktree/EBWebView가 있으면 그 프로필로 한 번 실행하고 기존 origin의 localStorage를 읽어 initialize_settings로 저장한다. JSON이 있으면 이전 localStorage보다 우선하며 이후 Worktree/EBWebView를 사용한다. 이전 프로필을 복사하거나 삭제하지 않는다. 설치 EXE 이름과 NSIS의 Worktree 제거 프로그램 키는 동일해 기존 설치 위치를 유지한다. 식별자가 달라 구버전과 신버전의 단일 인스턴스 키는 다르므로 업데이트 전 기존 앱은 종료한다.
 
@@ -226,3 +228,155 @@ Node 62개 테스트·버전 검사·Vite 빌드 통과. 문서별 공수 설정
 ## 0.13.0 정식 릴리즈 승인 (2026-10-20)
 
 박대호가 누적 변경의 정식 릴리즈를 승인했다. 버전 0.13.0을 유지하고 develop의 릴리즈 문서 정리 후 main에 병합·푸시하여 CI에서 정식 설치 파일·업데이트 서명·manifest를 생성한다. 로컬 0.13.0 NSIS 설치 빌드는 성공했으며 bundle/nsis 내부만 정리하고 빌드 캐시는 유지했다. R05는 계속 보류이며 미수행 실제 설치·파일 연결·배포 후 자동 업데이트 인수를 완료로 처리하지 않는다.
+
+릴리즈 결과: main 병합 커밋 29999be 기준 [v0.13.0](https://github.com/DevPumpkin0113/worktree/releases/tag/v0.13.0) 게시 완료. [CI 39441144062](https://github.com/DevPumpkin0113/worktree/actions/runs/39441144062) 전체 성공. Node 62개·Rust 19개 테스트, 버전 검사, Windows NSIS 빌드, 서명 검증·변조 거부 통과. 공개 latest.json의 버전·설치 URL·서명과 게시 자산의 일치를 확인했다. 실제 설치·자동 업데이트 인수는 별도다. develop은 릴리즈된 main으로 fast-forward한 뒤 이 결과를 기록한다.
+
+## 댓글 UI 임시 확인 (2026-10-21)
+
+박대호의 명시적 요청으로 이번 작업만 codex/comments-ui-preview 브랜치를 사용한다. develop 직접 작업 원칙은 유지하며 이번 브랜치는 확인용 예외다. 작업 상세의 작업 정보·댓글 탭을 사이드 패널·모달에서 공통 사용한다. 예시 댓글 두 개는 실제 의견으로 간주하지 않도록 표시하고, 작성자 이름은 직접 편집한다. Git 이름 조회·사용자 설정 저장·원본 WBS 변경은 하지 않는다. 댓글·탭·초안은 문서 경로와 작업 ID별로 현재 창의 메모리에 보관한다. 작성자 이름은 현재 창에서 공통 사용한다. Ctrl+Enter 등록과 탭 좌우·Home·End 이동을 지원한다. 저장 형식·작성자 정책을 확정한 ADR은 만들지 않는다. 이후 박대호가 UI를 확인하고 커밋·develop 병합을 승인했다. 배포는 별도 지시를 기다린다.
+
+검증: Node 62개 테스트·버전 검사·Vite 빌드 통과. IPC 대체 Playwright 브라우저에서 댓글 등록·Ctrl+Enter·작업별 댓글 분리·초안 복원·HTML 문자 표시·탭 키보드 탐색 및 사이드 패널·모달을 확인했다. 1280×850·760×560 화면을 확인했고 실제 설치 앱 검증은 미수행이다. 확인 자료는 .local/qa/check-comments.js와 comments-preview.png에 보관한다.
+
+댓글 UI 후속 조정: 상세 제목의 실제 높이를 ResizeObserver로 반영하고 작업 정보·댓글 탭을 제목 아래 sticky로 고정한다. 기존 dialog 스크롤 구조와 탐색 상태 복원은 유지한다.
+
+고정 탭 검증: Node 62개·Vite 빌드 통과. IPC 대체 브라우저의 1280×850·760×560에서 스크롤 후 탭 상단과 제목 하단의 일치를 검사했고 두 탭 전환·사이드 패널·모달을 확인했다. 증거: .local/qa/check-sticky.js, sticky-comments-1280.png, sticky-comments-modal-760.png. 설치 파일은 이번 조정 후 재생성하지 않았다.
+
+2026-10-21: 박대호의 UI 확인 및 develop 병합 승인에 따라 댓글 UI(고정 탭 포함)를 커밋하고 통합한다. 작성자·파일 저장·이력의 제품 설계는 미확정 상태로 유지한다. 원격 푸시·main 병합·배포는 이번 승인 범위에 포함하지 않는다.
+
+## 0.14.1 우측 상세 패널 크기 조절
+
+경계 드래그로 너비를 조절하고 최소 280px·본문 최소 240px을 기준으로 제한한다. 드래그 종료 너비가 160px 미만이면 숨기고 이전 너비를 보관한다. 재선택하면 다시 열린다. 경계에서 좌우 화살표·Home·End로 조절, Enter로 숨기기, 더블클릭으로 기본 너비 복원, Esc·포인터 취소로 드래그 취소를 지원한다. 숨기기 버튼은 사이드 패널에서만 표시한다. 너비는 앱 설정 파일에 저장하지 않는다.
+
+검증: Node 62개 테스트·Vite 빌드 통과. IPC 대체 브라우저에서 실제 경계 드래그·숨기기·너비 복원·끌어 닫기·Home 최소 너비를 확인했다. .local/qa/check-resize.js에 검증을 기록했다. 사용자 지시에 따라 0.14.1을 커밋하며 설치 파일·푸시·배포는 수행하지 않는다.
+
+## 0.14.2 좌측 워크스페이스 UI
+
+보드는 기존 네 가지 시각화와 요약, 모든 작업은 검색·필터 가능한 말단 작업의 일렬 목록, 분석은 데이터 연결 전 자리 표시 화면으로 구성한다. 페이지 선택은 현재 창에서만 유지한다. 문서 열기·세션은 기존 파일 단위를 유지하며 워크스페이스는 UI 구역이다. 실제 프로젝트 저장·문서 묶음·분석 집계를 구현한 것으로 간주하지 않는다. 박대호 확인과 추가 조정을 위해 미커밋으로 유지한다.
+
+검증: Node 62개 테스트·버전 검사·Vite 빌드 통과. IPC 대체 브라우저에서 세 페이지 전환·목록 검색·작업 상세 열기·페이지 이동 시 상세 닫기·설정 중 좌측 비활성화를 확인했다. 1440×900 및 900×650 배치를 확인했다. .local/qa/check-workspace.js 및 workspace-tasks-1440.png·workspace-analytics-1440.png·workspace-board-1440.png·workspace-tasks-900.png에 증거를 보관한다. 0.14.2는 미커밋이며 설치 파일은 만들지 않았다.
+
+0.14.2 후속 UI 조정: 좌측 상단 W·내 워크스페이스·로컬 프로젝트 영역을 제거하고 접기·펼치기 버튼으로 대체한다. 축소 너비는 64px이며 메뉴 아이콘·접근성 이름·기본 툴팁은 유지한다. 펼침 상태는 현재 창에서만 유지한다. 좌측 크기 변경 시 사용자 조절한 우측 패널도 가용 폭에 맞춰 제한한다. 이 범위 확인 후 React·TypeScript 전환을 별도 작업으로 진행할 예정이며 여기서는 전환하지 않는다.
+
+축소 UI 검증: Node 62개·버전 검사·Vite 빌드 통과. IPC 대체 브라우저에서 64px 아이콘 전용 표시, 메뉴 이름·페이지 전환, 키보드 펼치기 및 760px 창을 확인했다. .local/qa/check-collapse.js·workspace-collapsed.png·workspace-expanded.png에 기록했다. 0.14.2 미커밋 상태를 유지한다.
+
+0.14.2 후속 조정: 접기·펼치기 버튼을 좌측 패널 하단 Worktree·계획에서 실행까지 문구 오른쪽으로 이동했다. 축소 상태에서도 하단 버튼은 유지한다. 박대호 요청에 따라 Playwright 검증은 생략하고 실사용 확인을 기다린다.
+
+2026-10-21: 박대호가 하단 접기 버튼을 포함한 0.14.2 커밋을 승인했다. 승인된 UI를 develop에 기록한 다음 0.15.0 React·TypeScript 전환을 별도 변경으로 진행한다.
+
+## 0.15.0 React·TypeScript 전환
+
+0.14.2를 2586a5f로 커밋한 후 develop에서 전환했다. UI·필터·상세·댓글·문서 탭·설정·오류·업데이트는 React 컴포넌트가 담당한다. 문서와 세션 상태는 DOM을 참조하지 않는 WorkspaceStore가 관리하고 useSyncExternalStore로 구독한다. 기존 파서·집계·JSON 저장 형식은 유지한다. 간트·네트워크는 계산 회귀를 줄이기 위해 ChartView 어댑터 내부에서 기존 SVG를 생성하며 다른 React 화면에서는 innerHTML을 사용하지 않는다. 타입·포맷 검사를 릴리즈 CI에 추가했다. 테스트는 직접 main 스크립트를 가공하는 VM 대역에서 실제 React를 jsdom에 마운트하는 방식으로 전환했다. 박대호 지시에 따라 Playwright를 실행하지 않으며 실제 WebView2 UI 확인은 박대호에게 남긴다.
+
+전환 검증: Node 63개 테스트(React DOM 통합 10개 포함), TypeScript strict·미사용 검사, Prettier 검사, 버전 일치 검사 및 Vite 프로덕션 빌드 통과. 새 통합 테스트는 설정 실패 후 재시도·손상 세션 보존·그룹 접힘·차트 스크롤·명시적 업데이트 설치와 서명 실패 표시도 검증한다. Playwright·실제 WebView2 UI·Windows 설치 빌드는 이번 전환 후 미수행이다. Rust 소스는 변경하지 않았으며 0.15.0 전환 및 책임 분리는 박대호의 커밋 지시에 따라 develop에 기록한다.
+
+## 컴포넌트·테스트 분류
+
+src/components는 layout·workspace·task-detail·documents·settings·problems·shared로 구분한다. tests는 domain·platform·interactions·visualizations·integration·scripts와 공통 helpers로 분류하며 npm test는 하위 폴더의 테스트를 실행한다. 나머지 소스 폴더 구조는 유지한다.
+
+### 컴포넌트 내부 책임 분리
+
+workspace는 TreeView·KanbanView·AllTasks·Analytics·TaskCard·Metrics·MetricsContent로 분리하고 Content는 화면을 조합한다. task-detail은 TaskInfo·DetailTabs·Comments·CommentList·CommentForm으로 구분하며 use-comment-threads는 임시 댓글 상태, use-detail-dialog는 상세 창 표시·크기·스크롤 생명주기를 관리한다. settings는 GeneralSettings·AboutSettings·BuildInformation·UpdateSettings·IssueReport로 분리한다. 각 컴포넌트는 직접 import하고 재노출용 통합 파일은 추가하지 않는다.
+
+책임 분리 후 기존 테스트 63개·strict 타입 검사·포맷 검사·Vite 빌드 통과. 실제 WebView2 화면 확인은 사용자 확인 대기다. 커밋 승인은 실제 UI 인수 완료와 구분한다.
+
+## 0.15.1 좌측 메뉴 시안
+
+작업 보드·작업 목록·인사이트로 이름을 바꾸고 분할 화면·체크 목록·추세 그래프 SVG를 사용한다. 기존 페이지 키와 탐색 동작은 유지하고 펼친 메뉴·축소 툴팁·접근성 이름·본문 제목에 같은 이름을 사용한다. 실제 화면은 사용자 확인 대기다.
+
+담당자·상태 필터는 shared/FilterDropdown으로 선택 목록까지 렌더링한다. combobox·listbox·option 역할 및 활성 항목·선택 상태를 제공하고 방향키·Home·End·Enter·Space·Esc·Tab과 바깥 포인터 입력을 처리한다. 선택 확정 전 탐색은 필터 값을 변경하지 않는다. 설정·간트의 기본 select는 이번 변경 범위에 포함하지 않는다.
+
+키보드 포커스 기본 스타일은 src/styles/focus.css, 메인 색상 변수는 src/styles/theme.css에서 관리한다. :where(:focus-visible)로 새 UI에도 자동 적용하고 낮은 명시도로 기존 컴포넌트의 포커스·오류 표현을 유지한다. 검색 입력은 클릭 포커스도 같은 파일에서 정의한다.
+
+CSS 유지보수: 과거 네트워크·설정 레이아웃의 미사용 규칙과 같은 범위의 뒤쪽 선언으로 덮어쓴 속성을 제거했다. 반응형 및 모달·패널별 덮어쓰기는 유지한다. 기본 포커스는 focus.css에서 관리하고 화면별 규칙은 안쪽 간격·오류·리사이즈 표현만 정의한다. npm run format 및 format:check는 CSS도 검사한다.
+
+### 테마 기반
+
+src/styles/theme.css는 현재 라이트 색상을 유지하는 의미별 토큰을 정의하며 화면 CSS보다 먼저 로드한다. 배경·글자·입력 및 카드 테두리·선택·상태·스크롤바·포커스의 공용 색상을 사용한다. 새로운 테마는 :root[data-theme="테마명"]에서 같은 변수를 재정의한다. 실제 테마 선택 UI·설정 저장·OS 테마 연동은 아직 추가하지 않는다. 세부 장식·그림자·상태 배지까지 모든 프런트엔드 CSS의 고정 색상은 theme.css에서 정의한다. transparent·currentColor·none은 투명도·상속·비표시 의미이므로 유지한다. 네트워크·간트 SVG의 색상은 --color-chart-* 변수로 관리한다. 화살표 마커도 CSS 클래스로 연결하고 공용 아이콘은 currentColor를 통해 주변 테마 색상을 상속한다.
+
+## 0.16.0 앱 설정·프로젝트 관리 진입점
+
+상단은 앱 설정, 좌측 열린 문서 이름 오른쪽의 아이콘은 프로젝트 관리로 구분한다. 버튼 문구는 툴팁과 접근성 이름으로 제공한다. 프로젝트 관리 UI는 components/project에서 관리하고 현재 WBS 메타데이터와 공통 작업 유형·상태를 조회한다. 유효한 문서가 없으면 진입 버튼을 비활성화한다. 프로젝트 폴더 열기·독립 설정 파일·편집·저장은 아직 구현하지 않는다. 프로젝트 관리는 모달 대신 메인 콘텐츠 페이지로 표시한다. 좌측 메뉴로 다른 페이지에 이동하며 앱 설정을 닫으면 원래 프로젝트 관리 페이지가 유지된다. 새 색상 상수 없이 공용 테마 변수를 사용한다.
+
+좌측 프로젝트 트리는 프로젝트 제목을 루트로 접기·펼치기를 지원하는 UI 시안이다. 현재 활성 WBS 파일 한 개를 들여쓰기하여 표시하고 클릭하면 작업 보드로 이동한다. 프로젝트 루트 탐색·내부 파일 수집·별도 프로젝트 상태는 아직 구현하지 않았고 하단 문서 탭·세션 계약은 유지한다. ProjectFiles와 ProjectEntry를 역할별로 분리한다.
+
+작업 보드·작업 목록 제목 오른쪽은 CompactProgress에서 전체 일반 작업 기준 완료/전체·진행률을 표시한다. 필터·그룹·마일스톤은 집계 기준에 영향을 주지 않는다. 기존 Metrics 요약 카드는 인사이트 본문으로 이동하고 공수 사용 여부를 유지한다. 인사이트 상단 요약은 실제 데이터이며 하단 분석 차트는 미연결 시안이다. 워크스페이스 장식 배지는 제거했다.
+
+## 0.16.1 한국어 리소스 분리
+
+프런트엔드 한국어 표시 문구는 src/i18n/ko.ts에 두고 src/i18n/messages.ts를 통해 참조한다. 툴팁·접근성 이름·SVG 안내·검증 및 저장 오류를 포함한다. Rust 네이티브 대화상자·오류·제보 양식은 src-tauri/src/i18n/ko.rs에 분리한다. UI 마크업은 기존 컴포넌트와 SVG 렌더러에 유지하고 문자열 삽입 시 기존 이스케이프를 적용한다.
+
+WBS 규격 상수는 src/domain/wbs-schema.ts에서 공유하며 번역 리소스와 분리한다. 언어 전환·언어 설정·날짜 및 숫자 로케일 변경은 아직 지원하지 않는다. 한국어 오류 정규식은 기존 계약을 보존하며, 실제 언어 전환 전에 오류 코드를 도입해야 한다. 결정 근거는 docs/adr/0006-korean-message-resources.md를 따른다.
+
+한국어 분리 검증: 프런트엔드 테스트 67개·Rust 19개·strict 타입 검사·TS/CSS 포맷 검사·버전 동기화·Vite 빌드 통과. Rust의 실네트워크·서명 설치 파일 검증 2개는 기존 ignored 상태로 실행하지 않았다. 실제 WebView2 UI 확인과 Windows 설치 빌드는 수행하지 않았다.
+
+영어 리소스는 src/i18n/en.ts와 src-tauri/src/i18n/en.rs에 같은 키·함수로 준비했다. TS는 satisfies typeof ko로 검사하고 테스트에서 키·함수 인자·서식 값 보존을 확인한다. Rust en 모듈은 테스트에서만 컴파일하며 런타임은 ko를 유지한다. 규격 제목 ## 작업 목록과 사람 이름은 영어 안내에서도 보존한다. 아직 언어 전환을 지원하지 않으므로 영어 화면을 켜는 코드 변경은 하지 않는다.
+
+영어 리소스 추가 후 프런트엔드 69개·Rust 20개 테스트, 타입·포맷·버전 검사 및 Vite 빌드 통과. 외부 네트워크·서명 설치 파일 검증 2개는 기존 ignored 상태다. 언어 선택과 실제 영어 UI 검증은 아직 수행하지 않았다.
+
+## 0.17.0 일반 설정·언어 선택
+
+앱 설정의 표시 메뉴를 일반으로 바꾸고 공용 FilterDropdown으로 한국어/English를 선택한다. 저장 성공 후 메뉴·상태 이름·화면·SVG와 네이티브 안내에 적용하며 실패 시 이전 언어를 유지한다. 기존 v1 설정은 읽기만으로 파일을 덮어쓰지 않고 한국어로 복원한다. 언어 설정 저장 시 schemaVersion 2를 사용하므로 구버전 앱은 원본 보존 정책에 따라 해당 설정을 지원하지 않는 버전으로 처리한다.
+
+문서 이름·원문·댓글·WBS 형식은 변경하지 않는다. 문서 파서 및 위치·수정 안내는 한국어 정규식 계약 때문에 ko 리소스를 사용하며 영어 UI에서도 오류 상세는 한국어다. 후속 오류 코드 계약을 도입할 때 표시 언어를 분리한다. 결정은 docs/adr/0007-app-language-setting.md를 따른다.
+
+0.17.0 검증: 프런트엔드 72개·Rust 22개 테스트와 타입·포맷·버전 검사·Vite 빌드 통과. 언어 즉시 전환·저장 실패 복구·영어 복원·차트 및 WBS 오류 위치 보존·v1 설정 원본 유지와 v2 저장을 확인했다. 외부 조회·서명 설치 테스트 2개는 기존 ignored 상태이며 실제 WebView2 화면·설치 빌드는 미수행이다.
+
+## 0.17.1 구조화된 문서 진단
+
+src/domain/document-diagnostics.ts의 DocumentValidationError가 코드·작업 ID·참조 ID·관계 종류를 전달한다. document-errors.ts는 코드로 문제 셀·행/열·수정 안내를 결정한다. 일반 Error의 문장은 해석하지 않으므로 위치를 추측하지 않는다. 기존처럼 Error.message도 제공하지만 내부 판별 계약은 diagnostics다.
+
+문제 패널·상태 표시줄·복사 내용은 현재 언어 리소스로 표시한다. 열린 오류도 언어 변경을 반영하며 원문·입력값·ID·위치는 유지한다. 0.17.0의 한국어 오류 유지 제약은 해제한다. 결정은 docs/adr/0008-document-diagnostics.md를 따른다.
+
+0.17.1 검증: 테스트 74개·타입 검사·포맷 검사·버전 동기화 검사·Vite 빌드 통과. 번역 문구 변경과 독립적인 코드 판별, 영어/한국어 전환 시 열린 오류·복사 내용·원본 행/열 보존을 검증했다. Rust 로직은 이번 작업에서 변경하지 않아 재검증하지 않았다. 실제 WebView2 화면 확인·Windows 설치 빌드·커밋은 수행하지 않았다.
+
+## 0.18.0 폴더 프로젝트
+
+하단 ProjectDock은 파일 대신 폴더를 탭으로 표시한다. +는 pick_project, 열기·복원은 scan_project 명령을 사용한다. src-tauri/src/projects.rs는 하위 WBS를 검색하고 경로를 정규화한다. 링크·junction·숨김 이름 폴더 및 node_modules·target·dist는 제외하며 파일 2,000개·폴더 10,000개·깊이 64로 제한한다. 실패 시 기존 프로젝트를 유지하고 문제 패널로 안내한다.
+
+좌측 ProjectFiles는 상대 경로 목록이며 선택한 WBS의 보드·목록·인사이트를 표시한다. 빈 프로젝트도 유지하고 새로고침으로 파일 목록을 갱신한다. 활성 문서 내용은 기존 자동 갱신을 유지한다. 원본과 프로젝트 폴더에는 쓰지 않는다. 직접 연 Markdown은 기존 호환 항목으로 유지한다.
+
+세션 schemaVersion 2는 프로젝트별 마지막 문서·프로젝트 순서·최근 프로젝트를 저장한다. v1 문서 탭은 상위 폴더별 프로젝트로 읽고 다음 정상 저장에 v2로 기록한다. 문서 보기 캐시는 최대 40개이며 각 프로젝트의 활성 문서를 우선 보존한다. 이전 앱은 v2를 지원하지 않으며 손상·미지원 세션을 덮어쓰지 않는다. 결정은 docs/adr/0009-folder-projects.md를 따른다.
+
+0.18.0 검증: 프런트엔드 80개·Rust 26개 테스트 통과. 폴더별 탭·하위 WBS 전환·빈 폴더·파일 추가/삭제 후 갱신·프로젝트/보기 복원·기존 Markdown·지연 응답 취소·실패 시 기존 상태 유지·v1 원본 보존과 v2 저장·junction 제외·검색 제한을 확인했다. 타입·포맷·버전 검사·Vite 빌드도 통과했다. 외부 네트워크·서명 설치 테스트 2개는 기존 ignored 상태다. 실제 폴더 선택창·드롭·WebView2 배치 및 설치 빌드는 수행하지 않았다.
+
+## 0.18.1 프로젝트 탐색기 UI
+
+상대 경로를 한 줄로 표시하던 ProjectFiles를 중첩 폴더 목록으로 변경했다. project-file-tree.ts는 폴더 우선 정렬과 계층 구성, ProjectFileBranch는 파일 선택과 재귀 조합, ProjectFolder는 접기·펼치기를 담당한다. 선택 파일 변경 시 상위 폴더를 펼치고 사용자가 현재 폴더를 접을 수 있다. 파일 목록과 세션 저장 형식은 유지한다.
+
+0.18.1 검증: 테스트 80개·타입·포맷·버전 검사·Vite 빌드 통과. 기존 통합 테스트에 폴더 표시·파일명 표시·접기/펼치기 중 문서 선택 유지 검증을 추가했다. Rust 로직 변경이 없어 Rust 테스트는 재실행하지 않았다. 실제 WebView2 배치 확인과 커밋은 수행하지 않았다.
+
+## 0.18.2 프로젝트 탐색기 높이
+
+use-project-tree-height.ts에서 ResizeObserver로 좌측 메뉴·푸터에 필요한 공간을 제외한 최대 높이를 측정한다. 기본 220px·최소 80px·상한 480px이며 창이 작으면 허용 범위를 줄인다. React pointer capture와 키보드 separator로 조절하고 Esc/포인터 취소는 드래그 전 높이로 복귀한다. 창이 다시 커지면 선호 높이를 복원한다. 높이는 현재 창에만 보관하며 설정·세션 스키마를 변경하지 않는다.
+
+0.18.2 검증: 테스트 81개·타입·포맷·버전 검사·Vite 빌드 통과. 드래그·Esc 취소·키보드 최소/최대·창 축소 시 상한 제한·창 확대와 접기/펼치기 후 높이 유지를 확인했다. Rust 로직 변경이 없어 Rust 테스트는 재실행하지 않았다. 실제 WebView2 포인터·배치 확인과 커밋은 수행하지 않았다.
+
+## 0.18.4 문서 전환 시 콘텐츠 페이지 유지
+
+WorkspaceStore.selectDocument에서 page를 board로 초기화하던 처리를 제거했다. 문서를 바꿔도 관리·작업 목록·인사이트 페이지를 유지하고 해당 컴포넌트는 새 활성 문서의 모델과 경로를 표시한다. 작업 상세 선택과 이전 문서 오류는 기존대로 해제한다.
+
+0.18.4 검증: 테스트 82개・타입・포맷・버전 검사・Vite 빌드 통과. 관리 화면에서 문서 경로와 ID 접두어 갱신, 작업 목록 및 인사이트에서 문서 전환 후 페이지 유지를 확인했다. 실제 앱 확인과 커밋은 수행하지 않았다.
+
+## 0.19.0 작업 수정·추가
+
+작업 상세에서 수정하고 보드·작업 목록에서 새 작업을 추가한다. TaskEditor는 편집 시점의 경로·원문·ID를 고정하고 TaskEditorFields가 입력을 렌더링한다. use_effort: false이면 공수 입력을 숨긴다. 기존 ID·유형을 유지하며 새 task/milestone만 생성한다. 빈 그룹 생성·작업 삭제·문서 생성은 이번 범위 밖이다.
+
+src/domain/task-editing.ts는 변경한 셀만 패치하거나 작업 표에 행을 추가하고 parseWbs로 전체 결과를 검증한다. 그룹 auto·설명·다른 표·공백·BOM·개행을 유지한다. 새 ID는 실제 문서 접두어와 기존 모든 번호의 최대값 다음을 사용해 표시 ID 충돌을 피한다. 원본 ID를 표시용 하이픈 설정으로 바꾸지 않는다.
+
+Rust save_document는 5MiB 제한·읽기 전용 검사·원본 내용 비교 후 같은 폴더의 임시 파일을 동기화하고 교체한다. 교체 직전에 다시 비교하며 앱 내부 저장을 직렬화한다. 외부 프로그램을 잠그는 원자적 CAS는 아니고 마지막 비교/교체 사이의 경합 가능성은 남는다. 감지된 충돌·쓰기 실패·교체 실패 시 입력 폼과 원본을 유지한다. 임시 파일은 오류 반환 시 정리한다. 문서 내용의 영구 백업·실행 취소·자동 병합은 후속 범위다. 근거는 docs/adr/0010-task-editing-and-saving.md다.
+
+0.19.0 검증: 프런트엔드 89개·Rust 29개 테스트 통과. 원문 셀/설명/BOM/CRLF/마지막 개행 보존·작업 ID·관계/날짜/공수 검증·새 작업과 마일스톤·원본 교체·외부 변경·읽기 전용·잠긴 파일 교체 실패·임시 파일 정리와 폼 입력 유지를 확인했다. 타입·포맷·버전 검사·Vite 빌드도 통과했다. 외부 네트워크·서명 설치 검사 2개는 기존 ignored 상태다. 실제 WebView2 편집/저장 확인·Windows 설치 빌드·새 편집 기능의 커밋은 수행하지 않았다. 이전 프로젝트 개선은 53bf84a로 커밋했고 푸시는 하지 않았다.
+
+0.19.0 UI 조정: 제목·진행률 헤더의 하단 경계선을 추가하고 작업 추가 버튼을 도구 모음 우측으로 이동했다. 공용 Icon의 plus SVG를 사용하며 버전은 사용자 지시에 따라 0.19.0을 유지한다.
+
+0.19.0 선행 작업 UI: 공용 SearchMultiSelect는 검색·다중 선택·해제·↑/↓/Enter/Esc/Tab과 IME 입력을 처리한다. TaskEditorFields는 그룹·자기 자신을 제외한 작업명 및 원본 ID 옵션을 제공하며 기존 쉼표 문자열로 변환한다. 파서의 순환·날짜 검증은 유지하고 파일/세션 규격은 바꾸지 않는다.
+
+선행 작업 검색 검증: 테스트 90개·타입·포맷·버전 검사·Vite 빌드 통과. 이름/ID 검색·다중 선택·해제·키보드 선택·Esc로 목록만 닫기·그룹/자기 자신 제외·원본 ID 저장과 기존 선택 복원을 확인했다. Rust 변경이 없어 재검증하지 않았으며 실제 WebView2 UI 확인·커밋은 수행하지 않았다.
+
+0.19.0 필수 표시: 작업명·완료 기준에 별표와 필수 안내를 추가하며 기존 required 속성과 검증을 유지한다. 선행 작업 검색 결과는 WBS 원본 행 순서를 유지하는 부분 문자열 필터이며 별도 정렬·관련도 계산은 하지 않는다.
+
+## 0.20.1 규격 정리 검증
+
+- 프로젝트 내부 가이드·배포 양식·예제는 WBS v2를 사용한다. 구형 예제는 tests/fixtures/legacy-error.wbs로 분리해 호환 검증을 유지한다. 외부 공용 양식은 이번 작업에서 변경하지 않았다.
+- Node 도메인·DOM 통합 테스트 96개, 타입·포맷·버전 검사와 Vite 빌드가 통과했다. 실제 WebView2 화면·설치 후 파일 연결·새 기능 인수는 별도이며 자동 테스트 통과로 완료 처리하지 않는다.
+- Windows 설치 프로그램은 승인된 main 릴리즈 CI에서 생성하고 서명·변조 거부 검사를 수행한다.

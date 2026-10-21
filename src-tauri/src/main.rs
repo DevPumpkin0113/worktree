@@ -2,8 +2,11 @@
 use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
-mod settings;
+mod document_write;
+mod i18n;
+mod projects;
 mod session;
+mod settings;
 mod update_cleanup;
 use app_updates::{
     check_app_update, get_build_info, install_app_update, open_issue_report, open_releases,
@@ -17,6 +20,10 @@ struct OpenQueue(Mutex<Vec<String>>);
 fn enqueue(state: &OpenQueue, paths: impl Iterator<Item = PathBuf>) {
     if let Ok(mut queue) = state.0.lock() {
         for path in paths {
+            if path.is_dir() {
+                queue.push(path.to_string_lossy().to_string());
+                continue;
+            }
             if let Some(ext) = path.extension().and_then(|x| x.to_str()) {
                 if ["wbs", "md", "markdown"].contains(&ext.to_lowercase().as_str()) {
                     queue.push(path.to_string_lossy().to_string());
@@ -41,25 +48,13 @@ fn read_document(path: String) -> Result<String, String> {
         .unwrap_or("")
         .to_lowercase();
     if !["wbs", "md", "markdown"].contains(&ext.as_str()) {
-        return Err("WBS 문서 파일을 선택해 주세요.".into());
+        return Err(crate::i18n::select_wbs().into());
     }
     let meta = std::fs::metadata(&file).map_err(|e| e.to_string())?;
     if !meta.is_file() || meta.len() > 5 * 1024 * 1024 {
-        return Err("5MB 이하 문서 파일만 열 수 있습니다.".into());
+        return Err(crate::i18n::document_too_large().into());
     }
     std::fs::read_to_string(file).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn pick_document() -> Result<Option<String>, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        rfd::FileDialog::new()
-            .add_filter("WBS 문서", &["wbs"])
-            .pick_file()
-            .map(|p| p.to_string_lossy().to_string())
-    })
-    .await
-    .map_err(|e| e.to_string())
 }
 
 fn main() {
@@ -89,7 +84,7 @@ fn main() {
             settings::setup(app)?;
             tauri::async_runtime::spawn_blocking(|| {
                 if let Err(error) = update_cleanup::cleanup_previous_installers() {
-                    eprintln!("이전 업데이트 임시 파일 정리 실패: {error}");
+                    eprintln!("{}", crate::i18n::cleanup_failed(&error));
                 }
             });
             enqueue(
@@ -106,7 +101,9 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             take_open_requests,
             read_document,
-            pick_document,
+            document_write::save_document,
+            projects::pick_project,
+            projects::scan_project,
             get_build_info,
             check_app_update,
             install_app_update,
@@ -119,5 +116,5 @@ fn main() {
             session::save_session
         ])
         .run(tauri::generate_context!())
-        .expect("Worktree 실행 실패");
+        .expect(crate::i18n::startup_failed());
 }

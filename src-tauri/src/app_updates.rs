@@ -21,7 +21,7 @@ struct Operation<'a>(&'a AtomicBool);
 impl<'a> Operation<'a> {
     fn start(busy: &'a AtomicBool) -> Result<Self, String> {
         busy.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
-            .map_err(|_| "업데이트 작업이 이미 진행 중입니다.".to_string())?;
+            .map_err(|_| crate::i18n::update_busy().to_string())?;
         Ok(Self(busy))
     }
 }
@@ -61,9 +61,9 @@ pub struct CheckResult {
 
 fn compare_versions(current: &str, latest: &str) -> Result<std::cmp::Ordering, String> {
     let current =
-        semver::Version::parse(current).map_err(|_| "현재 앱 버전이 올바르지 않습니다.")?;
+        semver::Version::parse(current).map_err(|_| crate::i18n::invalid_app_version())?;
     let latest = semver::Version::parse(latest.strip_prefix('v').unwrap_or(latest))
-        .map_err(|_| "릴리즈 버전이 올바르지 않습니다.")?;
+        .map_err(|_| crate::i18n::invalid_release_version())?;
     Ok(current.cmp(&latest))
 }
 
@@ -81,26 +81,23 @@ async fn fetch_latest_release() -> Result<Option<serde_json::Value>, String> {
         .get(RELEASE_API)
         .send()
         .await
-        .map_err(|_| "서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 다시 시도하세요.")?;
+        .map_err(|_| crate::i18n::network_failed())?;
     if response.status() == reqwest::StatusCode::NOT_FOUND {
         return Ok(None);
     }
     if response.status() == reqwest::StatusCode::FORBIDDEN
         || response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS
     {
-        return Err("GitHub 조회 한도에 도달했습니다. 잠시 후 다시 시도하세요.".into());
+        return Err(crate::i18n::rate_limited().into());
     }
     let release: serde_json::Value = response
         .error_for_status()
         .map_err(|e| {
-            format!(
-                "업데이트 서버 오류: {}",
-                e.status().map(|s| s.as_u16()).unwrap_or(0)
-            )
+            crate::i18n::update_server_failed(&(e.status().map(|s| s.as_u16()).unwrap_or(0)))
         })?
         .json()
         .await
-        .map_err(|_| "릴리즈 정보를 읽지 못했습니다.")?;
+        .map_err(|_| crate::i18n::release_read_failed())?;
     Ok(Some(release))
 }
 
@@ -113,7 +110,7 @@ pub async fn check_app_update(
     *state
         .pending
         .lock()
-        .map_err(|_| "업데이트 상태를 읽지 못했습니다.")? = None;
+        .map_err(|_| crate::i18n::update_state_read_failed())? = None;
     let Some(release) = fetch_latest_release().await? else {
         return Ok(CheckResult {
             kind: "no-release",
@@ -123,7 +120,7 @@ pub async fn check_app_update(
     };
     let tag = release["tag_name"]
         .as_str()
-        .ok_or("릴리즈 버전이 없습니다.")?;
+        .ok_or(crate::i18n::release_version_missing())?;
     let version = tag.strip_prefix('v').unwrap_or(tag).to_string();
     let comparison = compare_versions(env!("CARGO_PKG_VERSION"), &version)?;
     let notes: String = release["body"]
@@ -160,16 +157,16 @@ pub async fn check_app_update(
         .map_err(|e| e.to_string())?
         .check()
         .await
-        .map_err(|_| "서명 업데이트 정보를 확인하지 못했습니다. 잠시 후 다시 시도하세요.")?
-        .ok_or("릴리즈 정보가 변경되었습니다. 다시 확인하세요.")?;
+        .map_err(|_| crate::i18n::signed_update_failed())?
+        .ok_or(crate::i18n::release_changed())?;
     if update.version != version || !valid_download(&update.download_url, &version) {
-        return Err("릴리즈와 설치 파일 정보가 일치하지 않습니다. 다시 확인하세요.".into());
+        return Err(crate::i18n::release_mismatch().into());
     }
     update.timeout = Some(Duration::from_secs(300));
     *state
         .pending
         .lock()
-        .map_err(|_| "업데이트 상태를 저장하지 못했습니다.")? = Some(update);
+        .map_err(|_| crate::i18n::update_state_save_failed())? = Some(update);
     Ok(CheckResult {
         kind: "available",
         version: Some(version),
@@ -194,15 +191,20 @@ pub async fn install_app_update(
     let update = state
         .pending
         .lock()
-        .map_err(|_| "업데이트 상태를 읽지 못했습니다.")?
+        .map_err(|_| crate::i18n::update_state_read_failed())?
         .clone()
-        .ok_or("업데이트를 먼저 확인하세요.")?;
+        .ok_or(crate::i18n::check_update_first())?;
     let version = update.version.clone();
     let confirmed = tauri::async_runtime::spawn_blocking(move || {
-        rfd::MessageDialog::new().set_title("Worktree 업데이트")
-            .set_description(format!("Worktree {version}을 다운로드하고 설치할까요?\n설치가 시작되면 앱이 종료됩니다. 설치 후 Worktree를 다시 실행해 주세요."))
-            .set_buttons(rfd::MessageButtons::OkCancel).show() == rfd::MessageDialogResult::Ok
-    }).await.map_err(|e| e.to_string())?;
+        rfd::MessageDialog::new()
+            .set_title(crate::i18n::update_title())
+            .set_description(crate::i18n::install_confirm(&version))
+            .set_buttons(rfd::MessageButtons::OkCancel)
+            .show()
+            == rfd::MessageDialogResult::Ok
+    })
+    .await
+    .map_err(|e| e.to_string())?;
     if !confirmed {
         return Ok(false);
     }
@@ -221,9 +223,7 @@ pub async fn install_app_update(
             || {},
         )
         .await
-        .map_err(|_| {
-            "다운로드 또는 서명 검증에 실패했습니다. 설치하지 않았습니다. 다시 시도하세요."
-        })?;
+        .map_err(|_| crate::i18n::verification_failed())?;
     let _ = on_progress.send(UpdateProgress {
         phase: "installing",
         downloaded: bytes.len() as u64,
@@ -232,13 +232,19 @@ pub async fn install_app_update(
     tauri::async_runtime::spawn_blocking(move || update.install(bytes))
         .await
         .map_err(|e| e.to_string())?
-        .map_err(|_| "설치 프로그램을 실행하지 못했습니다. 다시 시도하세요.".to_string())?;
+        .map_err(|_| crate::i18n::installer_failed().to_string())?;
     Ok(true)
 }
 
 fn issue_url() -> reqwest::Url {
     let info = get_build_info();
-    let body = format!("## 발생한 문제\n\n\n## 재현 방법\n1. \n\n## 기대한 동작\n\n\n## 앱 정보\n- 버전: {}\n- 빌드: {} / {}\n- 빌드 일시(Unix UTC): {}\n- 환경: {}\n\n문서 내용이나 개인 경로는 포함되지 않습니다. 첨부 자료의 개인정보를 확인해 주세요.\n", info.version, info.channel, info.commit, info.built_at, info.platform);
+    let body = crate::i18n::issue_body(
+        &info.version,
+        &info.channel,
+        &info.commit,
+        &info.built_at,
+        &info.platform,
+    );
     let mut url =
         reqwest::Url::parse("https://github.com/DevPumpkin0113/worktree/issues/new").unwrap();
     url.query_pairs_mut().append_pair("body", &body);
@@ -249,9 +255,7 @@ pub async fn open_issue_report() -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(|| open::that(issue_url().as_str()))
         .await
         .map_err(|e| e.to_string())?
-        .map_err(|_| {
-            "기본 브라우저를 열지 못했습니다. GitHub 저장소의 Issues에서 제보해 주세요.".into()
-        })
+        .map_err(|_| crate::i18n::browser_failed().into())
 }
 #[tauri::command]
 pub async fn open_releases() -> Result<(), String> {

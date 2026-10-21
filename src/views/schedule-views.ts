@@ -1,9 +1,7 @@
 import { messages } from '../i18n/messages';
 import type { WorkRow } from '../domain/types';
 import { escapeHtml as escape } from './html';
-const DAY = 86400000;
 import { STATUS_NAMES as stateName } from '../app/types';
-const dateString = (time: number) => new Date(time).toISOString().slice(0, 10);
 
 export function graphLayout(rows: WorkRow[]) {
   const byId = new Map(rows.map((r) => [r.id, r])),
@@ -110,69 +108,6 @@ export function renderDependencies(
     : `<div class="notice">${escape(messages.networkHint)}</div>`;
   return (
     info +
-    `<div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${titles}${edges}${cards}</svg></div><p class="sub">${escape(messages.networkFilterHint)}</p>`
+    `<div class="chart-scroll-frame"><div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${titles}${edges}${cards}</svg></div></div><p class="sub">${escape(messages.networkFilterHint)}</p>`
   );
-}
-
-export function timelineRange(rows: WorkRow[], unit: 'day' | 'week' = 'day', minimumWidth = 720) {
-  const scheduled = rows.filter((r) => r.start !== '-');
-  if (!scheduled.length) return null;
-  const start = Math.min(...scheduled.map((r) => Date.parse(r.start))),
-    end = Math.max(...scheduled.map((r) => Date.parse(r.end)));
-  const days = Math.round((end - start) / DAY) + 1,
-    width = Math.min(18000, Math.max(minimumWidth, days * (unit === 'week' ? 7 : 32))),
-    dayWidth = width / days,
-    step = Math.max(unit === 'week' ? 7 : 1, Math.ceil(44 / dayWidth));
-  return { start, end, days, dayWidth, width, step };
-}
-
-export function renderGantt(
-  rows: WorkRow[],
-  label: (id: string) => string,
-  unit: 'day' | 'week' = 'day',
-  today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }),
-  availableWidth = 960,
-) {
-  if (!rows.length) return `<div class="empty">${escape(messages.noMatchingTasks)}</div>`;
-  const known = rows.filter((r) => r.start !== '-'),
-    unknown = rows.filter((r) => r.start === '-'),
-    range = timelineRange(rows, unit, Math.max(240, availableWidth - 242));
-  let result = `<div class="schedule-toolbar"><div><strong>${escape(messages.gantt)}</strong><span class="sub">${escape(messages.ganttScheduledPrefix)}${known.length}${escape(messages.ganttUnknownPrefix)}${unknown.length}</span></div><label>${escape(messages.dateAxis + ' ')}<select id="ganttUnit" aria-label="${escape(messages.ganttDateAxis)}"><option value="day" ${unit === 'day' ? 'selected' : ''}>${escape(messages.dayUnit)}</option><option value="week" ${unit === 'week' ? 'selected' : ''}>${escape(messages.weekUnit)}</option></select></label></div>`;
-  if (range) {
-    const { start, days, dayWidth, width, step } = range;
-    let grid = '',
-      ticks = '';
-    for (let i = 0; i < days; i += step) {
-      const x = i * dayWidth,
-        day = dateString(start + i * DAY);
-      grid += `<path d="M${x} 0v48" class="date-grid"/>`;
-      ticks += `<text x="${x + 4}" y="23" class="date-label">${day.slice(5).replace('-', '/')}</text>`;
-    }
-    const todayOffset = (Date.parse(today) - start) / DAY;
-    const todayLine =
-      todayOffset >= 0 && todayOffset < days
-        ? `<path d="M${todayOffset * dayWidth + dayWidth / 2} 0v48" class="today-line"><title>${escape(messages.todayPrefix)}${today}</title></path>`
-        : '';
-    result += `<p class="sub">${dateString(start)} ~ ${dateString(range.end)}${escape(messages.ganttRangeHint)}</p><div class="gantt-scroll" tabindex="0" aria-label="${escape(messages.ganttScrollLabel)}"><table class="gantt-table"><thead><tr><th scope="col">${escape(messages.workList)}</th><th scope="col"><svg width="${width}" height="38" aria-label="${escape(messages.dateAxis)}">${ticks}</svg></th></tr></thead><tbody>`;
-    result += known
-      .map((r) => {
-        const x = ((Date.parse(r.start) - start) / DAY) * dayWidth,
-          duration = ((Date.parse(r.end) - Date.parse(r.start)) / DAY + 1) * dayWidth;
-        const mark = `<rect x="${x + 1}" y="14" width="${Math.max(2, duration - 2)}" height="20" rx="4" class="schedule-bar state-${r.status}"/>`;
-        return `<tr><th scope="row"><button class="gantt-label" data-id="${r.id}" title="${escape(r.name)}"><span class="id">${escape(label(r.id))}</span><span>${escape(r.name)}</span></button></th><td><svg width="${width}" height="48" data-id="${r.id}" class="timeline-row" role="button" tabindex="0" aria-label="${escape(r.name + ' ' + r.start + ' ~ ' + r.end)}"><title>${escape(r.name + ' · ' + r.start + ' ~ ' + r.end + ' · ' + stateName[r.status])}</title>${grid}${mark}${todayLine}</svg></td></tr>`;
-      })
-      .join('');
-    result += '</tbody></table></div>';
-  } else result += `<div class="empty">${escape(messages.ganttEmpty)}</div>`;
-  if (unknown.length)
-    result +=
-      `<details class="unscheduled" open><summary>${escape(messages.unscheduledPrefix)}${unknown.length}${escape(messages.countSuffix)}</summary><div class="unscheduled-list">` +
-      unknown
-        .map(
-          (r) =>
-            `<button data-id="${r.id}"><span class="id">${escape(label(r.id))}</span> ${escape(r.name)}</button>`,
-        )
-        .join('') +
-      '</div></details>';
-  return result;
 }

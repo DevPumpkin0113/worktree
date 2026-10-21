@@ -1118,3 +1118,103 @@ test('미지정 묶음은 마일스톤 아래에 표시하고 전체 진행률·
     await f.close();
   }
 });
+
+test('간트는 오늘 중심으로 시작하고 배율·크기·보기·필터 전환 후 보던 날짜를 복원한다', async () => {
+  const oldObserver = Object.getOwnPropertyDescriptor(globalThis, 'ResizeObserver');
+  const observers = new Map<Element, () => void>();
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    configurable: true,
+    value: class {
+      node?: Element;
+      constructor(private callback: () => void) {}
+      observe(node: Element) {
+        this.node = node;
+        observers.set(node, this.callback);
+      }
+      disconnect() {
+        if (this.node) observers.delete(this.node);
+      }
+    },
+  });
+  const f = await fixture();
+  try {
+    const { initialWindowStart, seoulToday } = await import('../../src/views/gantt-timeline');
+    const text =
+      source +
+      '| W004 | W001 | task | 미래 일정 | 확인 | codex | todo | 2030-01-01 | 2030-01-10 | - | - |\n';
+    f.files.set(first, text);
+    await act(async () => f.store.open(first));
+    await f.click('[data-view="gantt"]');
+    let scroll = f.element<HTMLElement>('.gantt-scroll');
+    assert.equal(scroll.dataset.visibleDays, '7');
+    assert.equal(Number(scroll.dataset.windowStart), initialWindowStart(seoulToday(), 'day'));
+    const axis = f.element<SVGElement>('thead svg');
+    let todayX = Number(
+      f
+        .element('thead svg .today-line')
+        .getAttribute('d')!
+        .match(/^M([^ ]+)/)![1],
+    );
+    assert.ok(Math.abs(todayX - Number(axis.getAttribute('width')) / 2) < 0.01);
+    Object.defineProperty(scroll, 'clientWidth', { configurable: true, value: 600 });
+    await act(async () => observers.get(scroll)!());
+    todayX = Number(
+      f
+        .element('thead svg .today-line')
+        .getAttribute('d')!
+        .match(/^M([^ ]+)/)![1],
+    );
+    assert.ok(Math.abs(todayX - Number(f.element('thead svg').getAttribute('width')) / 2) < 0.01);
+    await act(async () => {
+      scroll.scrollLeft = 123;
+      scroll.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+    const dayStart = Number(scroll.dataset.windowStart);
+    assert.ok(dayStart > initialWindowStart(seoulToday(), 'day'));
+    await f.click('#ganttUnit');
+    await f.click('#ganttUnit-options [data-value="week"]');
+    scroll = f.element('.gantt-scroll');
+    assert.equal(scroll.dataset.visibleDays, '35');
+    assert.equal(Number(scroll.dataset.windowStart), initialWindowStart(seoulToday(), 'week'));
+    assert.equal(f.host.querySelectorAll('thead svg text').length, 5);
+    assert.match(f.element('thead svg').textContent!, /주차/);
+    await act(async () => {
+      scroll.scrollLeft = 77;
+      scroll.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+    const weekStart = Number(scroll.dataset.windowStart);
+    await f.click('#ganttUnit');
+    await f.click('#ganttUnit-options [data-value="day"]');
+    assert.ok(
+      Math.abs(Number(f.element('.gantt-scroll').getAttribute('data-window-start')) - dayStart) < 2,
+    );
+    await f.click('[data-view="tree"]');
+    await f.click('[data-view="gantt"]');
+    assert.ok(
+      Math.abs(Number(f.element('.gantt-scroll').getAttribute('data-window-start')) - dayStart) < 2,
+    );
+    await f.value('#search', '미래');
+    assert.equal(f.host.querySelectorAll('.gantt-table tbody tr').length, 1);
+    assert.ok(
+      Math.abs(Number(f.element('.gantt-scroll').getAttribute('data-window-start')) - dayStart) < 2,
+    );
+    f.files.set(first, text.replace('미래 일정', '미래 일정 변경'));
+    await act(async () => f.store.poll());
+    assert.ok(
+      Math.abs(Number(f.element('.gantt-scroll').getAttribute('data-window-start')) - dayStart) < 2,
+    );
+    await f.click('#ganttUnit');
+    await f.click('#ganttUnit-options [data-value="week"]');
+    assert.ok(
+      Math.abs(Number(f.element('.gantt-scroll').getAttribute('data-window-start')) - weekStart) <
+        2,
+    );
+    await f.click('.gantt-label[data-id="W004"]');
+    assert.match(f.element('#detailTitle').textContent!, /미래 일정 변경/);
+    assert.equal(f.files.get(first), text.replace('미래 일정', '미래 일정 변경'));
+  } finally {
+    await f.close();
+    if (oldObserver) Object.defineProperty(globalThis, 'ResizeObserver', oldObserver);
+    else Reflect.deleteProperty(globalThis, 'ResizeObserver');
+  }
+});

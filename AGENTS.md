@@ -140,7 +140,7 @@ UI 변경 요청은 다음 구역 명칭을 기준으로 해석한다. 안내 �
 ### 프런트엔드 파일 위치
 
 - index.html은 root 컨테이너와 src/main.tsx 진입점만 둔다. src/App.tsx는 화면 조합, src/components는 React 화면, src/hooks는 생명주기, src/app은 타입과 상태 저장소, src/styles는 CSS를 담당한다.
-- src/domain은 WBS·ID·집계 규칙, src/views는 기존 SVG 생성·표시 문자열 도우미, src/platform은 Tauri 및 저장소 연결, src/interactions는 독립 포인터·스크롤 로직을 담당한다. React 소유 DOM은 이벤트·상태·ref로 관리하고 문자열 HTML 삽입은 ChartView의 SVG 어댑터 경계에만 한정한다.
+- src/domain은 WBS·ID·집계 규칙, src/views는 기존 SVG 생성·표시 문자열 도우미, src/platform은 Tauri 및 저장소 연결, src/interactions는 독립 포인터·스크롤 로직을 담당한다. React 소유 DOM은 이벤트·상태·ref로 관리하고 문자열 HTML 삽입은 ChartView가 조합하는 DependencyChart의 SVG 어댑터 경계에만 한정한다. 간트는 GanttView·GanttAxis·GanttTaskRow의 React SVG로 렌더링한다.
 - 자동화 테스트는 tests에 두고 npm test로 실행한다. public 및 src-tauri의 에셋 위치는 유지한다.
 
 - 상세 정보는 설정에서 모달·우측 사이드 패널을 선택하며 같은 상세 렌더러를 재사용한다. 기본은 우측 사이드 패널이며 설정은 앱 전체에 저장한다. 사이드 패널은 목록 조작을 막지 않는다. 문서 전환 시 이전 상세를 닫는다.
@@ -226,3 +226,5 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 - 작업 삭제는 task-deletion.ts에서 영향 범위·하위 작업 유지/삭제·외부 선행 참조 해제 동의를 검증한다. TaskDeleteDialog의 확정 시에만 원본 비교 저장하며 실패·충돌 시 선택을 유지한다. 정책은 docs/adr/0013-task-deletion.md를 따른다.
 
 - 트리 보기의 상위 ID가 -인 일반 작업은 실제 마일스톤 아래 미지정 가상 묶음으로 표시한다. 해당 작업이 없거나 필터 결과가 없으면 숨긴다. 진행률은 필터와 무관한 전체 미지정 작업 기준이며 마일스톤 수에 포함하지 않는다. 문서에 가상 ID나 행을 쓰지 않고 접힘은 문서별 메모리 보기 상태로 유지한다.
+
+- 간트는 일 단위 7일·오늘 중앙, 주 단위 5주·현재 주 중앙으로 처음 표시한다. 주는 월요일 시작 ISO 연간 주차다. gantt-timeline.ts의 날짜 계산과 use-gantt-viewport.ts의 측정·스크롤·리사이즈를 분리하며 가시 구간만 그린다. 문서별 일/주 보기 상태는 픽셀과 날짜 앵커를 현재 창 메모리에 보관한다. 긴 범위의 스크롤 트랙은 최대 18,000px로 매핑하고 날짜 배율은 줄이지 않는다. 간트·네트워크 스크롤 프레임은 좌우·하단 10px 여백을 둔다.

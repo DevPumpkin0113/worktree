@@ -12,7 +12,11 @@ export function createDocumentViewState() {
     {
       views: Map<
         string,
-        { left: number; top: number; nested: Record<string, { left: number; top: number }> }
+        {
+          left: number;
+          top: number;
+          nested: Record<string, { left: number; top: number; date?: number }>;
+        }
       >;
       groups: Map<string, boolean>;
     }
@@ -28,11 +32,18 @@ export function createDocumentViewState() {
       const scroll = {
         left: root.scrollLeft || 0,
         top: root.scrollTop || 0,
-        nested: {} as Record<string, { left: number; top: number }>,
+        nested: {} as Record<string, { left: number; top: number; date?: number }>,
       };
       for (const selector of scrollers) {
         const node = root.querySelector?.<HTMLElement>(selector);
-        if (node) scroll.nested[selector] = { left: node.scrollLeft, top: node.scrollTop };
+        if (node) {
+          const date = Number(node.dataset?.windowStart);
+          scroll.nested[selector] = {
+            left: node.scrollLeft,
+            top: node.scrollTop,
+            ...(Number.isFinite(date) ? { date } : {}),
+          };
+        }
       }
       for (const summary of root.querySelectorAll?.<HTMLElement>(groupSelector) || []) {
         const key = groupKey(summary);
@@ -63,8 +74,14 @@ export function createDocumentViewState() {
       for (const selector of scrollers) {
         const node = root.querySelector?.<HTMLElement>(selector);
         if (node) {
-          node.scrollLeft = scroll?.nested[selector]?.left || 0;
-          node.scrollTop = scroll?.nested[selector]?.top || 0;
+          const saved = scroll?.nested[selector];
+          if (saved?.date !== undefined) {
+            node.dataset.restoreWindowStart = String(saved.date);
+            node.dataset.windowStart = String(saved.date);
+          }
+          node.scrollLeft = saved?.left ?? (Number(node.dataset?.initialScrollLeft) || 0);
+          node.scrollTop = saved?.top || 0;
+          if (selector === '.gantt-scroll') node.dispatchEvent?.(new Event('scroll'));
         }
       }
     },

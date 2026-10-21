@@ -1,4 +1,5 @@
 export const ko = {
+  ganttWeekLabel: (week: string | number) => `${week}주차`,
   unassignedMilestone: '미지정',
   edit: '수정',
   delete: '삭제',
@@ -162,7 +163,7 @@ export const ko = {
   dateFixHint:
     '날짜는 YYYY-MM-DD로 입력하고 시작일이 종료일보다 늦지 않게 하세요. 미정이면 두 날짜 모두 -로 입력하세요.',
   dateRange: '시작일 / 종료일',
-  dayUnit: '일 단위',
+  dayUnit: '일 단위 · 7일',
   dependencyCycleHint: '서로를 선행 작업으로 참조하는 연결을 해제하세요.',
   dependencyDateExample: '선행 작업 종료일이 2026-10-20이면 시작일은 2026-10-21 이후',
   dependencyDateHint: '후속 작업 시작일을 선행 작업 종료일 다음 날 이후로 입력하세요.',
@@ -408,7 +409,7 @@ export const ko = {
     '문서 첫 메타데이터의 use_effort에 true(공수 표시) 또는 false(공수 숨김)를 입력하세요.',
   versionPrefix: '버전 ',
   viewSourcePrefix: '관련 원문 보기 ·',
-  weekUnit: '주 단위',
+  weekUnit: '주 단위 · 5주',
   weightedProgressPrefix: '공수 진척도 ',
   windowControlError: '창 제어 오류',
   workBoard: '작업 보드',

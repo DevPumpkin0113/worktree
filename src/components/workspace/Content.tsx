@@ -48,7 +48,12 @@ export function Content({
   const rows = model?.rows;
   const root = useRef<HTMLDivElement>(null);
   const viewState = useRef(createDocumentViewState());
-  const pageKey = state.page === 'board' ? (active?.view ?? 'tree') : state.page;
+  const pageKey =
+    state.page === 'board'
+      ? active?.view === 'gantt'
+        ? 'gantt:' + active.ganttUnit
+        : (active?.view ?? 'tree')
+      : state.page;
   const filtered = useMemo(
     () =>
       rows?.filter(
@@ -231,7 +236,10 @@ export function Content({
             label={label}
             selectedId={selectedId}
             unit={active.ganttUnit}
-            onUnit={(unit) => store.setGanttUnit(unit)}
+            onUnit={(unit) => {
+              capture();
+              store.setGanttUnit(unit);
+            }}
             onSelect={(id) => store.selectWork(id)}
             onScroll={capture}
           />

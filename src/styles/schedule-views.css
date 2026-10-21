@@ -7,15 +7,6 @@
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
-.schedule-toolbar label {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-.schedule-toolbar select {
-  font-size: 12px;
-  padding: 6px 10px;
-  margin-left: 8px;
-}
 .gantt-scroll,
 .diagram-scroll {
   max-width: 100%;
@@ -44,9 +35,6 @@
   position: sticky;
   left: 0;
   z-index: 2;
-  width: 240px;
-  min-width: 240px;
-  max-width: 240px;
   background: var(--color-surface);
   border-right: 1px solid var(--color-recent-files-border);
 }
@@ -70,7 +58,8 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  width: 240px;
+  width: 100%;
+  overflow: hidden;
   height: 48px;
   border: 0;
   background: transparent;
@@ -258,4 +247,31 @@
 
 .dependency-arrow {
   fill: var(--color-chart-arrow);
+}
+
+.chart-scroll-frame {
+  --chart-scroll-inset: 10px;
+  padding: 0 var(--chart-scroll-inset) var(--chart-scroll-inset);
+  border: 1px solid var(--color-recent-files-border);
+  border-radius: 10px;
+  background: var(--color-gantt-scroll-background);
+  overflow: hidden;
+}
+.chart-scroll-frame .gantt-scroll,
+.chart-scroll-frame .diagram-scroll {
+  border: 0;
+  border-radius: 0;
+}
+.gantt-canvas {
+  position: relative;
+}
+.gantt-viewport-table {
+  position: sticky;
+  left: 0;
+}
+.gantt-viewport-table thead th {
+  height: 48px;
+}
+.schedule-toolbar .filter-dropdown {
+  min-width: 150px;
 }

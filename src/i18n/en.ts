@@ -1,6 +1,7 @@
 import type { ko } from './ko';
 
 export const en = {
+  ganttWeekLabel: (week: string | number) => `Week ${week}`,
   unassignedMilestone: 'No milestone',
   edit: 'Edit',
   delete: 'Delete',
@@ -166,7 +167,7 @@ export const en = {
   dateFixHint:
     'Use YYYY-MM-DD dates. The start date must not be after the end date. Use - for both dates if the schedule is unknown.',
   dateRange: 'Start date / end date',
-  dayUnit: 'Days',
+  dayUnit: 'Days · 7 days',
   dependencyCycleHint: 'Remove dependency links that refer back to each other.',
   dependencyDateExample: 'If the predecessor ends on 2026-10-20, start on 2026-10-21 or later.',
   dependencyDateHint:
@@ -420,7 +421,7 @@ export const en = {
     'Set use_effort in the document front matter to true to show effort or false to hide it.',
   versionPrefix: 'Version ',
   viewSourcePrefix: 'View source ·',
-  weekUnit: 'Weeks',
+  weekUnit: 'Weeks · 5 weeks',
   weightedProgressPrefix: 'Effort-weighted progress: ',
   windowControlError: 'Window control error',
   workBoard: 'Task board',

@@ -106,16 +106,20 @@ export function TaskInfo({
             </div>
           ))}
       </div>
-      <section className="detail-section criteria-section">
-        <div className="detail-section-heading">
-          <h3>{messages.criteria}</h3>
-          {row.status === 'done' ? (
-            <span className="detail-complete">{messages.recordedDone}</span>
+      {!row.milestone ? (
+        <section className="detail-section criteria-section">
+          <div className="detail-section-heading">
+            <h3>{messages.criteria}</h3>
+            {row.status === 'done' ? (
+              <span className="detail-complete">{messages.recordedDone}</span>
+            ) : null}
+          </div>
+          <p className="detail-criteria">{row.criteria || messages.noCriteria}</p>
+          {row.status === 'blocked' ? (
+            <p className="detail-blocked">{messages.blockedHint}</p>
           ) : null}
-        </div>
-        <p className="detail-criteria">{row.criteria || messages.noCriteria}</p>
-        {row.status === 'blocked' ? <p className="detail-blocked">{messages.blockedHint}</p> : null}
-      </section>
+        </section>
+      ) : null}
       {children.length ? (
         <section className="detail-section">
           <h3>
@@ -125,22 +129,24 @@ export function TaskInfo({
           {links(children)}
         </section>
       ) : null}
-      <div className="detail-relations">
-        {[
-          [messages.predecessors, previous],
-          [messages.successors, next],
-        ].map(([name, items]) => (
-          <section className="detail-section" key={name as string}>
-            <h3>
-              {name as string} <span>{(items as WorkRow[]).length}</span>
-            </h3>
-            <p className="detail-section-note">
-              {name === messages.predecessors ? messages.predecessorHint : messages.successorHint}
-            </p>
-            {links(items as WorkRow[])}
-          </section>
-        ))}
-      </div>
+      {!row.milestone ? (
+        <div className="detail-relations">
+          {[
+            [messages.predecessors, previous],
+            [messages.successors, next],
+          ].map(([name, items]) => (
+            <section className="detail-section" key={name as string}>
+              <h3>
+                {name as string} <span>{(items as WorkRow[]).length}</span>
+              </h3>
+              <p className="detail-section-note">
+                {name === messages.predecessors ? messages.predecessorHint : messages.successorHint}
+              </p>
+              {links(items as WorkRow[])}
+            </section>
+          ))}
+        </div>
+      ) : null}
       {!row.milestone ? (
         <details className="detail-identifiers">
           <summary>{messages.identifiers}</summary>
@@ -149,7 +155,9 @@ export function TaskInfo({
             <dd>{label(row.id)}</dd>
             <dt>{messages.sourceId}</dt>
             <dd>{row.id}</dd>
-            <dt>{messages.parentId}</dt>
+            <dt>
+              {byId.get(row.parent)?.milestone ? messages.parentMilestone : messages.parentId}
+            </dt>
             <dd>
               {row.parent === '-'
                 ? messages.none

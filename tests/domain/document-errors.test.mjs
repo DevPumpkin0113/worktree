@@ -7,7 +7,7 @@ import {parseWbs} from '../../src/domain/model.ts';
 import {describeDocumentErrors,formatDocumentProblem,problemLocation} from '../../src/domain/document-errors.ts';
 import {tableCellPositions} from '../../src/domain/work-table.ts';
 import {renderDocumentErrors} from '../helpers/render-helpers.tsx';
-const fixture=fs.readFileSync(new URL('../../examples/Error-demo.wbs',import.meta.url),'utf8');
+const fixture=fs.readFileSync(new URL('../fixtures/legacy-error.wbs',import.meta.url),'utf8');
 
 test('참조 오류에서 작업·문제 값·수정 안내와 해당 원문만 추출한다',()=>{
  let error;try{parseWbs(fixture);}catch(e){error=e;}

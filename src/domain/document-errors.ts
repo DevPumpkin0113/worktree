@@ -52,6 +52,8 @@ function buildDocumentProblems(
   messages: typeof ko,
 ): Problem[] {
   const sourceLines = markdown.split(/\r?\n/).map((raw, index) => ({ raw, line: index + 1 }));
+  const metadata = markdown.match(/^\uFEFF?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1] ?? '';
+  const modern = /^schema_version:[ \t]*2[ \t]*$/m.test(metadata);
   const { table } = findWorkTable(markdown);
   const rows = table.slice(2);
   const diagnostics = error instanceof DocumentValidationError ? error.diagnostics : [];
@@ -125,17 +127,21 @@ function buildDocumentProblems(
             ? messages.dependencyCycleHint
             : code === 'INVALID_DEPENDENCY_DATE'
               ? messages.dependencyDateHint
-              : messages.dependencyFixHint;
-      if (key === 'parent') hint = messages.parentFixHint;
+              : modern
+                ? messages.modernDependencyHint
+                : messages.dependencyFixHint;
+      if (key === 'parent') hint = modern ? messages.modernParentHint : messages.parentFixHint;
       if (key === 'id') hint = messages.idFixHint;
-      if (key === 'status') hint = messages.statusFixHint;
+      if (key === 'status') hint = modern ? messages.modernStatusHint : messages.statusFixHint;
       if (key === 'type') hint = messages.typeFixHint;
       if (key === 'start') hint = messages.dateFixHint;
       if (key === 'effort') hint = messages.effortFixHint;
       if (code === 'EMPTY_GROUP') hint = messages.emptyGroupHint;
       if (code === 'INVALID_GROUP_FIELDS') hint = messages.groupFieldsHint;
       indexes = key ? fieldColumns[key] : [];
-      example = key ? examples(messages)[key] : '';
+      example = key ? examples(messages)[key] : example;
+      if (modern && key === 'status') example = 'milestone·group: auto / task: todo';
+      if (code === 'INVALID_MILESTONE_CONTAINER') indexes = [1, 9, 10];
       if (code === 'INVALID_DEPENDENCY_DATE') {
         indexes = [7];
         field = messages.startDate;
@@ -163,6 +169,7 @@ function buildDocumentProblems(
       hint = messages.columnsFixHint;
     else if (code === 'MISSING_WORK_SECTION') hint = messages.sectionFixHint;
     else if (code === 'INVALID_USE_EFFORT') hint = messages.useEffortFixHint;
+    else if (code === 'UNSUPPORTED_SCHEMA') hint = messages.unsupportedWbsSchema;
     else if (code === 'INVALID_ID_PREFIX') hint = messages.prefixFixHint;
     else if (kindKey === 'fileReadError') hint = messages.fileReadFixHint;
     else if (!documentKind) hint = messages.retryHint;
@@ -173,7 +180,7 @@ function buildDocumentProblems(
       else if (code === 'INVALID_COLUMN_COUNT')
         locations = rows.filter((item) => item.cells.length !== 11).slice(0, 1);
       else if (
-        (code === 'INVALID_ID_PREFIX' || code === 'INVALID_USE_EFFORT') &&
+        ['INVALID_ID_PREFIX', 'INVALID_USE_EFFORT', 'UNSUPPORTED_SCHEMA'].includes(code || '') &&
         /^\uFEFF?---$/.test(sourceLines[0]?.raw || '')
       ) {
         const end = sourceLines.findIndex((item, index) => index > 0 && item.raw === '---');
@@ -181,7 +188,13 @@ function buildDocumentProblems(
           .slice(1, end < 0 ? 1 : end)
           .find((item) =>
             new RegExp(
-              '^' + (code === 'INVALID_USE_EFFORT' ? 'use_effort' : 'id_prefix') + ':',
+              '^' +
+                (code === 'UNSUPPORTED_SCHEMA'
+                  ? 'schema_version'
+                  : code === 'INVALID_USE_EFFORT'
+                    ? 'use_effort'
+                    : 'id_prefix') +
+                ':',
             ).test(item.raw),
           );
         if (prefix) locations = [prefix];
@@ -221,11 +234,16 @@ function buildDocumentProblems(
         }
         example = messages.columnsExample;
       } else if (
-        (code === 'INVALID_ID_PREFIX' || code === 'INVALID_USE_EFFORT') &&
+        ['INVALID_ID_PREFIX', 'INVALID_USE_EFFORT', 'UNSUPPORTED_SCHEMA'].includes(code || '') &&
         locations.length
       ) {
         const item = locations[0],
-          key = code === 'INVALID_USE_EFFORT' ? 'use_effort' : 'id_prefix',
+          key =
+            code === 'UNSUPPORTED_SCHEMA'
+              ? 'schema_version'
+              : code === 'INVALID_USE_EFFORT'
+                ? 'use_effort'
+                : 'id_prefix',
           prefix = item.raw.match(new RegExp('^' + key + ':[ \t]*'))![0];
         const column = Array.from(prefix).length + 1;
         positions = [
@@ -237,7 +255,12 @@ function buildDocumentProblems(
         ];
         field = key;
         value = item.raw.slice(prefix.length);
-        example = key === 'use_effort' ? 'use_effort: false' : 'id_prefix: OBS';
+        example =
+          key === 'schema_version'
+            ? 'schema_version: 2'
+            : key === 'use_effort'
+              ? 'use_effort: false'
+              : 'id_prefix: OBS';
       }
     }
     return {

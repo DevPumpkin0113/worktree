@@ -79,10 +79,10 @@ export function TaskEditorFields({
         />
       </div>
       <div className="task-editor-field">
-        <span>{messages.parentId}</span>
+        <span>{messages.parentMilestone}</span>
         <FilterDropdown
           id="taskEditor-parent"
-          label={messages.parentId}
+          label={messages.parentMilestone}
           value={draft.parent}
           disabled={disabled}
           options={[

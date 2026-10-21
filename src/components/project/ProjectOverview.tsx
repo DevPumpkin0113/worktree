@@ -1,6 +1,6 @@
 import { folderName } from '../../domain/project-paths';
 import { messages } from '../../i18n/messages';
-import { STATUS_NAMES, TYPE_NAMES, type OpenProject, type WorkModel } from '../../app/types';
+import { STATUS_NAMES, type OpenProject, type WorkModel } from '../../app/types';
 export function ProjectOverview({
   model,
   path,
@@ -36,7 +36,7 @@ export function ProjectOverview({
         <dl>
           <div>
             <dt>{messages.workTypes}</dt>
-            <dd>{Object.values(TYPE_NAMES).join(' · ')}</dd>
+            <dd>{[messages.task, messages.milestone].join(' · ')}</dd>
           </div>
           <div>
             <dt>{messages.workStatuses}</dt>

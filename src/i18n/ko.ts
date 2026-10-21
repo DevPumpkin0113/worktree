@@ -1,4 +1,12 @@
 export const ko = {
+  modernDependencyHint:
+    '존재하는 task의 ID를 입력하세요. 마일스톤은 선행 작업으로 지정할 수 없습니다. 없으면 -로 입력하세요.',
+  modernParentHint:
+    '존재하는 milestone의 ID를 입력하세요. 기존 중첩 group도 지원하며 최상위 작업은 -로 둡니다.',
+  modernStatusHint: 'milestone·group은 auto, task는 todo·doing·blocked·done 중 하나를 입력하세요.',
+  parentMilestone: '마일스톤',
+  milestoneDetailSuffix: ' 마일스톤 상세',
+
   optionalTargetPeriod: '목표 기간 (선택)',
   unsupportedWbsSchema: '지원하지 않는 WBS schema_version입니다. 1 또는 2를 사용하세요.',
   invalidMilestoneContainer: '마일스톤은 최상위에 두고 공수·선행 작업을 -로 작성하세요.',
@@ -194,7 +202,7 @@ export const ko = {
   ganttScrollLabel: '작업 일정 가로 스크롤',
   ganttUnknownPrefix: ' / 미정 ',
   group: '그룹',
-  groupDependencySuffix: '은 그룹이므로 참조할 수 없습니다.',
+  groupDependencySuffix: '은 작업 묶음이므로 참조할 수 없습니다.',
   groupDetailSuffix: ' 그룹 상세',
   groupFields: '그룹 집계 필드',
   groupFieldsExample: '시작일 / 종료일 / 예상 공수(h) / 선행 작업: - / - / - / -',
@@ -241,7 +249,7 @@ export const ko = {
   invalidIdSeparator: '잘못된 ID 구분자 설정입니다.',
   invalidIdReason: 'ID 형식 오류 (예: W001, W-001, OBS001, OBS-001)',
   invalidMilestone: '마일스톤 날짜 또는 공수 오류',
-  invalidParent: '상위 그룹 참조 오류',
+  invalidParent: '상위 작업 묶음 참조 오류',
   invalidSeparator: '작업 표의 구분선이 없거나 공통 규격과 다릅니다.',
   invalidSession: '세션 파일의 버전 또는 값이 올바르지 않습니다. 원본은 보존합니다.',
   invalidSetting: '올바르지 않은 설정입니다.',
@@ -353,7 +361,7 @@ export const ko = {
   statusFilter: '상태 필터',
   statusFixHint: 'group은 auto, task·milestone은 todo·doing·blocked·done 중 하나를 입력하세요.',
   structureNotice: (groupCount: string | number, missingDates: string | number) =>
-    `구조 검사 통과 · ${groupCount}개 그룹 · 일정 미정 ${missingDates}개`,
+    `구조 검사 통과 · ${groupCount}개 작업 묶음 · 일정 미정 ${missingDates}개`,
   submitComment: '댓글 등록',
   successorHint: '이 작업이 끝난 뒤 이어지는 작업',
   successors: '후속 작업',

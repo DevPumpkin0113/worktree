@@ -1,6 +1,14 @@
 import type { ko } from './ko';
 
 export const en = {
+  modernDependencyHint:
+    'Enter an existing task ID. Milestones cannot be dependencies. Use - for none.',
+  modernParentHint:
+    'Enter an existing milestone ID. Legacy nested groups are also supported. Use - for a root task.',
+  modernStatusHint: 'Use auto for milestone/group and todo, doing, blocked, or done for task.',
+  parentMilestone: 'Milestone',
+  milestoneDetailSuffix: ' milestone details',
+
   optionalTargetPeriod: 'Target period (optional)',
   unsupportedWbsSchema: 'Unsupported WBS schema_version. Use 1 or 2.',
   invalidMilestoneContainer: 'Milestones must be at the root with - for effort and dependencies.',
@@ -200,7 +208,7 @@ export const en = {
   ganttScrollLabel: 'Task schedule horizontal scroll',
   ganttUnknownPrefix: ' / unknown: ',
   group: 'Group',
-  groupDependencySuffix: ' is a group and cannot be used as a dependency.',
+  groupDependencySuffix: ' is a task collection and cannot be used as a dependency.',
   groupDetailSuffix: ' — group details',
   groupFields: 'Group aggregate fields',
   groupFieldsExample: 'Start / end / estimated effort (h) / predecessors: - / - / - / -',
@@ -250,7 +258,7 @@ export const en = {
   invalidIdSeparator: 'Invalid ID separator setting.',
   invalidIdReason: 'invalid ID format (examples: W001, W-001, OBS001, OBS-001)',
   invalidMilestone: 'invalid milestone date or effort',
-  invalidParent: 'invalid parent group reference',
+  invalidParent: 'invalid parent collection reference',
   invalidSeparator: 'The task table separator is missing or does not match the shared schema.',
   invalidSession: 'The session file version or values are invalid. The original file is preserved.',
   invalidSetting: 'Invalid setting value.',

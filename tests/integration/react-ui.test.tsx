@@ -966,3 +966,32 @@ test('선행 작업은 이름·ID 검색으로 여러 개 선택·해제하고 �
     await f.close();
   }
 });
+
+test('마일스톤 생성·상세는 제목과 선택 기간을 사용하고 이전 작업 필드를 숨긴다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#milestoneAddOpen');
+    assert.equal(f.host.querySelector('#taskEditor-criteria'), null);
+    assert.equal(f.host.querySelector('#taskEditor-status'), null);
+    await f.value('#taskEditor-name', '새 목표');
+    await f.click('#taskEditorSave');
+    assert.match(f.files.get(first)!, /MS001 \| - \| milestone \| 새 목표/);
+    const summary = [...f.host.querySelectorAll('summary')].find((node) =>
+      node.textContent?.includes('새 목표'),
+    )!;
+    assert.ok(summary);
+    assert.doesNotMatch(summary.textContent!, /MS001/);
+    await f.click('.group-detail[data-id="MS001"]');
+    assert.equal(f.element('#detailTitle').textContent, '새 목표');
+    assert.equal(f.host.querySelector('#detailBody .criteria-section'), null);
+    assert.equal(f.host.querySelector('#detailBody .detail-relations'), null);
+    assert.equal(f.host.querySelector('#detailBody .detail-identifiers'), null);
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-start', '2026-10-21');
+    await f.value('#taskEditor-end', '2026-11-01');
+    await f.click('#taskEditorSave');
+    assert.match(f.files.get(first)!, /2026-10-21 \| 2026-11-01/);
+  } finally {
+    await f.close();
+  }
+});

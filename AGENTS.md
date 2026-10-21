@@ -216,3 +216,9 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 - 콘텐츠 제목·진행률은 하나의 헤더 영역으로 구분선을 둔다. 작업 추가 버튼은 헤더가 아닌 아래 도구 모음 우측에 두고 SVG + 아이콘과 텍스트를 함께 표시한다.
 
 - 작업 편집의 선행 작업은 shared/SearchMultiSelect로 작업명·원본 ID를 검색해 다중 선택한다. 그룹과 자기 자신을 제외하며 선택 상태·해제 버튼·키보드·IME를 지원한다. WBS에는 기존처럼 원본 ID 쉼표 목록을 저장하고 순환/일정 등 검증은 task-editing.ts와 파서에서 수행한다.
+
+### WBS v2 마일스톤
+
+- 새 문서의 최상위 묶음은 milestone이며 제목·선택 목표 기간으로 생성한다. 상태 auto, 공수·상위·선행은 -이며 빈 상태를 허용한다. 날짜형 승인·출시 항목은 task로 작성한다.
+- 새 milestone은 MS 내부 번호를 별도로 발급하고 UI에서 숨긴다. 일반 작업 번호와 참조는 유지한다. v1 검증·읽기 변환과 중첩 group은 호환용으로 보존하며 내부 group 타입은 집계 재사용 경계다. 결정은 docs/adr/0011-milestone-containers.md를 따른다.
+- 현재 배포 양식은 프로젝트 templates를 따른다. 외부 공용 양식은 이번 프로젝트 내부 정리 범위에서 수정하지 않았다.

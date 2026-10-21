@@ -22,6 +22,12 @@ export const en = {
   invalidProjectField: (file: string, field: string) => `${file}: check the ${field} field.`,
   projectFieldHint: 'Check this file’s field, document format, and task references.',
   idSequenceExhausted: 'The task ID sequence limit has been reached.',
+  projectResetHint:
+    'Delete the data folder, everything inside it, and the root worktree.json. Parent folders and files outside the data folder are preserved. Set up the project again after deletion. This cannot be undone.',
+  projectResetNameHint: 'Type the exact project name below to continue.',
+  projectResetting: 'Resetting…',
+  projectResetFailed: 'Project reset failed: ',
+  projectResetConflict: 'The project changed outside the app. Cancel, refresh, and try again.',
   initializeProject: 'Initialize project',
   initializingProject: 'Creating project…',
   initializeProjectHint: 'Create a document collection in this folder.',

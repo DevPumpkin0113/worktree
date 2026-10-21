@@ -35,6 +35,9 @@ pub fn display(path: &Path) -> String {
     }
 }
 pub fn root(path: &Path) -> Result<PathBuf, String> {
+    if !path.exists() && path.file_name().is_some_and(|v| v == "worktree.json") {
+        return root(path.parent().ok_or_else(invalid)?);
+    }
     let target = fs::canonicalize(path).map_err(|e| e.to_string())?;
     if target.is_dir() {
         return Ok(target);

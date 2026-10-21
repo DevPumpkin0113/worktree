@@ -112,7 +112,9 @@ pub struct ProjectFiles {
     selected_path: Option<String>,
 }
 fn scan(path: &Path) -> Result<ProjectFiles, String> {
+    let _guard = project_write::LOCK.lock().map_err(|e| e.to_string())?;
     let root = files::root(path)?;
+    crate::project_reset::recover(&root)?;
     let marker = files::safe_join(&root, "worktree.json")?;
     let selected = marker.exists().then(|| files::display(&marker));
     Ok(ProjectFiles {
@@ -132,6 +134,7 @@ pub async fn read_project(path: String) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = project_write::LOCK.lock().map_err(|e| e.to_string())?;
         let root = files::root(Path::new(&path))?;
+        crate::project_reset::recover(&root)?;
         project_write::recover(&root, &files::data_directory(&root)?)?;
         serde_json::to_string(&files::read(&root)?).map_err(|e| e.to_string())
     })
@@ -142,7 +145,9 @@ pub async fn read_project(path: String) -> Result<String, String> {
 pub async fn save_project(path: String, expected: String, text: String) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = project_write::LOCK.lock().map_err(|e| e.to_string())?;
-        project_write::save(&files::root(Path::new(&path))?, &expected, &text).map(String::from)
+        let root = files::root(Path::new(&path))?;
+        crate::project_reset::recover(&root)?;
+        project_write::save(&root, &expected, &text).map(String::from)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -182,6 +187,7 @@ fn initialize(
 ) -> Result<(), String> {
     let _guard = project_write::LOCK.lock().map_err(|e| e.to_string())?;
     let root = files::root(root)?;
+    crate::project_reset::recover(&root)?;
     let marker = files::safe_join(&root, "worktree.json")?;
     let data = files::safe_join(&root, directory)?;
     if !rules.valid()
@@ -219,7 +225,8 @@ fn initialize(
         .map_err(|e| e.to_string())?
         + "\n";
     // If publication fails, retain the newly created data for inspection; no existing data is removed.
-    project_write::atomic(&marker, &marker_text, true)
+    project_write::atomic(&marker, &marker_text, true)?;
+    Ok(())
 }
 fn selected_parent(root: &Path, selected: &Path) -> Result<String, String> {
     let root = std::path::PathBuf::from(files::display(root));

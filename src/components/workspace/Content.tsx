@@ -1,4 +1,3 @@
-import { ProjectInitialization } from '../project/ProjectInitialization';
 import { ProjectInitializer } from '../project/ProjectInitializer';
 import { messages } from '../../i18n/messages';
 import { ProjectManagement } from '../project/ProjectManagement';
@@ -187,21 +186,6 @@ export function Content({
             store={store}
             step={initializationStep}
             onStep={onInitializationStep}
-          />
-        ) : state.page === 'initialize' && store.activeProject ? (
-          <ProjectInitialization
-            key={store.activeProject.path}
-            step={initializationStep}
-            onStep={onInitializationStep}
-            onCancel={() => store.setPage('project')}
-            onPickParent={(parent) =>
-              store.platform.invoke<string | null>('pick_project_parent', {
-                path: store.activeProject!.path,
-                parent,
-              })
-            }
-            project={store.activeProject}
-            model={model ?? null}
           />
         ) : state.page === 'project' && store.activeProject ? (
           <ProjectManagement

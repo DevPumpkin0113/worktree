@@ -340,6 +340,39 @@ export class WorkspaceStore {
     });
     if (this.state.activeProjectPath === project.path) await this.open(project.path);
   }
+  async resetProject(path: string, expected: string, confirmation: string) {
+    const project = this.state.projects.find((item) => item.path === path);
+    if (!project) throw Error(messages.documentUnavailable);
+    const result = await this.platform.invoke<'reset' | 'conflict'>('reset_project', {
+      path,
+      expected,
+      confirmation,
+    });
+    if (result === 'conflict') throw Error(messages.projectResetConflict);
+    if (result !== 'reset') throw Error(messages.invalidUpdateResponse);
+    ++this.openRevision;
+    const active = this.state.activeProjectPath === path;
+    this.patch({
+      projects: this.state.projects.map((item) =>
+        item.path === path ? { ...item, files: [], activePath: null, page: 'initialize' } : item,
+      ),
+      documents: this.state.documents.filter((doc) => !project.files.includes(doc.path)),
+      ...(active
+        ? {
+            activePath: null,
+            page: 'initialize',
+            selectedId: null,
+            owner: 'all',
+            query: '',
+            status: 'all',
+            operationProblems: [],
+            problemsOpen: false,
+          }
+        : {}),
+    });
+    this.title();
+    this.saveSession();
+  }
   selectProject(path: string) {
     return this.open(path);
   }

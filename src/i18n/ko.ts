@@ -20,6 +20,13 @@ export const ko = {
   invalidProjectField: (file: string, field: string) => `${file}: ${field} 값을 확인해 주세요.`,
   projectFieldHint: '해당 파일의 필드·문서 규격과 작업 참조를 확인하세요.',
   idSequenceExhausted: '작업 번호의 발급 한도를 초과했습니다.',
+  projectResetHint:
+    '데이터 저장 폴더와 내부의 모든 파일, 루트의 worktree.json을 삭제합니다. 상위 폴더와 저장 위치 밖의 파일은 유지됩니다. 삭제 후 새로 설정하며, 이 작업은 되돌릴 수 없습니다.',
+  projectResetNameHint: '계속하려면 아래 프로젝트 이름을 정확히 입력하세요.',
+  projectResetting: '초기화 중…',
+  projectResetFailed: '프로젝트 초기화 실패: ',
+  projectResetConflict:
+    '프로젝트가 외부에서 변경되었습니다. 취소하고 새로고침한 뒤 다시 시도하세요.',
   initializeProject: '프로젝트 초기화',
   initializingProject: '프로젝트 생성 중…',
   initializeProjectHint: '이 폴더에 프로젝트 문서 집합을 생성합니다.',

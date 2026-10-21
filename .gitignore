@@ -13,3 +13,5 @@ src-tauri/gen/
 **/.worktree-transaction.json
 **/.worktree-save-*
 **/.worktree-init-*/
+**/.worktree-reset.json
+**/.worktree-reset-data-*/

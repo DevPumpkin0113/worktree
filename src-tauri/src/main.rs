@@ -4,6 +4,7 @@ use tauri::Manager;
 mod app_updates;
 mod i18n;
 mod project_files;
+mod project_reset;
 mod project_write;
 mod projects;
 mod session;
@@ -88,6 +89,7 @@ fn main() {
             projects::read_project,
             projects::save_project,
             projects::initialize_project,
+            project_reset::reset_project,
             projects::pick_project,
             projects::pick_project_parent,
             projects::scan_project,

@@ -1,3 +1,5 @@
+import { readSource } from '../../domain/project-source';
+import { ProjectResetDialog } from './ProjectResetDialog';
 import { messages } from '../../i18n/messages';
 import { useRef, useState } from 'react';
 import { ProjectSettingsEditor } from './ProjectSettingsEditor';
@@ -13,6 +15,11 @@ export function ProjectManagement({
   store: WorkspaceStore;
   project: OpenProject;
 }) {
+  const [resetSession, setResetSession] = useState<{
+    text: string;
+    name: string;
+    directory: string;
+  } | null>(null);
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const lastValid = useRef<{ text: string; path: string; model: WorkModel } | null>(null);
@@ -29,6 +36,16 @@ export function ProjectManagement({
       className="project-management"
       aria-labelledby="workspacePageTitle"
     >
+      {resetSession ? (
+        <ProjectResetDialog
+          name={resetSession.name}
+          directory={resetSession.directory}
+          onReset={(confirmation) =>
+            store.resetProject(project.path, resetSession.text, confirmation)
+          }
+          onClose={() => setResetSession(null)}
+        />
+      ) : null}
       {editing && source ? (
         <ProjectSettingsEditor
           text={source.text}
@@ -54,7 +71,14 @@ export function ProjectManagement({
               <button
                 id="projectResetOpen"
                 disabled={!model || !source}
-                onClick={() => store.setPage('initialize')}
+                onClick={() => {
+                  if (source)
+                    setResetSession({
+                      text: source.text,
+                      name: source.model.title,
+                      directory: readSource(source.text).dataDirectory,
+                    });
+                }}
                 className="project-reset-button"
                 type="button"
               >

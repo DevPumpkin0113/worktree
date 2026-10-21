@@ -875,3 +875,16 @@
 .project-initialize-content-actions {
   margin: 16px 4px 4px;
 }
+
+.project-reset-dialog {
+  width: min(520px, calc(100vw - 48px));
+}
+.project-reset-files {
+  padding-left: 20px;
+  margin: 12px 0 20px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.project-reset-files li {
+  margin: 5px 0;
+}

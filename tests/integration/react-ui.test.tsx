@@ -573,12 +573,9 @@ test('프로젝트 관리는 조회·수정의 항목 순서를 유지하고 고
       (node) => node.textContent,
     );
     await f.click('#projectResetOpen');
-    assert.ok(f.host.querySelector('.initialization-steps'));
-    assert.ok(f.host.querySelector('#initialization-directory-name'));
-    await f.click('#initializationNext');
-    await f.click('#initializationNext');
-    assert.ok(f.element<HTMLButtonElement>('#initializationSubmit').disabled);
-    await f.click('#initializationCancel');
+    assert.ok(f.host.querySelector('#projectResetDialog'));
+    assert.ok(f.element<HTMLButtonElement>('#projectResetConfirm').disabled);
+    await f.click('#projectResetCancel');
     assert.ok(
       !f.calls.some(
         (call) => call.command === 'initialize_project' || call.command === 'save_project',

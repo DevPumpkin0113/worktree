@@ -383,3 +383,11 @@ pub fn select_project_parent() -> &'static str {
         ko::SELECT_PROJECT_PARENT
     }
 }
+
+pub fn reset_name_mismatch() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::RESET_NAME_MISMATCH
+    } else {
+        ko::RESET_NAME_MISMATCH
+    }
+}

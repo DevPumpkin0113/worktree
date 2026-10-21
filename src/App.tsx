@@ -20,6 +20,7 @@ import type { WorkspaceStore } from './app/workspace-store';
 export function App({ store }: { store: WorkspaceStore }) {
   const state = useWorkspace(store),
     model = store.active?.model ?? null;
+  const page = store.activeProject?.files.length === 0 ? 'initialize' : state.page;
   const [editor, setEditor] = useState<TaskEditorSession | null>(null);
   const openEditor = (id?: string, kind: 'task' | 'milestone' = 'task') => {
     const doc = store.active;
@@ -27,6 +28,8 @@ export function App({ store }: { store: WorkspaceStore }) {
   };
   const [deletion, setDeletion] = useState<TaskDeleteSession | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [initializationStep, setInitializationStep] = useState(0);
+  useEffect(() => setInitializationStep(0), [state.activeProjectPath, state.page]);
   useEffect(() => {
     document.documentElement.lang = state.settings.language;
   }, [state.settings.language]);
@@ -73,21 +76,25 @@ export function App({ store }: { store: WorkspaceStore }) {
     <>
       <Titlebar store={store} settingsOpen={state.settingsOpen} collapsed={collapsed} />
       <WorkspaceNav
+        initializationStep={initializationStep}
+        onInitializationStep={setInitializationStep}
         projectTitle={
           model?.title ?? (state.activeProjectPath ? folderName(state.activeProjectPath) : null)
         }
         onManage={() => {
           store.setPage('project');
         }}
-        page={state.page}
+        page={page}
         collapsed={collapsed}
         onPage={(page) => store.setPage(page)}
         onCollapse={() => setCollapsed((value) => !value)}
         inert={state.settingsOpen}
       />
       <Content
+        initializationStep={initializationStep}
+        onInitializationStep={setInitializationStep}
         store={store}
-        state={state}
+        state={{ ...state, page }}
         label={label}
         onAddTask={() => openEditor()}
         onAddMilestone={() => openEditor(undefined, 'milestone')}

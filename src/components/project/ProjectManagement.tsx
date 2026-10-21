@@ -52,6 +52,7 @@ export function ProjectManagement({
           <div className="project-management-actions">
             <button
               id="projectInitializePreview"
+              onClick={() => store.setPage('initialize')}
               className="project-initialize-preview"
               type="button"
             >

@@ -403,4 +403,13 @@ export const ko = {
   workStatusHint: '상태별 작업과 병목 파악',
   workTypes: '작업 유형',
   writeComment: '댓글 작성',
+  initializationSteps: '초기화 단계',
+  initializationBasic: '기본 정보',
+  initializationStorage: '저장 위치',
+  initializationReview: '최종 확인',
+  initializationDescription: '프로젝트 초기화 화면을 미리 확인하세요.',
+  initializationPreviewHint: '화면 미리보기이며 실제 파일은 변경하지 않습니다.',
+  initializationBack: '이전',
+  initializationNext: '다음',
+  initializationCancel: '프로젝트 관리로 돌아가기',
 };

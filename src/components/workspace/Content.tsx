@@ -1,3 +1,4 @@
+import { ProjectInitialization } from '../project/ProjectInitialization';
 import { ProjectInitializer } from '../project/ProjectInitializer';
 import { messages } from '../../i18n/messages';
 import { ProjectManagement } from '../project/ProjectManagement';
@@ -35,7 +36,11 @@ export function Content({
   label,
   onAddTask,
   onAddMilestone,
+  initializationStep,
+  onInitializationStep,
 }: {
+  initializationStep: number;
+  onInitializationStep: (step: number) => void;
   store: WorkspaceStore;
   state: WorkspaceSnapshot;
   label: (id: string) => string;
@@ -76,7 +81,7 @@ export function Content({
     if (path) viewState.current.restore(path, pageKey, root.current, rows ?? []);
   }, [active?.path, pageKey, rows, filtered, label]);
   return (
-    <main id="workspace" inert={state.settingsOpen}>
+    <main id="workspace" data-page={state.page} inert={state.settingsOpen}>
       <div className="workspace-page-heading">
         <div>
           <h2 id="workspacePageTitle">{PAGES[state.page][0]}</h2>
@@ -89,7 +94,9 @@ export function Content({
       <div
         id="workspaceTools"
         className="tools"
-        hidden={state.page === 'analytics' || state.page === 'project'}
+        hidden={
+          state.page === 'analytics' || state.page === 'project' || state.page === 'initialize'
+        }
       >
         {(Object.keys(VIEWS) as View[]).map((view) => (
           <button
@@ -174,7 +181,21 @@ export function Content({
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
         {store.activeProject && store.activeProject.files.length === 0 ? (
-          <ProjectInitializer key={store.activeProject.path} store={store} />
+          <ProjectInitializer
+            key={store.activeProject.path}
+            store={store}
+            step={initializationStep}
+            onStep={onInitializationStep}
+          />
+        ) : state.page === 'initialize' && store.activeProject ? (
+          <ProjectInitialization
+            key={store.activeProject.path}
+            step={initializationStep}
+            onStep={onInitializationStep}
+            onCancel={() => store.setPage('project')}
+            project={store.activeProject}
+            model={model ?? null}
+          />
         ) : state.page === 'project' && store.activeProject ? (
           <ProjectManagement
             key={store.activeProject.path}

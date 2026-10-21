@@ -186,12 +186,15 @@ test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위�
   const f = await fixture();
   try {
     await act(() => f.store.open('C:/NEW'));
-    assert.ok(f.host.querySelector('#projectInit-submit'));
-    await f.value('#projectInit-name', '신규 프로젝트');
-    await f.value('#projectInit-directory', 'docs/custom');
-    await f.value('#projectInit-prefix', 'DEV');
+    assert.ok(f.host.querySelector('.initialization-steps'));
+    assert.equal(f.element('#workspace').getAttribute('data-page'), 'initialize');
+    await f.value('#initialization-name', '신규 프로젝트');
+    await f.click('#initializationNext');
+    await f.value('#initialization-directory', 'docs/custom');
+    await f.value('#initialization-prefix', 'DEV');
+    await f.click('#initializationNext');
     await act(async () => {
-      f.element('.project-initializer form').dispatchEvent(
+      f.element('.initialization-preview').dispatchEvent(
         new Event('submit', { bubbles: true, cancelable: true }),
       );
     });
@@ -199,7 +202,7 @@ test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위�
     assert.equal(f.store.active?.model?.dataDirectory, 'docs/custom');
     assert.equal(f.store.active?.model?.rows.length, 0);
     assert.ok(f.host.querySelector('#taskAddOpen'));
-    assert.equal(f.host.querySelector('#projectInit-submit'), null);
+    assert.equal(f.host.querySelector('#initializationSubmit'), null);
     await f.click('#taskAddOpen');
     assert.equal(f.element<HTMLInputElement>('#taskEditor input[readonly]').value, 'DEV001');
   } finally {
@@ -210,19 +213,24 @@ test('초기화 실패 시 입력을 유지하고 재시도한다', async () => 
   const f = await fixture();
   try {
     await act(() => f.store.open('C:/NEW'));
-    await f.value('#projectInit-name', '유지할 이름');
+    await f.value('#initialization-name', '유지할 이름');
+    await f.click('#initializationNext');
+    await f.click('#initializationNext');
     f.setSaveFailure(true);
     await act(async () => {
-      f.element('.project-initializer form').dispatchEvent(
+      f.element('.initialization-preview').dispatchEvent(
         new Event('submit', { bubbles: true, cancelable: true }),
       );
     });
     assert.match(f.element('[role="alert"]').textContent ?? '', /disk failure/);
-    assert.equal(f.element<HTMLInputElement>('#projectInit-name').value, '유지할 이름');
+    await f.click('.initialization-steps nav button');
+    assert.equal(f.element<HTMLInputElement>('#initialization-name').value, '유지할 이름');
+    await f.click('#initializationNext');
+    await f.click('#initializationNext');
     assert.equal(f.store.active, null);
     f.setSaveFailure(false);
     await act(async () => {
-      f.element('.project-initializer form').dispatchEvent(
+      f.element('.initialization-preview').dispatchEvent(
         new Event('submit', { bubbles: true, cancelable: true }),
       );
     });
@@ -528,6 +536,12 @@ test('프로젝트 관리는 조회·수정의 항목 순서를 유지하고 고
       (node) => node.textContent,
     );
     await f.click('#projectInitializePreview');
+    assert.ok(f.host.querySelector('.initialization-steps'));
+    await f.click('#initializationNext');
+    assert.ok(f.host.querySelector('#initialization-directory'));
+    await f.click('#initializationNext');
+    assert.ok(f.element<HTMLButtonElement>('#initializationSubmit').disabled);
+    await f.click('#initializationCancel');
     assert.ok(
       !f.calls.some(
         (call) => call.command === 'initialize_project' || call.command === 'save_project',

@@ -410,4 +410,13 @@ export const en = {
   workStatusHint: 'Task status and bottlenecks',
   workTypes: 'Task types',
   writeComment: 'Write a comment',
+  initializationSteps: 'Initialization steps',
+  initializationBasic: 'Basic information',
+  initializationStorage: 'Storage location',
+  initializationReview: 'Review',
+  initializationDescription: 'Preview project initialization.',
+  initializationPreviewHint: 'This is a preview. No files will be changed.',
+  initializationBack: 'Back',
+  initializationNext: 'Next',
+  initializationCancel: 'Back to project management',
 } satisfies typeof ko;

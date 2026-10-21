@@ -195,3 +195,92 @@
   border-color: var(--color-error-focus);
   color: var(--color-text-inverse);
 }
+
+.initialization-steps {
+  margin-top: 14px;
+}
+.workspace-nav nav button[aria-current='step'] {
+  background: var(--color-nav-selected);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.initialization-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  font-size: 11px;
+}
+[aria-current='step'] .initialization-step-number {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+.initialization-preview {
+  width: 100%;
+  max-width: none;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+.initialization-step-body {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 680px;
+}
+.initialization-step-count {
+  font-size: 12px;
+  color: var(--color-primary);
+  margin: 0 0 10px;
+}
+.initialization-step-body h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.initialization-preview-note {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin: 12px 0 28px;
+  line-height: 1.6;
+}
+.initialization-preview .milestone-editor-fields {
+  gap: 22px;
+}
+.initialization-preview input[type='checkbox'] {
+  width: auto;
+  accent-color: var(--color-primary);
+}
+.initialization-preview input:disabled {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+.initialization-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 32px;
+}
+.initialization-actions > div {
+  display: flex;
+  gap: 8px;
+}
+.initialization-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.workspace-nav-collapsed .initialization-steps .workspace-nav-label {
+  display: none;
+}
+.workspace-nav-collapsed .initialization-steps nav button {
+  padding: 10px 0;
+  justify-content: center;
+}

@@ -75,6 +75,7 @@ export function TaskEditor({
       }}
     >
       <form
+        autoComplete="off"
         onSubmit={(event) => {
           event.preventDefault();
           void save();

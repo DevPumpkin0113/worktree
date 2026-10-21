@@ -62,6 +62,7 @@ export function TaskDeleteDialog({
       }}
     >
       <form
+        autoComplete="off"
         onSubmit={(event) => {
           event.preventDefault();
           void remove();

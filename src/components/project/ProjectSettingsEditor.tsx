@@ -21,6 +21,7 @@ export function ProjectSettingsEditor({
   const form = useProjectSettings(text, onSave);
   return (
     <form
+      autoComplete="off"
       id="projectSettingsForm"
       className="project-settings-editor"
       onSubmit={async (event) => {

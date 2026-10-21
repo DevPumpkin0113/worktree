@@ -13,6 +13,7 @@ export function CommentForm({
 }) {
   return (
     <form
+      autoComplete="off"
       className="preview-comment-form"
       onSubmit={(event) => {
         event.preventDefault();

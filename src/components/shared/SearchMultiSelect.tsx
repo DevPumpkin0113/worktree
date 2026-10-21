@@ -109,6 +109,7 @@ export function SearchMultiSelect({
         </ul>
       ) : null}
       <input
+        autoComplete="off"
         ref={input}
         id={id}
         role="combobox"

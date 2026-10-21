@@ -116,6 +116,7 @@ export function Content({
           </button>
         ))}
         <input
+          autoComplete="off"
           id="search"
           aria-label={messages.searchTasks}
           placeholder={messages.searchPlaceholder}

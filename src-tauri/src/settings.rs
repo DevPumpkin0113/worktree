@@ -14,26 +14,29 @@ pub struct Settings {
     id_separator: String,
     detail_mode: String,
     auto_check_updates: bool,
+    language: String,
 }
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            schema_version: 1,
+            schema_version: 2,
             id_separator: "none".into(),
             detail_mode: "sidebar".into(),
             auto_check_updates: true,
+            language: "ko".into(),
         }
     }
 }
 impl Settings {
     fn validate(&self) -> Result<(), String> {
-        if self.schema_version != 1 {
-            return Err("지원하지 않는 설정 파일 버전입니다. 파일을 변경하지 않았습니다.".into());
+        if self.schema_version != 2 {
+            return Err(crate::i18n::unsupported_settings().into());
         }
-        if !["none", "hyphen"].contains(&self.id_separator.as_str())
+        if !["ko", "en"].contains(&self.language.as_str())
+            || !["none", "hyphen"].contains(&self.id_separator.as_str())
             || !["modal", "sidebar"].contains(&self.detail_mode.as_str())
         {
-            return Err("설정 파일의 값이 올바르지 않습니다.".into());
+            return Err(crate::i18n::invalid_settings().into());
         }
         Ok(())
     }
@@ -66,21 +69,26 @@ impl SettingsStore {
                     warning: String::new(),
                 })
             }
-            Err(e) => return Err(format!("설정 파일을 읽지 못했습니다: {e}")),
+            Err(e) => return Err(crate::i18n::settings_read_failed(&e)),
         };
         let text = text.trim_start_matches('\u{feff}');
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(text) {
             if value
                 .get("schemaVersion")
-                .is_some_and(|version| version != 1)
+                .is_some_and(|version| version != 1 && version != 2)
             {
-                return Err(
-                    "지원하지 않는 설정 파일 버전입니다. 파일을 변경하지 않았습니다.".into(),
-                );
+                return Err(crate::i18n::unsupported_settings().into());
             }
         }
         let settings = serde_json::from_str::<Settings>(text)
             .ok()
+            .map(|mut value| {
+                if value.schema_version == 1 {
+                    value.schema_version = 2;
+                    value.language = "ko".into();
+                }
+                value
+            })
             .filter(|value| value.validate().is_ok());
         if let Some(settings) = settings {
             return Ok(LoadedSettings {
@@ -89,7 +97,10 @@ impl SettingsStore {
             });
         }
         // Preserve malformed user edits before recovering; backup failure must not overwrite the original.
-        let parent = self.path.parent().ok_or("설정 폴더를 찾지 못했습니다.")?;
+        let parent = self
+            .path
+            .parent()
+            .ok_or(crate::i18n::settings_folder_missing())?;
         let mut backup = tempfile::Builder::new()
             .prefix("settings.invalid-")
             .suffix(".json")
@@ -104,15 +115,15 @@ impl SettingsStore {
         self.write(&settings)?;
         Ok(LoadedSettings {
             settings: Some(settings),
-            warning: format!(
-                "잘못된 설정을 {}에 보관하고 기본 설정으로 복구했습니다.",
-                backup_path.display()
-            ),
+            warning: crate::i18n::settings_recovered(&(backup_path.display())),
         })
     }
     fn write(&self, settings: &Settings) -> Result<(), String> {
         settings.validate()?;
-        let parent = self.path.parent().ok_or("설정 폴더를 찾지 못했습니다.")?;
+        let parent = self
+            .path
+            .parent()
+            .ok_or(crate::i18n::settings_folder_missing())?;
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         let mut file = tempfile::Builder::new()
             .prefix("settings-")
@@ -124,7 +135,7 @@ impl SettingsStore {
         file.write_all(&bytes).map_err(|e| e.to_string())?;
         file.as_file().sync_all().map_err(|e| e.to_string())?;
         file.persist(&self.path)
-            .map_err(|e| format!("설정 파일을 저장하지 못했습니다: {}", e.error))?;
+            .map_err(|e| crate::i18n::settings_save_failed(&e.error))?;
         Ok(())
     }
 }
@@ -157,7 +168,11 @@ pub fn setup(app: &mut tauri::App) -> tauri::Result<()> {
 #[tauri::command]
 pub fn load_settings(state: State<SettingsStore>) -> Result<LoadedSettings, String> {
     let _lock = state.lock.lock().map_err(|e| e.to_string())?;
-    state.read()
+    let loaded = state.read()?;
+    if let Some(settings) = &loaded.settings {
+        crate::i18n::set_language(&settings.language);
+    }
+    Ok(loaded)
 }
 #[tauri::command]
 pub fn initialize_settings(
@@ -166,9 +181,11 @@ pub fn initialize_settings(
 ) -> Result<Settings, String> {
     let _lock = state.lock.lock().map_err(|e| e.to_string())?;
     if let Some(current) = state.read()?.settings {
+        crate::i18n::set_language(&current.language);
         return Ok(current);
     }
     state.write(&settings)?;
+    crate::i18n::set_language(&settings.language);
     Ok(settings)
 }
 #[tauri::command]
@@ -177,12 +194,31 @@ pub fn save_settings(settings: Settings, state: State<SettingsStore>) -> Result<
     // A future schema or external read error must not be silently overwritten.
     state.read()?;
     state.write(&settings)?;
+    crate::i18n::set_language(&settings.language);
     Ok(settings)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn language_migrates_from_v1_and_roundtrips_in_v2() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = SettingsStore::at(dir.path());
+        let original = r#"{"schemaVersion":1,"idSeparator":"hyphen","detailMode":"modal","autoCheckUpdates":false}"#;
+        fs::write(&store.path, original).unwrap();
+        let mut settings = store.read().unwrap().settings.unwrap();
+        assert_eq!(settings.schema_version, 2);
+        assert_eq!(settings.language, "ko");
+        assert_eq!(fs::read_to_string(&store.path).unwrap(), original);
+        settings.language = "en".into();
+        store.write(&settings).unwrap();
+        assert_eq!(store.read().unwrap().settings.unwrap(), settings);
+        let saved = fs::read(&store.path).unwrap();
+        settings.language = "invalid".into();
+        assert!(store.write(&settings).is_err());
+        assert_eq!(fs::read(&store.path).unwrap(), saved);
+    }
     #[test]
     fn settings_round_trip_replaces_existing_file_without_temporary_residue() {
         let root = tempfile::tempdir().unwrap();
@@ -221,7 +257,7 @@ mod tests {
     fn unknown_schema_and_invalid_save_do_not_destroy_existing_settings() {
         let root = tempfile::tempdir().unwrap();
         let store = SettingsStore::at(root.path());
-        let future = r#"{"schemaVersion":2,"newFeature":true}"#;
+        let future = r#"{"schemaVersion":3,"newFeature":true}"#;
         fs::write(&store.path, future).unwrap();
         assert!(store.read().is_err());
         assert_eq!(fs::read_to_string(&store.path).unwrap(), future);

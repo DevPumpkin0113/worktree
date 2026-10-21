@@ -2,8 +2,9 @@
 use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
-mod settings;
+mod i18n;
 mod session;
+mod settings;
 mod update_cleanup;
 use app_updates::{
     check_app_update, get_build_info, install_app_update, open_issue_report, open_releases,
@@ -41,11 +42,11 @@ fn read_document(path: String) -> Result<String, String> {
         .unwrap_or("")
         .to_lowercase();
     if !["wbs", "md", "markdown"].contains(&ext.as_str()) {
-        return Err("WBS 문서 파일을 선택해 주세요.".into());
+        return Err(crate::i18n::select_wbs().into());
     }
     let meta = std::fs::metadata(&file).map_err(|e| e.to_string())?;
     if !meta.is_file() || meta.len() > 5 * 1024 * 1024 {
-        return Err("5MB 이하 문서 파일만 열 수 있습니다.".into());
+        return Err(crate::i18n::document_too_large().into());
     }
     std::fs::read_to_string(file).map_err(|e| e.to_string())
 }
@@ -54,7 +55,7 @@ fn read_document(path: String) -> Result<String, String> {
 async fn pick_document() -> Result<Option<String>, String> {
     tauri::async_runtime::spawn_blocking(|| {
         rfd::FileDialog::new()
-            .add_filter("WBS 문서", &["wbs"])
+            .add_filter(crate::i18n::wbs_filter(), &["wbs"])
             .pick_file()
             .map(|p| p.to_string_lossy().to_string())
     })
@@ -89,7 +90,7 @@ fn main() {
             settings::setup(app)?;
             tauri::async_runtime::spawn_blocking(|| {
                 if let Err(error) = update_cleanup::cleanup_previous_installers() {
-                    eprintln!("이전 업데이트 임시 파일 정리 실패: {error}");
+                    eprintln!("{}", crate::i18n::cleanup_failed(&error));
                 }
             });
             enqueue(
@@ -119,5 +120,5 @@ fn main() {
             session::save_session
         ])
         .run(tauri::generate_context!())
-        .expect("Worktree 실행 실패");
+        .expect(crate::i18n::startup_failed());
 }

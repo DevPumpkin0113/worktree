@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import type { Thread } from './comment-types';
 export function CommentForm({
   thread,
@@ -18,7 +19,7 @@ export function CommentForm({
         const name = author.trim(),
           text = thread.draft.trim();
         if (!name || !text || name.length > 40 || text.length > 2000) {
-          thread.feedback = '작성자 이름과 댓글 내용을 입력해 주세요.';
+          thread.feedback = messages.commentRequired;
           onChange();
           return;
         }
@@ -34,15 +35,15 @@ export function CommentForm({
           sample: false,
         });
         thread.draft = '';
-        thread.feedback = '댓글을 임시로 등록했습니다. 파일에는 저장되지 않습니다.';
+        thread.feedback = messages.commentAdded;
         onChange();
       }}
     >
       <div className="preview-composer-heading">
-        <h3>댓글 작성</h3>
-        <span>이 작업에 의견 남기기</span>
+        <h3>{messages.writeComment}</h3>
+        <span>{messages.leaveOpinion}</span>
       </div>
-      <label htmlFor="previewAuthor">작성자 이름</label>
+      <label htmlFor="previewAuthor">{messages.authorName}</label>
       <input
         id="previewAuthor"
         name="author"
@@ -52,14 +53,14 @@ export function CommentForm({
         required
         autoComplete="off"
       />
-      <label htmlFor="previewComment">내용</label>
+      <label htmlFor="previewComment">{messages.content}</label>
       <textarea
         id="previewComment"
         name="comment"
         rows={4}
         maxLength={2000}
         required
-        placeholder="질문, 검토 의견이나 결정 내용을 남겨 주세요."
+        placeholder={messages.commentPlaceholder}
         value={thread.draft}
         onChange={(event) => {
           thread.draft = event.target.value;
@@ -73,8 +74,8 @@ export function CommentForm({
         }}
       />
       <div className="preview-composer-actions">
-        <small>Ctrl+Enter로 등록 · 임시 보관</small>
-        <button type="submit">댓글 등록</button>
+        <small>{messages.commentShortcut}</small>
+        <button type="submit">{messages.submitComment}</button>
       </div>
       <p className="preview-comment-feedback" role="status" aria-live="polite">
         {thread.feedback}

@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { STATUS_NAMES } from '../../app/types';
 import type { ListProps } from './types';
 export function AllTasks(props: ListProps) {
@@ -6,7 +7,7 @@ export function AllTasks(props: ListProps) {
       <table>
         <thead>
           <tr>
-            {['작업', '상태', '담당자', '종료일'].map((name) => (
+            {[messages.task, messages.status, messages.owner, messages.endDate].map((name) => (
               <th scope="col" key={name}>
                 {name}
               </th>
@@ -28,15 +29,15 @@ export function AllTasks(props: ListProps) {
                   <span className="id">{props.label(row.id)}</span>
                   <span>{row.name}</span>
                   {row.type === 'milestone' ? (
-                    <span className="all-task-type">마일스톤</span>
+                    <span className="all-task-type">{messages.milestone}</span>
                   ) : null}
                 </button>
               </td>
               <td>
                 <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>
               </td>
-              <td>{row.owner === '-' ? '담당 미정' : row.owner}</td>
-              <td>{row.end === '-' ? '미정' : row.end}</td>
+              <td>{row.owner === '-' ? messages.unassigned : row.owner}</td>
+              <td>{row.end === '-' ? messages.unknown : row.end}</td>
             </tr>
           ))}
         </tbody>

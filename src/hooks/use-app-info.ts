@@ -1,3 +1,4 @@
+import { messages, getLanguage } from '../i18n/messages';
 import { useEffect, useRef, useState } from 'react';
 import type { DownloadEvent, Platform, SettingsStorage } from '../app/types';
 interface Build {
@@ -14,12 +15,14 @@ interface Update {
 }
 export function useAppInfo(platform: Platform, storage: SettingsStorage) {
   const [build, setBuild] = useState<Build | null>(null),
-    [title, setTitle] = useState('업데이트 확인 전'),
-    [description, setDescription] = useState('새 버전이 있으면 이곳에 안내합니다.'),
+    [notification, setNotification] = useState<() => [string, string]>(() => () => [
+      messages.updateIdle,
+      messages.updateIdleHint,
+    ]),
     [busy, setBusy] = useState(false),
     [update, setUpdate] = useState<Update | null>(null),
     [progress, setProgress] = useState<number | null | undefined>(undefined),
-    [checkedAt, setCheckedAt] = useState(''),
+    [checkedTime, setCheckedTime] = useState<Date | null>(null),
     [auto, setAuto] = useState(true),
     [preferenceError, setPreferenceError] = useState(''),
     [preferenceBusy, setPreferenceBusy] = useState(false),
@@ -28,10 +31,9 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
     [reporting, setReporting] = useState(false);
   const locked = useRef(false),
     alive = useRef(true);
-  function message(title: string, description: string) {
+  function message(create: () => [string, string]) {
     if (alive.current) {
-      setTitle(title);
-      setDescription(description);
+      setNotification(() => create);
     }
   }
   async function check() {
@@ -40,33 +42,24 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
     setBusy(true);
     setUpdate(null);
     setProgress(undefined);
-    message('업데이트 확인 중', 'GitHub 정식 릴리즈를 확인하고 있습니다.');
+    message(() => [messages.updateChecking, messages.updateCheckingHint]);
     try {
       const result = await platform.invoke<Update>('check_app_update');
-      const messages: Record<string, [string, string]> = {
-        latest: ['최신 버전입니다', `현재 버전 ${result.version}을 사용 중입니다.`],
-        ahead: [
-          '개발 버전을 사용 중입니다',
-          `현재 앱은 최신 정식 버전 ${result.version}보다 앞서 있습니다.`,
-        ],
-        'no-release': ['공개된 릴리즈가 없습니다', '정식 릴리즈가 등록되면 안내합니다.'],
-        manual: [
-          `새 버전 ${result.version}이 있습니다`,
-          '이 릴리즈는 앱 내 설치를 지원하지 않습니다. 릴리즈에서 설치 파일을 받아주세요.',
-        ],
-        available: [
-          `새 버전 ${result.version}이 있습니다`,
-          '다운로드 후 서명을 검증합니다. 설치를 시작하면 앱이 종료됩니다.',
-        ],
+      const updateMessages: Record<string, () => [string, string]> = {
+        latest: () => [messages.updateLatest, messages.currentVersion(result.version)],
+        ahead: () => [messages.updateAhead, messages.aheadVersion(result.version)],
+        'no-release': () => [messages.noRelease, messages.noReleaseHint],
+        manual: () => [messages.availableVersion(result.version), messages.manualUpdateHint],
+        available: () => [messages.availableVersion(result.version), messages.installUpdateHint],
       };
-      if (!messages[result.kind]) throw Error('올바르지 않은 업데이트 응답입니다.');
+      if (!updateMessages[result.kind]) throw Error(messages.invalidUpdateResponse);
       if (alive.current) {
         setUpdate(result);
-        message(...messages[result.kind]);
-        setCheckedAt('마지막 확인: ' + new Date().toLocaleString('ko-KR'));
+        message(() => updateMessages[result.kind]());
+        setCheckedTime(new Date());
       }
     } catch (error) {
-      message('업데이트 확인에 실패했습니다', String(error));
+      message(() => [messages.updateCheckFailed, String(error)]);
     } finally {
       locked.current = false;
       if (alive.current) setBusy(false);
@@ -76,27 +69,24 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
     if (locked.current || update?.kind !== 'available') return;
     locked.current = true;
     setBusy(true);
-    message('설치 확인 대기', '확인 창에서 설치 여부를 선택하세요.');
+    message(() => [messages.installConfirm, messages.installConfirmHint]);
     try {
       const handler = (event: DownloadEvent) => {
         if (!alive.current) return;
         if (event.phase === 'installing') {
           setProgress(100);
-          message(
-            '설치 시작 중',
-            '서명 검증을 마쳤습니다. 설치 프로그램이 실행되면 앱이 종료됩니다.',
-          );
+          message(() => [messages.installStarting, messages.installStartingHint]);
         } else {
           const percent = event.total
             ? Math.min(100, Math.round((event.downloaded / event.total) * 100))
             : null;
           setProgress(percent);
-          message(
-            '업데이트 다운로드 중',
+          message(() => [
+            messages.updateDownloading,
             percent === null
-              ? `${(event.downloaded / 1048576).toFixed(1)} MB 다운로드됨`
-              : `${percent}% · 다운로드 후 서명을 검증합니다.`,
-          );
+              ? messages.downloadedMegabytes((event.downloaded / 1048576).toFixed(1))
+              : messages.downloadPercent(percent),
+          ]);
         }
       };
       const installed = await platform.invoke<boolean>('install_app_update', {
@@ -104,11 +94,11 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
       });
       if (!installed) {
         setProgress(undefined);
-        message('설치를 취소했습니다', '다운로드 및 설치 버튼으로 다시 시작할 수 있습니다.');
+        message(() => [messages.installCancelled, messages.installCancelledHint]);
       }
     } catch (error) {
       setProgress(undefined);
-      message('업데이트를 설치하지 못했습니다', String(error));
+      message(() => [messages.installFailed, String(error)]);
     } finally {
       locked.current = false;
       if (alive.current) setBusy(false);
@@ -121,7 +111,7 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
         const info = await platform.invoke<Build>('get_build_info');
         if (alive.current) setBuild(info);
       } catch {
-        if (alive.current) setBuildError('빌드 정보를 불러오지 못했습니다.');
+        if (alive.current) setBuildError(messages.buildInfoFailed);
       }
       try {
         await storage.ready;
@@ -130,7 +120,7 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
         if (enabled && alive.current) await check();
       } catch {
         if (alive.current) {
-          setPreferenceError('설정을 불러오지 못해 자동 확인을 중지했습니다.');
+          setPreferenceError(messages.autoCheckLoadFailed);
           setAuto(false);
         }
       }
@@ -147,7 +137,7 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
       setAuto(value);
       setPreferenceError('');
     } catch {
-      setPreferenceError('자동 확인 설정을 저장하지 못했습니다.');
+      setPreferenceError(messages.autoCheckSaveFailed);
     } finally {
       setPreferenceBusy(false);
     }
@@ -158,7 +148,7 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
     setFeedback('');
     try {
       await platform.invoke('open_issue_report');
-      setFeedback('브라우저에서 내용을 작성한 후 제출하세요.');
+      setFeedback(messages.issueOpenedHint);
     } catch (error) {
       setFeedback(String(error));
     } finally {
@@ -169,9 +159,14 @@ export function useAppInfo(platform: Platform, storage: SettingsStorage) {
     try {
       await platform.invoke('open_releases');
     } catch (error) {
-      message('브라우저를 열지 못했습니다', String(error));
+      message(() => [messages.browserOpenFailed, String(error)]);
     }
   }
+  const [title, description] = notification();
+  const checkedAt = checkedTime
+    ? messages.lastCheckedPrefix +
+      checkedTime.toLocaleString(getLanguage() === 'ko' ? 'ko-KR' : 'en-US')
+    : '';
   return {
     build,
     buildError,

@@ -34,3 +34,18 @@ test('문서별 공수 사용은 생략 시 true이며 true·false만 허용한�
  assert.equal(parseWbs(body+'\nuse_effort: false').useEffort,true);
  assert.throws(()=>parseWbs('---\nuse_effort: false\n---\n'+body.replace('| - | - | - | - |\n','| - | - | 0 | - |\n')),/공수/);
 });
+
+
+test('화면 문구를 바꿔도 WBS 한글 열 이름과 작업 목록 규격은 유지한다',async()=>{
+ const {messages}=await import('../../src/i18n/messages.ts');
+ const {WBS_COLUMNS}=await import('../../src/domain/wbs-schema.ts');
+ const saved={parentId:messages.parentId,type:messages.type,status:messages.status};
+ try{
+  Object.assign(messages,{parentId:'Parent ID',type:'Type',status:'Status'});
+  const source='## 작업 목록\n| '+WBS_COLUMNS.join(' | ')+' |\n|'+Array(11).fill('---').join('|')+'|\n| W001 | - | task | 원본 작업명 | 확인 | 담당자 | todo | - | - | - | - |\n';
+  const model=parseWbs(source);
+  assert.equal(model.rows[0].name,'원본 작업명');
+  assert.equal(model.rows[0].owner,'담당자');
+  assert.throws(()=>parseWbs(source.replace('상위 ID','Parent ID')),/열 이름/);
+ }finally{Object.assign(messages,saved);}
+});

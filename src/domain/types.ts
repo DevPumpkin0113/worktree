@@ -19,6 +19,7 @@ export interface WorkModel {
   rows: WorkRow[];
 }
 export interface Problem {
+  category?: string;
   kind: string;
   source: string;
   message: string;

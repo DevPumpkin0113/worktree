@@ -1,3 +1,4 @@
+import { messages } from '../i18n/messages';
 import type { WorkRow } from './types';
 export function summarizeWork(rows: WorkRow[]) {
   const leaves = rows.filter((row) => row.type !== 'group');
@@ -25,7 +26,7 @@ export function summarizeWork(rows: WorkRow[]) {
 
 export function statusNotice(summary: ReturnType<typeof summarizeWork>, useEffort = true) {
   return (
-    `구조 검사 통과 · ${summary.groupCount}개 그룹 · 일정 미정 ${summary.missingDates}개` +
-    (useEffort ? ` · 공수 미정 ${summary.missingEfforts}개` : '')
+    messages.structureNotice(summary.groupCount, summary.missingDates) +
+    (useEffort ? messages.missingEffortNotice(summary.missingEfforts) : '')
   );
 }

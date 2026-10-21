@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useDetailDialog } from './use-detail-dialog';
 import { Comments } from './Comments';
 import { DetailTabs } from './DetailTabs';
@@ -44,11 +45,11 @@ export function TaskDetail({
         ref={handle}
         id="detailResize"
         role="separator"
-        aria-label="상세 패널 너비 조절"
+        aria-label={messages.resizeDetail}
         aria-orientation="vertical"
         aria-controls="detail"
         tabIndex={0}
-        title="드래그로 너비 조절 · 오른쪽 끝까지 끌어 숨기기"
+        title={messages.resizeDetailHint}
       />
       <dialog
         ref={dialog}
@@ -82,8 +83,8 @@ export function TaskDetail({
                 id="detailHide"
                 type="button"
                 className="modal-close"
-                aria-label="상세 패널 숨기기"
-                title="상세 패널 숨기기"
+                aria-label={messages.hideDetail}
+                title={messages.hideDetail}
                 onClick={onClose}
               >
                 <Icon name="chevron-right" />
@@ -101,8 +102,8 @@ export function TaskDetail({
           <button
             id="close"
             className="modal-close"
-            aria-label="작업 상세 닫기"
-            title="닫기"
+            aria-label={messages.closeTaskDetail}
+            title={messages.close}
             onClick={onClose}
           >
             <Icon name="close" />
@@ -143,7 +144,7 @@ export function TaskDetail({
           ) : null}
         </div>
         <div className="detail-footer">
-          <p>작업 정보는 읽기 전용 · 댓글은 UI 미리보기이며 파일에 저장되지 않습니다.</p>
+          <p>{messages.detailReadOnlyHint}</p>
         </div>
       </dialog>
     </>

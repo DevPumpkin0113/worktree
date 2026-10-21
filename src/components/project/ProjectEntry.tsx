@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useState } from 'react';
 import { ProjectFiles } from './ProjectFiles';
 import { Icon } from '../shared/Icon';
@@ -18,28 +19,31 @@ export function ProjectEntry({
 }) {
   const [expanded, setExpanded] = useState(true);
   return (
-    <section className="project-tree" aria-label="프로젝트 탐색">
+    <section className="project-tree" aria-label={messages.projectExplorer}>
       <div className="project-entry">
         <button
           id="projectTreeToggle"
           type="button"
           className="project-tree-toggle"
-          aria-label={(title ?? '프로젝트') + (expanded ? ' 접기' : ' 펼치기')}
-          title={title ?? '열린 문서 없음'}
+          aria-label={
+            (title ?? messages.project) +
+            (expanded ? messages.collapseSuffix : messages.expandSuffix)
+          }
+          title={title ?? messages.noOpenDocument}
           aria-expanded={expanded}
           aria-controls="projectFiles"
           onClick={() => setExpanded(!expanded)}
           disabled={disabled}
         >
           <Icon name="chevron-right" />
-          <span className="project-entry-title">{title ?? '열린 문서 없음'}</span>
+          <span className="project-entry-title">{title ?? messages.noOpenDocument}</span>
         </button>
         <button
           id="projectManageOpen"
           type="button"
           className="project-manage-open"
-          aria-label="프로젝트 관리"
-          title="프로젝트 관리"
+          aria-label={messages.projectManagement}
+          title={messages.projectManagement}
           aria-current={active ? 'page' : undefined}
           aria-controls="content"
           disabled={disabled}

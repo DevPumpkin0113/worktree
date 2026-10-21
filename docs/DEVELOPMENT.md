@@ -124,7 +124,7 @@ Tauri 공식 updater를 Rust 명령에서 사용한다. GitHub 최신 정식 릴
 
 ## 0.5.1 설정 저장과 프로필 이전
 
-앱 식별자 io.github.devpumpkin0113.worktree와 게시자 DevPumpkin0113을 사용한다. 설정 경로는 식별자와 독립적인 %LOCALAPPDATA%/Worktree/settings.json이다. schemaVersion 1, idSeparator(none/hyphen), detailMode(sidebar/modal), autoCheckUpdates(boolean)를 저장한다.
+앱 식별자 io.github.devpumpkin0113.worktree와 게시자 DevPumpkin0113을 사용한다. 설정 경로는 식별자와 독립적인 %LOCALAPPDATA%/Worktree/settings.json이다. schemaVersion 2, language(ko/en), idSeparator(none/hyphen), detailMode(sidebar/modal), autoCheckUpdates(boolean)를 저장한다. 기존 v1은 한국어 기본값으로 읽고 다음 저장에서 v2로 기록한다.
 
 창 자동 생성을 끄고 Rust setup에서 데이터 디렉터리를 선택한다. JSON이 없고 이전 local.toothless.worktree/EBWebView가 있으면 그 프로필로 한 번 실행하고 기존 origin의 localStorage를 읽어 initialize_settings로 저장한다. JSON이 있으면 이전 localStorage보다 우선하며 이후 Worktree/EBWebView를 사용한다. 이전 프로필을 복사하거나 삭제하지 않는다. 설치 EXE 이름과 NSIS의 Worktree 제거 프로그램 키는 동일해 기존 설치 위치를 유지한다. 식별자가 달라 구버전과 신버전의 단일 인스턴스 키는 다르므로 업데이트 전 기존 앱은 종료한다.
 
@@ -275,7 +275,7 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 
 ### 컴포넌트 내부 책임 분리
 
-workspace는 TreeView·KanbanView·AllTasks·Analytics·TaskCard·Metrics·MetricsContent로 분리하고 Content는 화면을 조합한다. task-detail은 TaskInfo·DetailTabs·Comments·CommentList·CommentForm으로 구분하며 use-comment-threads는 임시 댓글 상태, use-detail-dialog는 상세 창 표시·크기·스크롤 생명주기를 관리한다. settings는 DisplaySettings·AboutSettings·BuildInformation·UpdateSettings·IssueReport로 분리한다. 각 컴포넌트는 직접 import하고 재노출용 통합 파일은 추가하지 않는다.
+workspace는 TreeView·KanbanView·AllTasks·Analytics·TaskCard·Metrics·MetricsContent로 분리하고 Content는 화면을 조합한다. task-detail은 TaskInfo·DetailTabs·Comments·CommentList·CommentForm으로 구분하며 use-comment-threads는 임시 댓글 상태, use-detail-dialog는 상세 창 표시·크기·스크롤 생명주기를 관리한다. settings는 GeneralSettings·AboutSettings·BuildInformation·UpdateSettings·IssueReport로 분리한다. 각 컴포넌트는 직접 import하고 재노출용 통합 파일은 추가하지 않는다.
 
 책임 분리 후 기존 테스트 63개·strict 타입 검사·포맷 검사·Vite 빌드 통과. 실제 WebView2 화면 확인은 사용자 확인 대기다. 커밋 승인은 실제 UI 인수 완료와 구분한다.
 
@@ -300,3 +300,31 @@ src/styles/theme.css는 현재 라이트 색상을 유지하는 의미별 토큰
 좌측 프로젝트 트리는 프로젝트 제목을 루트로 접기·펼치기를 지원하는 UI 시안이다. 현재 활성 WBS 파일 한 개를 들여쓰기하여 표시하고 클릭하면 작업 보드로 이동한다. 프로젝트 루트 탐색·내부 파일 수집·별도 프로젝트 상태는 아직 구현하지 않았고 하단 문서 탭·세션 계약은 유지한다. ProjectFiles와 ProjectEntry를 역할별로 분리한다.
 
 작업 보드·작업 목록 제목 오른쪽은 CompactProgress에서 전체 일반 작업 기준 완료/전체·진행률을 표시한다. 필터·그룹·마일스톤은 집계 기준에 영향을 주지 않는다. 기존 Metrics 요약 카드는 인사이트 본문으로 이동하고 공수 사용 여부를 유지한다. 인사이트 상단 요약은 실제 데이터이며 하단 분석 차트는 미연결 시안이다. 워크스페이스 장식 배지는 제거했다.
+
+## 0.16.1 한국어 리소스 분리
+
+프런트엔드 한국어 표시 문구는 src/i18n/ko.ts에 두고 src/i18n/messages.ts를 통해 참조한다. 툴팁·접근성 이름·SVG 안내·검증 및 저장 오류를 포함한다. Rust 네이티브 대화상자·오류·제보 양식은 src-tauri/src/i18n/ko.rs에 분리한다. UI 마크업은 기존 컴포넌트와 SVG 렌더러에 유지하고 문자열 삽입 시 기존 이스케이프를 적용한다.
+
+WBS 규격 상수는 src/domain/wbs-schema.ts에서 공유하며 번역 리소스와 분리한다. 언어 전환·언어 설정·날짜 및 숫자 로케일 변경은 아직 지원하지 않는다. 한국어 오류 정규식은 기존 계약을 보존하며, 실제 언어 전환 전에 오류 코드를 도입해야 한다. 결정 근거는 docs/adr/0006-korean-message-resources.md를 따른다.
+
+한국어 분리 검증: 프런트엔드 테스트 67개·Rust 19개·strict 타입 검사·TS/CSS 포맷 검사·버전 동기화·Vite 빌드 통과. Rust의 실네트워크·서명 설치 파일 검증 2개는 기존 ignored 상태로 실행하지 않았다. 실제 WebView2 UI 확인과 Windows 설치 빌드는 수행하지 않았다.
+
+영어 리소스는 src/i18n/en.ts와 src-tauri/src/i18n/en.rs에 같은 키·함수로 준비했다. TS는 satisfies typeof ko로 검사하고 테스트에서 키·함수 인자·서식 값 보존을 확인한다. Rust en 모듈은 테스트에서만 컴파일하며 런타임은 ko를 유지한다. 규격 제목 ## 작업 목록과 사람 이름은 영어 안내에서도 보존한다. 아직 언어 전환을 지원하지 않으므로 영어 화면을 켜는 코드 변경은 하지 않는다.
+
+영어 리소스 추가 후 프런트엔드 69개·Rust 20개 테스트, 타입·포맷·버전 검사 및 Vite 빌드 통과. 외부 네트워크·서명 설치 파일 검증 2개는 기존 ignored 상태다. 언어 선택과 실제 영어 UI 검증은 아직 수행하지 않았다.
+
+## 0.17.0 일반 설정·언어 선택
+
+앱 설정의 표시 메뉴를 일반으로 바꾸고 공용 FilterDropdown으로 한국어/English를 선택한다. 저장 성공 후 메뉴·상태 이름·화면·SVG와 네이티브 안내에 적용하며 실패 시 이전 언어를 유지한다. 기존 v1 설정은 읽기만으로 파일을 덮어쓰지 않고 한국어로 복원한다. 언어 설정 저장 시 schemaVersion 2를 사용하므로 구버전 앱은 원본 보존 정책에 따라 해당 설정을 지원하지 않는 버전으로 처리한다.
+
+문서 이름·원문·댓글·WBS 형식은 변경하지 않는다. 문서 파서 및 위치·수정 안내는 한국어 정규식 계약 때문에 ko 리소스를 사용하며 영어 UI에서도 오류 상세는 한국어다. 후속 오류 코드 계약을 도입할 때 표시 언어를 분리한다. 결정은 docs/adr/0007-app-language-setting.md를 따른다.
+
+0.17.0 검증: 프런트엔드 72개·Rust 22개 테스트와 타입·포맷·버전 검사·Vite 빌드 통과. 언어 즉시 전환·저장 실패 복구·영어 복원·차트 및 WBS 오류 위치 보존·v1 설정 원본 유지와 v2 저장을 확인했다. 외부 조회·서명 설치 테스트 2개는 기존 ignored 상태이며 실제 WebView2 화면·설치 빌드는 미수행이다.
+
+## 0.17.1 구조화된 문서 진단
+
+src/domain/document-diagnostics.ts의 DocumentValidationError가 코드·작업 ID·참조 ID·관계 종류를 전달한다. document-errors.ts는 코드로 문제 셀·행/열·수정 안내를 결정한다. 일반 Error의 문장은 해석하지 않으므로 위치를 추측하지 않는다. 기존처럼 Error.message도 제공하지만 내부 판별 계약은 diagnostics다.
+
+문제 패널·상태 표시줄·복사 내용은 현재 언어 리소스로 표시한다. 열린 오류도 언어 변경을 반영하며 원문·입력값·ID·위치는 유지한다. 0.17.0의 한국어 오류 유지 제약은 해제한다. 결정은 docs/adr/0008-document-diagnostics.md를 따른다.
+
+0.17.1 검증: 테스트 74개·타입 검사·포맷 검사·버전 동기화 검사·Vite 빌드 통과. 번역 문구 변경과 독립적인 코드 판별, 영어/한국어 전환 시 열린 오류·복사 내용·원본 행/열 보존을 검증했다. Rust 로직은 이번 작업에서 변경하지 않아 재검증하지 않았다. 실제 WebView2 화면 확인·Windows 설치 빌드·커밋은 수행하지 않았다.

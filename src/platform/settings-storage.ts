@@ -1,5 +1,7 @@
+import { messages, isLanguage, type Language } from '../i18n/messages';
 import type { Platform, SettingsStorage } from '../app/types';
 interface SavedSettings {
+  language: Language;
   schemaVersion: number;
   idSeparator: 'none' | 'hyphen';
   detailMode: 'sidebar' | 'modal';
@@ -7,23 +9,26 @@ interface SavedSettings {
 }
 type Field = Exclude<keyof SavedSettings, 'schemaVersion'>;
 const keys: Record<string, Field> = {
+  'worktree.language': 'language',
   'worktree.id-separator': 'idSeparator',
   'worktree.detail-mode': 'detailMode',
   'worktree.autoCheckUpdates': 'autoCheckUpdates',
 };
 const defaults = (): SavedSettings => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
+  language: 'ko',
   idSeparator: 'none',
   detailMode: 'sidebar',
   autoCheckUpdates: true,
 });
 function valueFor(field: Field, value: string) {
+  if (field === 'language' && isLanguage(value)) return value;
   if (field === 'idSeparator' && ['none', 'hyphen'].includes(value))
     return value as SavedSettings[Field];
   if (field === 'detailMode' && ['modal', 'sidebar'].includes(value))
     return value as SavedSettings[Field];
   if (field === 'autoCheckUpdates' && ['true', 'false'].includes(value)) return value === 'true';
-  throw Error('올바르지 않은 설정입니다.');
+  throw Error(messages.invalidSetting);
 }
 
 export function createSettingsStorage({
@@ -42,7 +47,7 @@ export function createSettingsStorage({
     getItem: (key) => (keys[key] ? String(settings[keys[key]]) : null),
     setItem(key, value) {
       const field = keys[key];
-      if (!field) return Promise.reject(Error('알 수 없는 설정입니다.'));
+      if (!field) return Promise.reject(Error(messages.unknownSetting));
       const operation = queue
         .catch(() => {})
         .then(async () => {
@@ -62,7 +67,7 @@ export function createSettingsStorage({
       );
       storage.warning = result.warning || '';
       if (result.settings) {
-        settings = result.settings;
+        settings = { ...defaults(), ...result.settings, schemaVersion: 2 };
         return;
       }
       const migrated = defaults();
@@ -70,6 +75,7 @@ export function createSettingsStorage({
       try {
         const legacy = legacyStorage();
         for (const [key, field] of Object.entries(keys)) {
+          if (field === 'language') continue;
           const value = legacy.getItem(key);
           if (value !== null && value !== undefined) {
             try {
@@ -78,9 +84,7 @@ export function createSettingsStorage({
           }
         }
       } catch {
-        throw Error(
-          '기존 설정을 읽지 못했습니다. 이전 데이터는 그대로 두었습니다. 앱을 다시 실행해 주세요.',
-        );
+        throw Error(messages.legacySettingsFailed);
       }
       settings = await invoke<SavedSettings>('initialize_settings', { settings: migrated });
     } catch (error) {

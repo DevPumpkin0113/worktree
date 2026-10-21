@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useMemo } from 'react';
 import { summarizeGroups } from '../../domain/group-summary';
 import { groupSchedule, groupEffort, groupProgress } from '../../views/group-summary';
@@ -39,14 +40,14 @@ export function TreeView({
               type="button"
               className="group-detail"
               data-id={row.id}
-              aria-label={row.name + ' 그룹 상세'}
+              aria-label={row.name + messages.groupDetailSuffix}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 props.onSelect(row.id);
               }}
             >
-              상세
+              {messages.details}
             </button>
             <span className="group-summary">
               {groupSchedule(summary)}

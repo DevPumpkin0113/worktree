@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import type { summarizeWork } from '../../domain/work-summary';
 export function MetricsContent({
   summary,
@@ -6,38 +7,40 @@ export function MetricsContent({
   summary: ReturnType<typeof summarizeWork>;
   useEffort: boolean;
 }) {
-  const progress = summary.taskProgress === null ? '작업 없음' : summary.taskProgress + '%';
+  const progress = summary.taskProgress === null ? messages.noTasks : summary.taskProgress + '%';
   return (
     <div id="metrics" className={'metrics' + (!useEffort ? ' without-effort' : '')}>
       <div className="metric">
-        <span>작업</span>
+        <span>{messages.task}</span>
         <strong>
           {summary.completedTasks} / {summary.taskCount}
         </strong>
-        <small className="metric-detail">완료 / 전체</small>
+        <small className="metric-detail">{messages.completedTotal}</small>
       </div>
       <div className="metric">
-        <span>마일스톤</span>
+        <span>{messages.milestone}</span>
         <strong>
           {summary.completedMilestones} / {summary.milestoneCount}
         </strong>
-        <small className="metric-detail">완료 / 전체</small>
+        <small className="metric-detail">{messages.completedTotal}</small>
       </div>
       <div className="metric metric-progress">
-        <span>진행률</span>
+        <span>{messages.completionRate}</span>
         <strong>{progress}</strong>
         <progress
           max="100"
           value={summary.taskProgress ?? 0}
-          aria-label="작업 개수 기준 진행률"
+          aria-label={messages.taskCompletionRate}
           aria-valuetext={progress}
         />
-        <small className="metric-detail">작업 개수 기준</small>
+        <small className="metric-detail">{messages.taskCountBasis}</small>
       </div>
       {useEffort ? (
         <div className="metric">
-          <span>공수 기준 진척도</span>
-          <strong>{summary.progress === null ? '산정 불가' : summary.progress + '%'}</strong>
+          <span>{messages.effortProgress}</span>
+          <strong>
+            {summary.progress === null ? messages.notCalculable : summary.progress + '%'}
+          </strong>
         </div>
       ) : null}
     </div>

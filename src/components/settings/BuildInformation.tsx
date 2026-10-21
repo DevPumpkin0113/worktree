@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import type { useAppInfo } from '../../hooks/use-app-info';
 export function BuildInformation({
   build,
@@ -13,24 +14,29 @@ export function BuildInformation({
         <img src="/worktree-icon.png" width={64} height={64} alt="" />
         <div>
           <h4>Worktree</h4>
-          <p className="about-description">WBS 문서를 읽고 탐색하는 데스크톱 앱</p>
+          <p className="about-description">{messages.appDescription}</p>
           <p id="appVersion" className="app-version" aria-live="polite">
-            {build ? '버전 ' + build.version : '버전 확인 중'}
+            {build ? messages.versionPrefix + build.version : messages.loadingVersion}
           </p>
         </div>
       </div>
       <div className="about-build">
         <span id="buildChannel" className="about-build-tag">
-          {build ? (build.channel === 'release' ? '정식 배포' : '개발용') : '확인 중'}
+          {build
+            ? build.channel === 'release'
+              ? messages.releaseBuild
+              : messages.developmentBuild
+            : messages.checking}
         </span>
         <span>
-          빌드 일시{' '}
+          {messages.buildTime}{' '}
           <span id="buildTime" className="about-build-value">
             {date && !Number.isNaN(date.valueOf()) ? date.toLocaleString('ko-KR') : error || '—'}
           </span>
         </span>
         <span>
-          커밋 <span id="buildCommit">{build?.commit ?? '—'}</span>
+          {messages.commit + ' '}
+          <span id="buildCommit">{build?.commit ?? '—'}</span>
         </span>
         <span id="buildPlatform">{build?.platform}</span>
       </div>

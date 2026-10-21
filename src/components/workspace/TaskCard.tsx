@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { STATUS_NAMES, TYPE_NAMES, type WorkRow } from '../../app/types';
 export function TaskCard({
   row,
@@ -31,9 +32,9 @@ export function TaskCard({
         {row.name}
         <div className="sub">
           <span className={'work-type-badge work-type-' + row.type}>
-            {TYPE_NAMES[row.type] === '작업 그룹' ? '그룹' : TYPE_NAMES[row.type]}
+            {TYPE_NAMES[row.type] === messages.workGroup ? messages.group : TYPE_NAMES[row.type]}
           </span>{' '}
-          · {row.owner === '-' ? '담당 미정' : row.owner}
+          · {row.owner === '-' ? messages.unassigned : row.owner}
         </div>
       </div>
       <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>

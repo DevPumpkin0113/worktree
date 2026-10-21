@@ -16,6 +16,7 @@ const first = 'C:\\QA\\first.wbs',
   second = 'C:\\QA\\second.wbs';
 async function fixture(
   options: {
+    language?: 'ko' | 'en';
     sessionFailure?: boolean;
     saveFailure?: boolean;
     updateKind?: string;
@@ -40,7 +41,8 @@ async function fixture(
       if (command === 'load_settings')
         result = {
           settings: {
-            schemaVersion: 1,
+            schemaVersion: 2,
+            language: options.language ?? 'ko',
             idSeparator: 'none',
             detailMode: 'sidebar',
             autoCheckUpdates: options.auto ?? false,
@@ -408,7 +410,7 @@ test('설정 메뉴 키보드 이동·패널 숨기기·펼치기와 선택 강�
     await f.click('#settingsOpen');
     await act(async () =>
       f
-        .element('#settingsDisplayTab')
+        .element('#settingsGeneralTab')
         .dispatchEvent(
           new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }),
         ),
@@ -525,6 +527,70 @@ test('프로젝트 파일 트리 시안은 현재 WBS 표시·접기·작업 보
     assert.equal(f.store.getSnapshot().page, 'board');
     assert.equal(f.store.getSnapshot().activePath, first);
     assert.equal(f.host.querySelectorAll('[data-tab-index]').length, 2);
+  } finally {
+    await f.close();
+  }
+});
+
+test('일반 메뉴의 언어 설정은 즉시 전환하고 저장 실패 시 기존 언어를 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#settingsOpen');
+    assert.equal(f.element('#settingsGeneralTab').textContent, '일반');
+    await f.click('#language');
+    await f.click('#language-options [data-value="en"]');
+    assert.equal(f.store.getSnapshot().settings.language, 'en');
+    assert.equal(f.element('#settingsGeneralTab').textContent, 'General');
+    assert.equal(f.element('#settingsTitle').textContent, 'App settings');
+    assert.equal(document.documentElement.lang, 'en');
+    await f.click('#settingsAboutTab');
+    assert.equal(f.element('#updateTitle').textContent, 'Updates have not been checked');
+    await f.click('#settingsClose');
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Task board');
+    assert.match(f.element('#content').textContent!, /In progress/);
+    assert.match(f.element('#content').textContent!, /댓글 구현/);
+    await f.click('[data-view="flow"]');
+    assert.match(f.element('.chart-adapter').textContent!, /Dependency stage/);
+    assert.doesNotMatch(f.element('.chart-adapter').textContent!, /선행 단계/);
+    await f.click('#settingsOpen');
+    f.setSaveFailure(true);
+    await f.click('#language');
+    await f.click('#language-options [data-value="ko"]');
+    assert.equal(f.store.getSnapshot().settings.language, 'en');
+    assert.match(f.element('#settingsError').textContent!, /Could not save settings/);
+    f.setSaveFailure(false);
+    await f.click('#language');
+    await f.click('#language-options [data-value="ko"]');
+    assert.equal(f.element('#settingsGeneralTab').textContent, '일반');
+    assert.equal(document.documentElement.lang, 'ko');
+  } finally {
+    await f.close();
+  }
+});
+
+test('문서 오류는 선택 언어로 표시하고 언어 전환 후에도 원본 위치를 유지한다', async () => {
+  const f = await fixture({ language: 'en' });
+  try {
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Task board');
+    f.files.set(first, source.replace(' | doing |', ' | invalid |'));
+    await act(async () => f.store.poll());
+    assert.ok(f.store.problems.length);
+    assert.equal(f.store.problems[0].field, 'Status');
+    assert.equal(f.store.problems[0].reason, 'invalid status');
+    const positions = f.store.problems[0].positions;
+    await f.click('#error');
+    assert.match(f.element('#problemsBody').textContent!, /invalid status/);
+    assert.match(f.element('#error').textContent!, /invalid status/);
+    assert.ok(f.store.problems[0].positions.length);
+    await f.click('#settingsOpen');
+    await f.click('#language');
+    await f.click('#language-options [data-value="ko"]');
+    assert.equal(f.store.problems[0].field, '상태');
+    assert.equal(f.store.problems[0].reason, '상태 오류');
+    assert.deepEqual(f.store.problems[0].positions, positions);
+    await f.click('#settingsClose');
+    assert.match(f.element('#problemsBody').textContent!, /상태 오류/);
+    assert.match(f.element('#error').textContent!, /상태 오류/);
   } finally {
     await f.close();
   }

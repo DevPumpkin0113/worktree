@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { formatDocumentProblem, problemLocation } from '../../domain/document-errors';
 import { copyText } from '../../platform/clipboard';
@@ -22,9 +23,9 @@ export function Problems({
   async function copy(text: string) {
     try {
       await copyText(text);
-      setFeedback('복사했습니다.');
+      setFeedback(messages.copied);
     } catch {
-      setFeedback('복사 실패 · 내용을 선택해 직접 복사하세요.');
+      setFeedback(messages.copyFailed);
     }
   }
   return (
@@ -40,7 +41,8 @@ export function Problems({
     >
       <div className="problems-heading">
         <h2 id="documentProblemsTitle">
-          문제 <span id="problemsCount">{problems.length}</span>
+          {messages.problems + ' '}
+          <span id="problemsCount">{problems.length}</span>
         </h2>
         <div className="problems-actions">
           <span id="copyFeedback" role="status" aria-live="polite">
@@ -52,13 +54,13 @@ export function Problems({
             className="problem-copy"
             onClick={() => void copy(problems.map(formatDocumentProblem).join('\n\n---\n\n'))}
           >
-            전체 복사
+            {messages.copyAll}
           </button>
           <button
             id="problemsClose"
             className="modal-close"
-            aria-label="문제 패널 닫기"
-            title="닫기"
+            aria-label={messages.closeProblems}
+            title={messages.close}
             onClick={onClose}
           >
             <Icon name="close" />
@@ -80,28 +82,28 @@ export function Problems({
                 className="problem-copy"
                 onClick={() => void copy(formatDocumentProblem(problem))}
               >
-                오류 복사
+                {messages.copyError}
               </button>
             </div>
             {problem.source ? <p className="problem-source">{problem.source}</p> : null}
             <dl>
-              <dt>원인</dt>
+              <dt>{messages.reason}</dt>
               <dd>{problem.reason}</dd>
               {problem.field ? (
                 <>
-                  <dt>문제 필드</dt>
+                  <dt>{messages.problemField}</dt>
                   <dd>{problem.field}</dd>
-                  <dt>입력된 값</dt>
+                  <dt>{messages.inputValue}</dt>
                   <dd>
                     <code>{problem.value}</code>
                   </dd>
                 </>
               ) : null}
-              <dt>수정 안내</dt>
+              <dt>{messages.fixHint}</dt>
               <dd>{problem.hint}</dd>
               {problem.example ? (
                 <>
-                  <dt>수정 예시</dt>
+                  <dt>{messages.fixExample}</dt>
                   <dd>
                     <code>{problem.example}</code>
                   </dd>
@@ -110,14 +112,17 @@ export function Problems({
             </dl>
             {problem.raw ? (
               <details className="problem-original">
-                <summary>관련 원문 보기 · {problemLocation(problem)}</summary>
+                <summary>
+                  {messages.viewSourcePrefix + ' '}
+                  {problemLocation(problem)}
+                </summary>
                 <div className="problem-source-actions">
                   <button
                     type="button"
                     className="problem-copy"
                     onClick={() => void copy(problem.raw)}
                   >
-                    원문 복사
+                    {messages.copySource}
                   </button>
                 </div>
                 <pre>{problem.raw}</pre>

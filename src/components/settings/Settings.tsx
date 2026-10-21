@@ -1,17 +1,18 @@
+import { messages } from '../../i18n/messages';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AboutSettings } from './AboutSettings';
-import { DisplaySettings } from './DisplaySettings';
+import { GeneralSettings } from './GeneralSettings';
 import { Icon } from '../shared/Icon';
 import type { WorkspaceStore } from '../../app/workspace-store';
 import type { WorkspaceSnapshot } from '../../app/types';
 export function Settings({ store, state }: { store: WorkspaceStore; state: WorkspaceSnapshot }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [page, setPage] = useState<'display' | 'about'>('display');
+  const [page, setPage] = useState<'general' | 'about'>('general');
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const opened = useRef(false);
   useLayoutEffect(() => {
     if (state.settingsOpen) {
-      setPage('display');
+      setPage('general');
       if (!dialog.current!.open) dialog.current!.show();
       opened.current = true;
     } else if (dialog.current!.open) dialog.current!.close();
@@ -31,12 +32,12 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
       }}
     >
       <header className="settings-topbar">
-        <h2 id="settingsTitle">앱 설정</h2>
+        <h2 id="settingsTitle">{messages.appSettings}</h2>
         <button
           id="settingsClose"
           className="modal-close"
-          aria-label="앱 설정 닫기"
-          title="닫기"
+          aria-label={messages.closeAppSettings}
+          title={messages.close}
           autoFocus
           onClick={() => store.closeSettings()}
         >
@@ -48,20 +49,20 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
           <nav
             className="settings-menu"
             role="tablist"
-            aria-label="앱 설정 메뉴"
+            aria-label={messages.appSettingsMenu}
             aria-orientation="vertical"
           >
-            {(['display', 'about'] as const).map((key, index) => (
+            {(['general', 'about'] as const).map((key, index) => (
               <button
                 ref={(node) => {
                   tabs.current[index] = node;
                 }}
                 key={key}
-                id={key === 'display' ? 'settingsDisplayTab' : 'settingsAboutTab'}
+                id={key === 'general' ? 'settingsGeneralTab' : 'settingsAboutTab'}
                 type="button"
                 role="tab"
                 aria-selected={page === key}
-                aria-controls={key === 'display' ? 'settingsDisplayPage' : 'settingsAboutPage'}
+                aria-controls={key === 'general' ? 'settingsGeneralPage' : 'settingsAboutPage'}
                 tabIndex={page === key ? 0 : -1}
                 className={'settings-menu-item' + (page === key ? ' active' : '')}
                 onClick={() => setPage(key)}
@@ -69,11 +70,11 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
                   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
                   event.preventDefault();
                   const next = event.key === 'Home' ? 0 : event.key === 'End' ? 1 : 1 - index;
-                  setPage(next === 0 ? 'display' : 'about');
+                  setPage(next === 0 ? 'general' : 'about');
                   tabs.current[next]?.focus();
                 }}
               >
-                {key === 'display' ? '표시' : '앱 정보'}
+                {key === 'general' ? messages.general : messages.aboutApp}
               </button>
             ))}
           </nav>
@@ -84,13 +85,13 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
         </aside>
         <div className="settings-main">
           <section
-            id="settingsDisplayPage"
+            id="settingsGeneralPage"
             className="settings-page"
             role="tabpanel"
-            aria-labelledby="settingsDisplayTab"
-            hidden={page !== 'display'}
+            aria-labelledby="settingsGeneralTab"
+            hidden={page !== 'general'}
           >
-            <DisplaySettings store={store} state={state} />
+            <GeneralSettings store={store} state={state} />
           </section>
           <section
             id="settingsAboutPage"

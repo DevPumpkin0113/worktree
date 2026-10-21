@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { summarizeGroups } from '../../domain/group-summary';
 import { groupEffort, groupProgress, groupSchedule } from '../../views/group-summary';
 import { STATUS_NAMES, type WorkModel, type WorkRow } from '../../app/types';
@@ -25,17 +26,23 @@ export function TaskInfo({
   const group = row.type === 'group' ? summarizeGroups(model.rows).get(row.id) : null;
   const facts = group
     ? [
-        ['집계 일정', groupSchedule(group)],
-        ['집계 공수', groupEffort(group)],
-        ['하위 작업', group.completedTasks + ' / ' + group.taskCount + ' 완료'],
-        ['마일스톤', group.completedMilestones + ' / ' + group.milestoneCount + ' 완료'],
-        ['진척도', groupProgress(group)],
+        [messages.aggregateSchedule, groupSchedule(group)],
+        [messages.aggregateEffort, groupEffort(group)],
+        [
+          messages.children,
+          group.completedTasks + ' / ' + group.taskCount + messages.completedSuffix,
+        ],
+        [
+          messages.milestone,
+          group.completedMilestones + ' / ' + group.milestoneCount + messages.completedSuffix,
+        ],
+        [messages.progress, groupProgress(group)],
       ]
     : [
-        ['담당자', row.owner === '-' ? '미정' : row.owner],
-        ['예상 공수', row.effort === '-' ? '미정' : row.effort + ' h'],
-        ['시작일', row.start === '-' ? '미정' : row.start],
-        ['종료일', row.end === '-' ? '미정' : row.end],
+        [messages.owner, row.owner === '-' ? messages.unknown : row.owner],
+        [messages.effort, row.effort === '-' ? messages.unknown : row.effort + ' h'],
+        [messages.startDate, row.start === '-' ? messages.unknown : row.start],
+        [messages.endDate, row.end === '-' ? messages.unknown : row.end],
       ];
   const links = (items: WorkRow[]) =>
     items.length ? (
@@ -53,11 +60,11 @@ export function TaskInfo({
         </button>
       ))
     ) : (
-      <p className="detail-empty">연결된 작업이 없습니다.</p>
+      <p className="detail-empty">{messages.noRelatedTasks}</p>
     );
   return (
     <>
-      <nav className="detail-breadcrumb" aria-label="상위 작업">
+      <nav className="detail-breadcrumb" aria-label={messages.ancestors}>
         {ancestors.length ? (
           ancestors.map((item) => (
             <button key={item.id} data-detail={item.id} onClick={() => onSelect(item.id)}>
@@ -65,13 +72,15 @@ export function TaskInfo({
             </button>
           ))
         ) : (
-          <span>최상위 작업</span>
+          <span>{messages.rootTask}</span>
         )}
       </nav>
       <div className="detail-facts">
         {facts
           .filter(
-            ([name]) => model.useEffort || !['집계 공수', '예상 공수', '진척도'].includes(name),
+            ([name]) =>
+              model.useEffort ||
+              ![messages.aggregateEffort, messages.effort, messages.progress].includes(name),
           )
           .map(([name, value]) => (
             <div className="detail-fact" key={name}>
@@ -82,51 +91,48 @@ export function TaskInfo({
       </div>
       <section className="detail-section criteria-section">
         <div className="detail-section-heading">
-          <h3>산출물 / 완료 기준</h3>
-          {row.status === 'done' ? <span className="detail-complete">✓ 완료로 기록됨</span> : null}
+          <h3>{messages.criteria}</h3>
+          {row.status === 'done' ? (
+            <span className="detail-complete">{messages.recordedDone}</span>
+          ) : null}
         </div>
-        <p className="detail-criteria">{row.criteria || '완료 기준이 없습니다.'}</p>
-        {row.status === 'blocked' ? (
-          <p className="detail-blocked">
-            진행이 막힌 작업입니다. 원본 문서의 이슈 및 결정 사항에서 원인과 해소 조건을 확인하세요.
-          </p>
-        ) : null}
+        <p className="detail-criteria">{row.criteria || messages.noCriteria}</p>
+        {row.status === 'blocked' ? <p className="detail-blocked">{messages.blockedHint}</p> : null}
       </section>
       {children.length ? (
         <section className="detail-section">
           <h3>
-            하위 작업 <span>{children.length}</span>
+            {messages.children + ' '}
+            <span>{children.length}</span>
           </h3>
           {links(children)}
         </section>
       ) : null}
       <div className="detail-relations">
         {[
-          ['선행 작업', previous],
-          ['후속 작업', next],
+          [messages.predecessors, previous],
+          [messages.successors, next],
         ].map(([name, items]) => (
           <section className="detail-section" key={name as string}>
             <h3>
               {name as string} <span>{(items as WorkRow[]).length}</span>
             </h3>
             <p className="detail-section-note">
-              {name === '선행 작업'
-                ? '이 작업보다 먼저 끝나야 하는 작업'
-                : '이 작업이 끝난 뒤 이어지는 작업'}
+              {name === messages.predecessors ? messages.predecessorHint : messages.successorHint}
             </p>
             {links(items as WorkRow[])}
           </section>
         ))}
       </div>
       <details className="detail-identifiers">
-        <summary>식별 정보</summary>
+        <summary>{messages.identifiers}</summary>
         <dl>
-          <dt>표시 ID</dt>
+          <dt>{messages.displayId}</dt>
           <dd>{label(row.id)}</dd>
-          <dt>원본 ID</dt>
+          <dt>{messages.sourceId}</dt>
           <dd>{row.id}</dd>
-          <dt>상위 ID</dt>
-          <dd>{row.parent === '-' ? '없음' : row.parent}</dd>
+          <dt>{messages.parentId}</dt>
+          <dd>{row.parent === '-' ? messages.none : row.parent}</dd>
         </dl>
       </details>
     </>

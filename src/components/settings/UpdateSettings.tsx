@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import type { useAppInfo } from '../../hooks/use-app-info';
 import { Icon } from '../shared/Icon';
 export function UpdateSettings({
@@ -10,7 +11,7 @@ export function UpdateSettings({
   return (
     <section className="about-section" aria-labelledby="aboutUpdateTitle">
       <div className="about-section-heading">
-        <h4 id="aboutUpdateTitle">업데이트</h4>
+        <h4 id="aboutUpdateTitle">{messages.update}</h4>
       </div>
       <div
         id="updateStatus"
@@ -31,11 +32,11 @@ export function UpdateSettings({
         id="updateProgress"
         max={100}
         value={app.progress ?? undefined}
-        aria-label="업데이트 다운로드 진행률"
+        aria-label={messages.updateDownloadProgress}
         hidden={app.progress === undefined}
       />
       <details id="updateNotesSection" hidden={!app.update?.notes}>
-        <summary>변경 내용</summary>
+        <summary>{messages.releaseNotes}</summary>
         <pre id="updateNotes">{app.update?.notes}</pre>
       </details>
       <div className="about-update-actions">
@@ -46,7 +47,7 @@ export function UpdateSettings({
           disabled={app.busy}
           onClick={() => void app.check()}
         >
-          업데이트 확인
+          {messages.checkUpdates}
         </button>
         <button
           id="installUpdate"
@@ -54,7 +55,7 @@ export function UpdateSettings({
           disabled={app.busy || app.update?.kind !== 'available'}
           onClick={() => void app.install()}
         >
-          다운로드 및 설치
+          {messages.downloadAndInstall}
         </button>
         <button
           id="releasePage"
@@ -62,7 +63,7 @@ export function UpdateSettings({
           hidden={app.update?.kind !== 'manual'}
           onClick={() => void app.releases()}
         >
-          릴리즈 열기
+          {messages.openRelease}
         </button>
       </div>
       <label className="about-auto-check">
@@ -73,7 +74,7 @@ export function UpdateSettings({
           disabled={app.preferenceBusy || !settingsReady}
           onChange={(event) => void app.changeAuto(event.target.checked)}
         />
-        <span>앱 시작 시 자동 확인</span>
+        <span>{messages.autoCheckUpdates}</span>
       </label>
       <p id="updateCheckedAt" className="about-pending-note">
         {app.checkedAt}

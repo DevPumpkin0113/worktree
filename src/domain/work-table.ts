@@ -1,3 +1,4 @@
+import { WBS_SECTION_PATTERN } from './wbs-schema';
 export interface SourceLine {
   raw: string;
   line: number;
@@ -42,7 +43,7 @@ export function tableCellPositions(raw: string) {
 // Retain source positions so parsing and error details use the same table boundary.
 export function findWorkTable(markdown: string) {
   const lines = markdown.replace(/^\uFEFF/, '').split(/\r?\n/);
-  const sectionStart = lines.findIndex((line) => /^## 작업 목록\s*$/.test(line));
+  const sectionStart = lines.findIndex((line) => WBS_SECTION_PATTERN.test(line));
   if (sectionStart < 0) return { sectionFound: false, table: [] };
   let sectionEnd = lines.findIndex(
     (line, index) => index > sectionStart && /^##(?:\s|$)/.test(line),

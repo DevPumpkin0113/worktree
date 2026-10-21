@@ -53,7 +53,7 @@ fn valid_path(value: &str) -> bool {
 impl Session {
     fn validate(&self) -> Result<(), String> {
         if self.schema_version != 1 {
-            return Err("지원하지 않는 세션 버전입니다. 원본은 보존합니다.".into());
+            return Err(crate::i18n::unsupported_session().into());
         }
         let unique_recent = self
             .recent_files
@@ -81,9 +81,7 @@ impl Session {
                 .as_ref()
                 .is_some_and(|path| !self.tabs.iter().any(|tab| &tab.path == path))
         {
-            return Err(
-                "세션 파일의 경로·보기·탭 목록이 올바르지 않습니다. 원본은 보존합니다.".into(),
-            );
+            return Err(crate::i18n::invalid_session().into());
         }
         Ok(())
     }
@@ -103,11 +101,11 @@ impl SessionStore {
             Err(error) => return Err(error.to_string()),
         };
         if metadata.len() > MAX_BYTES {
-            return Err("세션 파일이 너무 큽니다. 원본은 보존합니다.".into());
+            return Err(crate::i18n::session_too_large().into());
         }
         let text = fs::read_to_string(&self.path).map_err(|error| error.to_string())?;
         let session: Session = serde_json::from_str(text.trim_start_matches('\u{feff}'))
-            .map_err(|error| format!("세션 파일을 읽지 못했습니다. 원본은 보존합니다: {error}"))?;
+            .map_err(|error| crate::i18n::session_read_failed(&error))?;
         session.validate()?;
         Ok(session)
     }
@@ -115,11 +113,14 @@ impl SessionStore {
         session.validate()?;
         // Unsupported or damaged saved state must never be silently overwritten.
         self.read()?;
-        let parent = self.path.parent().ok_or("세션 폴더를 찾지 못했습니다.")?;
+        let parent = self
+            .path
+            .parent()
+            .ok_or(crate::i18n::session_folder_missing())?;
         fs::create_dir_all(parent).map_err(|error| error.to_string())?;
         let bytes = serde_json::to_vec_pretty(session).map_err(|error| error.to_string())?;
         if bytes.len() as u64 > MAX_BYTES {
-            return Err("저장할 세션이 너무 큽니다.".into());
+            return Err(crate::i18n::session_save_too_large().into());
         }
         let mut temporary = tempfile::Builder::new()
             .prefix("session-")

@@ -1,3 +1,4 @@
+import { messages } from './i18n/messages';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { createIdLabels } from './domain/id-display';
 import { summarizeWork, statusNotice } from './domain/work-summary';
@@ -14,6 +15,9 @@ export function App({ store }: { store: WorkspaceStore }) {
   const state = useWorkspace(store),
     model = store.active?.model ?? null;
   const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    document.documentElement.lang = state.settings.language;
+  }, [state.settings.language]);
   const labels = useMemo(
     () =>
       model
@@ -27,8 +31,8 @@ export function App({ store }: { store: WorkspaceStore }) {
   const collisions = [...labels.values()].filter((value) => value.includes('[')).length;
   const notice = summary
     ? statusNotice(summary, model!.useEffort) +
-      (collisions ? ' 표시 ID 중복 ' + collisions + '개: 원본 ID를 함께 표시합니다.' : '')
-    : '문서를 열어 주세요.';
+      (collisions ? messages.idCollisionPrefix + collisions + messages.idCollisionSuffix : '')
+    : messages.openDocumentPrompt;
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('workspace-nav-collapsed', collapsed);
     return () => document.documentElement.classList.remove('workspace-nav-collapsed');
@@ -82,7 +86,7 @@ export function App({ store }: { store: WorkspaceStore }) {
       <footer
         id="appStatusbar"
         className="app-statusbar"
-        aria-label="문서 상태"
+        aria-label={messages.documentStatus}
         inert={state.settingsOpen}
       >
         <button
@@ -93,10 +97,15 @@ export function App({ store }: { store: WorkspaceStore }) {
           aria-live="polite"
           hidden={!problems.length}
           onClick={() => store.toggleProblems()}
-          title={problems[0] ? '클릭하여 문제 패널 열기/닫기: ' + problems[0].message : ''}
+          title={problems[0] ? messages.toggleProblemsPrefix + problems[0].message : ''}
         >
           {problems[0]
-            ? '⚠ ' + problems[0].kind + ' ' + problems.length + '개 · ' + problems[0].message
+            ? '⚠ ' +
+              problems[0].kind +
+              ' ' +
+              problems.length +
+              messages.issueCountSeparator +
+              problems[0].message
             : ''}
         </button>
         <span
@@ -110,9 +119,9 @@ export function App({ store }: { store: WorkspaceStore }) {
           {notice}
         </span>
         <span id="source" className="source-status" title={state.activePath ?? ''}>
-          {state.activePath ?? '열린 문서 없음'}
+          {state.activePath ?? messages.noOpenDocument}
         </span>
-        <span className="statusbar-mode">읽기 전용</span>
+        <span className="statusbar-mode">{messages.readOnly}</span>
       </footer>
       <TaskDetail
         model={model}

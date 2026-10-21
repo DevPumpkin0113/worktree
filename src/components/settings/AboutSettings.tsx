@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useAppInfo } from '../../hooks/use-app-info';
 import { BuildInformation } from './BuildInformation';
 import { UpdateSettings } from './UpdateSettings';
@@ -8,7 +9,7 @@ export function AboutSettings({ store }: { store: WorkspaceStore }) {
   return (
     <>
       <div className="settings-page-heading">
-        <h3>앱 정보</h3>
+        <h3>{messages.aboutApp}</h3>
       </div>
       <BuildInformation build={app.build} error={app.buildError} />
       <UpdateSettings app={app} settingsReady={store.getSnapshot().settings.ready} />

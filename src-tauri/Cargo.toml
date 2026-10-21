@@ -1,6 +1,6 @@
 [package]
 name = "worktree"
-version = "0.16.0"
+version = "0.17.1"
 description = "Markdown WBS desktop viewer"
 edition = "2021"
 

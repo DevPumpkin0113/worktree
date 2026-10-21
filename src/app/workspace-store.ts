@@ -1,3 +1,5 @@
+import { messages, setLanguage, isLanguage } from '../i18n/messages';
+import { ko } from '../i18n/ko';
 import { readSeparator, saveSeparator } from '../domain/id-display';
 import { readDetailMode, saveDetailMode } from '../domain/detail-settings';
 import { parseWbs } from '../domain/model';
@@ -35,7 +37,14 @@ export class WorkspaceStore {
     settingsOpen: false,
     problemsOpen: false,
     operationProblems: [],
-    settings: { separator: 'none', detailMode: 'sidebar', ready: false, error: '', saving: false },
+    settings: {
+      language: 'ko',
+      separator: 'none',
+      detailMode: 'sidebar',
+      ready: false,
+      error: '',
+      saving: false,
+    },
   };
   private listeners = new Set<() => void>();
   private initialized: Promise<void> | null = null;
@@ -69,7 +78,7 @@ export class WorkspaceStore {
   get problems() {
     return [...(this.active?.problems ?? []), ...this.state.operationProblems];
   }
-  report(error: unknown, path = '', kind = '앱 오류') {
+  report(error: unknown, path = '', kind = ko.appError) {
     this.patch({ operationProblems: describeDocumentErrors(error, '', path, kind) as Problem[] });
   }
   initialize() {
@@ -80,8 +89,12 @@ export class WorkspaceStore {
   private async initializeSettings() {
     try {
       await this.storage.ready;
+      const savedLanguage = this.storage.getItem('worktree.language') ?? 'ko';
+      const language = isLanguage(savedLanguage) ? savedLanguage : 'ko';
+      setLanguage(language);
       this.patch({
         settings: {
+          language,
           separator: readSeparator(this.storage),
           detailMode: readDetailMode(this.storage),
           ready: true,
@@ -91,7 +104,10 @@ export class WorkspaceStore {
       });
     } catch (error) {
       this.patch({
-        settings: { ...this.state.settings, error: '설정을 불러오지 못했습니다: ' + String(error) },
+        settings: {
+          ...this.state.settings,
+          error: messages.settingsLoadFailedPrefix + String(error),
+        },
       });
     }
   }
@@ -132,7 +148,7 @@ export class WorkspaceStore {
     try {
       saved = await this.session.load();
     } catch (error) {
-      failures.push(...(describeDocumentErrors(error, '', '', '세션 읽기 오류') as Problem[]));
+      failures.push(...(describeDocumentErrors(error, '', '', ko.sessionReadError) as Problem[]));
     }
     const documents: OpenDocument[] = [];
     for (const tab of saved.tabs as { path: string; view: View; ganttUnit: 'day' | 'week' }[]) {
@@ -141,7 +157,7 @@ export class WorkspaceStore {
         documents.push(this.document(tab.path, text, { ...tab } as OpenDocument));
       } catch (error) {
         failures.push(
-          ...(describeDocumentErrors(error, '', tab.path, '파일 읽기 오류') as Problem[]),
+          ...(describeDocumentErrors(error, '', tab.path, ko.fileReadError) as Problem[]),
         );
       }
     }
@@ -175,7 +191,7 @@ export class WorkspaceStore {
         tabs: documents.map(({ path, view, ganttUnit }) => ({ path, view, ganttUnit })),
         activePath: this.state.activePath,
       })
-      .catch((error: unknown) => this.report(error, '', '세션 저장 오류'));
+      .catch((error: unknown) => this.report(error, '', ko.sessionSaveError));
   }
   async open(path: string) {
     try {
@@ -200,7 +216,7 @@ export class WorkspaceStore {
       this.title();
       this.saveSession();
     } catch (error) {
-      this.report(error, path, '파일 읽기 오류');
+      this.report(error, path, ko.fileReadError);
     }
   }
   async pick() {
@@ -305,11 +321,15 @@ export class WorkspaceStore {
       ? this.state.selectedId
       : null;
   }
-  async saveSetting(key: 'separator' | 'detailMode', value: string) {
+  async saveSetting(key: 'separator' | 'detailMode' | 'language', value: string) {
     if (this.state.settings.saving) return;
     this.patch({ settings: { ...this.state.settings, saving: true, error: '' } });
     try {
-      if (key === 'separator') await saveSeparator(this.storage, value);
+      if (key === 'language') {
+        if (!isLanguage(value)) throw Error(messages.invalidSetting);
+        await this.storage.setItem('worktree.language', value);
+        setLanguage(value);
+      } else if (key === 'separator') await saveSeparator(this.storage, value);
       else await saveDetailMode(this.storage, value);
       this.patch({ settings: { ...this.state.settings, [key]: value, saving: false } });
     } catch (error) {
@@ -317,7 +337,7 @@ export class WorkspaceStore {
         settings: {
           ...this.state.settings,
           saving: false,
-          error: '설정을 저장하지 못했습니다: ' + String(error),
+          error: messages.settingsSaveFailedPrefix + String(error),
         },
       });
     }
@@ -351,12 +371,12 @@ export class WorkspaceStore {
           this.title();
         } else if (
           this.state.operationProblems.some(
-            (problem) => problem.kind === '파일 읽기 오류' && problem.source === path,
+            (problem) => problem.category === 'fileReadError' && problem.source === path,
           )
         )
           this.patch({ operationProblems: [] });
       } catch (error) {
-        if (this.state.activePath === path) this.report(error, path, '파일 읽기 오류');
+        if (this.state.activePath === path) this.report(error, path, ko.fileReadError);
       }
     } catch (error) {
       this.report(error);

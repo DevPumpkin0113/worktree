@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { bindDocumentTabs } from '../../interactions/document-tabs';
 import type { WorkspaceStore } from '../../app/workspace-store';
@@ -68,10 +69,10 @@ export function DocumentDock({
       ref={dock}
       id="documentDock"
       className="document-dock"
-      aria-label="열린 문서"
+      aria-label={messages.openDocuments}
       inert={state.settingsOpen}
     >
-      <span className="dock-label">문서</span>
+      <span className="dock-label">{messages.documents}</span>
       <div
         ref={tabs}
         id="tabs"
@@ -94,7 +95,7 @@ export function DocumentDock({
               >
                 <button
                   data-tab={index}
-                  title={doc.path + ' · 드래그로 탭 순서 변경 · Alt+Shift+←/→'}
+                  title={doc.path + messages.reorderTabHint}
                   aria-keyshortcuts="Alt+Shift+ArrowLeft Alt+Shift+ArrowRight"
                   aria-pressed={doc.path === state.activePath}
                   onClick={(event) => {
@@ -110,7 +111,7 @@ export function DocumentDock({
                 <button
                   className="tab-close"
                   data-close-tab={index}
-                  aria-label={title + ' 문서 닫기'}
+                  aria-label={title + messages.closeDocumentSuffix}
                   onClick={(event) => {
                     event.stopPropagation();
                     store.closeDocument(doc.path);
@@ -122,10 +123,15 @@ export function DocumentDock({
             );
           })
         ) : (
-          <span className="dock-empty">열린 문서 없음</span>
+          <span className="dock-empty">{messages.noOpenDocument}</span>
         )}
       </div>
-      <div id="recentFiles" className="recent-files" aria-label="최근 파일" hidden={!recentOpen}>
+      <div
+        id="recentFiles"
+        className="recent-files"
+        aria-label={messages.recentFiles}
+        hidden={!recentOpen}
+      >
         {state.recent.length ? (
           state.recent.map((path) => (
             <button
@@ -142,27 +148,27 @@ export function DocumentDock({
             </button>
           ))
         ) : (
-          <p>최근 파일이 없습니다.</p>
+          <p>{messages.noRecentFiles}</p>
         )}
       </div>
       <button
         id="recentOpen"
         type="button"
         className="dock-open recent-open"
-        aria-label="최근 파일"
+        aria-label={messages.recentFiles}
         aria-expanded={recentOpen}
         aria-controls="recentFiles"
-        title="최근 파일"
+        title={messages.recentFiles}
         disabled={!state.ready}
         onClick={() => setRecentOpen((value) => !value)}
       >
-        최근
+        {messages.recent}
       </button>
       <button
         id="dockOpen"
         className="dock-open"
-        aria-label="문서 열기"
-        title="문서 열기"
+        aria-label={messages.openDocument}
+        title={messages.openDocument}
         disabled={!state.ready}
         onClick={() => void store.pick()}
       >

@@ -1,3 +1,5 @@
+import type { Language } from '../i18n/messages';
+import { messages } from '../i18n/messages';
 import type { Status, WorkModel, Problem } from '../domain/types';
 export type { Status, WorkRow, WorkModel, Problem } from '../domain/types';
 export type View = 'tree' | 'board' | 'flow' | 'gantt';
@@ -31,6 +33,7 @@ export interface DownloadEvent {
   total?: number;
 }
 export interface Settings {
+  language: Language;
   separator: 'none' | 'hyphen';
   detailMode: DetailMode;
   ready: boolean;
@@ -53,9 +56,27 @@ export interface WorkspaceSnapshot {
   settings: Settings;
 }
 export const STATUS_NAMES: Record<Status, string> = {
-  todo: '시작 전',
-  doing: '진행 중',
-  blocked: '막힘',
-  done: '완료',
+  get todo() {
+    return messages.todo;
+  },
+  get doing() {
+    return messages.doing;
+  },
+  get blocked() {
+    return messages.blocked;
+  },
+  get done() {
+    return messages.done;
+  },
 };
-export const TYPE_NAMES = { group: '작업 그룹', task: '작업', milestone: '마일스톤' };
+export const TYPE_NAMES = {
+  get group() {
+    return messages.workGroup;
+  },
+  get task() {
+    return messages.task;
+  },
+  get milestone() {
+    return messages.milestone;
+  },
+};

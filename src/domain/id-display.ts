@@ -1,3 +1,4 @@
+import { messages } from '../i18n/messages';
 import type { WorkModel } from './types';
 interface IdStorage {
   getItem(key: string): string | null;
@@ -12,7 +13,7 @@ export function readSeparator(storage: Pick<IdStorage, 'getItem'>) {
   }
 }
 export function saveSeparator(storage: IdStorage, value: string) {
-  if (!['none', 'hyphen'].includes(value)) throw Error('잘못된 ID 구분자 설정입니다.');
+  if (!['none', 'hyphen'].includes(value)) throw Error(messages.invalidIdSeparator);
   return storage.setItem(KEY, value);
 }
 export function createIdLabels(model: WorkModel, separator: string) {

@@ -1,3 +1,4 @@
+import { getLanguage } from '../../i18n/messages';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { renderDependencies, renderGantt } from '../../views/schedule-views';
 import { bindChartPan } from '../../interactions/chart-pan';
@@ -33,12 +34,13 @@ export function ChartView({
   const [width, setWidth] = useState(960);
   const pan = useRef<ReturnType<typeof bindChartPan> | null>(null);
   const validFocus = rows.some((row) => row.id === focus) ? focus : null;
+  const language = getLanguage();
   const html = useMemo(
     () =>
       view === 'flow'
         ? renderDependencies(rows, filtered, validFocus, label)
         : renderGantt(filtered, label, unit, undefined, width),
-    [view, rows, filtered, validFocus, label, unit, width],
+    [view, rows, filtered, validFocus, label, unit, width, language],
   );
   useLayoutEffect(() => {
     const node = root.current!;

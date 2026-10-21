@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { useRef, type KeyboardEvent } from 'react';
 import type { Thread } from './comment-types';
 export function DetailTabs({
@@ -17,7 +18,7 @@ export function DetailTabs({
     refs.current[next]?.focus();
   }
   return (
-    <div className="detail-preview-tabs" role="tablist" aria-label="작업 상세 보기">
+    <div className="detail-preview-tabs" role="tablist" aria-label={messages.taskDetailView}>
       {keys.map((tab, index) => (
         <button
           key={tab}
@@ -34,10 +35,11 @@ export function DetailTabs({
           onKeyDown={(event) => keydown(event, index)}
         >
           {tab === 'info' ? (
-            '작업 정보'
+            messages.taskInfo
           ) : (
             <>
-              댓글 <span>{thread.comments.length}</span>
+              {messages.comments + ' '}
+              <span>{thread.comments.length}</span>
             </>
           )}
         </button>

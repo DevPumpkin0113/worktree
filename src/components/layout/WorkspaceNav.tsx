@@ -1,12 +1,21 @@
+import { messages } from '../../i18n/messages';
 import { version } from '../../../package.json';
 import { ProjectEntry } from '../project/ProjectEntry';
 import { Icon } from '../shared/Icon';
 import type { Page } from '../../app/types';
 export const PAGES: Record<Page, [string, string]> = {
-  project: ['프로젝트 관리', '프로젝트 정보와 작업 규칙을 확인하세요.'],
-  board: ['작업 보드', '다양한 보기로 작업의 흐름을 확인하세요.'],
-  tasks: ['작업 목록', '문서의 작업을 한 목록에서 확인하고 찾아보세요.'],
-  analytics: ['인사이트', '프로젝트 진행 상황을 살펴볼 공간입니다.'],
+  get project() {
+    return [messages.projectManagement, messages.projectManagementDescription] as [string, string];
+  },
+  get board() {
+    return [messages.workBoard, messages.workBoardDescription] as [string, string];
+  },
+  get tasks() {
+    return [messages.workList, messages.workListDescription] as [string, string];
+  },
+  get analytics() {
+    return [messages.insights, messages.insightsDescription] as [string, string];
+  },
 };
 const PAGE_ICONS: Record<Page, string> = {
   project: 'project',
@@ -33,9 +42,14 @@ export function WorkspaceNav({
   onCollapse: () => void;
   inert: boolean;
 }) {
-  const collapseName = collapsed ? '워크스페이스 펼치기' : '워크스페이스 접기';
+  const collapseName = collapsed ? messages.expandWorkspace : messages.collapseWorkspace;
   return (
-    <aside id="workspaceNav" className="workspace-nav" aria-label="워크스페이스" inert={inert}>
+    <aside
+      id="workspaceNav"
+      className="workspace-nav"
+      aria-label={messages.workspace}
+      inert={inert}
+    >
       <ProjectEntry
         filePath={projectPath}
         onFile={() => onPage('board')}
@@ -44,8 +58,8 @@ export function WorkspaceNav({
         disabled={!projectTitle}
         active={page === 'project'}
       />
-      <p className="workspace-nav-label">워크스페이스</p>
-      <nav aria-label="워크스페이스 메뉴">
+      <p className="workspace-nav-label">{messages.workspace}</p>
+      <nav aria-label={messages.workspaceMenu}>
         {(['board', 'tasks', 'analytics'] as const).map((key) => (
           <button
             key={key}

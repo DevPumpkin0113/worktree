@@ -1,3 +1,4 @@
+import { messages } from '../i18n/messages';
 import type { Platform, View } from '../app/types';
 export interface Session {
   schemaVersion: 1;
@@ -42,7 +43,7 @@ export function validateSession(input: unknown): Session {
     new Set(value.tabs.map((tab) => tab.path)).size !== value.tabs.length ||
     !(value.activePath === null || value.tabs.some((tab) => tab.path === value.activePath))
   )
-    throw Error('세션 파일의 버전 또는 값이 올바르지 않습니다. 원본은 보존합니다.');
+    throw Error(messages.invalidSession);
   return {
     schemaVersion: 1,
     recentFiles: [...value.recentFiles],

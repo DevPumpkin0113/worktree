@@ -1,3 +1,4 @@
+import { messages } from '../i18n/messages';
 export async function copyText(
   text: string,
   environment: {
@@ -12,7 +13,7 @@ export async function copyText(
     }
   } catch {}
   const doc = environment.document;
-  if (!doc?.body || !doc.execCommand) throw Error('클립보드에 접근할 수 없습니다.');
+  if (!doc?.body || !doc.execCommand) throw Error(messages.clipboardUnavailable);
   const previous = doc.activeElement;
   const input = doc.createElement('textarea');
   input.value = text;
@@ -22,7 +23,7 @@ export async function copyText(
   try {
     input.focus({ preventScroll: true });
     input.select();
-    if (!doc.execCommand('copy')) throw Error('클립보드 복사에 실패했습니다.');
+    if (!doc.execCommand('copy')) throw Error(messages.clipboardFailed);
   } finally {
     input.remove();
     (previous as HTMLElement | null)?.focus?.({ preventScroll: true });

@@ -1,3 +1,4 @@
+import { messages } from '../../i18n/messages';
 import { ProjectManagement } from '../project/ProjectManagement';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import { useLayoutEffect, useMemo, useRef } from 'react';
@@ -14,10 +15,18 @@ import { PAGES } from '../layout/WorkspaceNav';
 import type { WorkspaceStore } from '../../app/workspace-store';
 import type { View, WorkspaceSnapshot } from '../../app/types';
 const VIEWS: Record<View, string> = {
-  tree: '트리',
-  board: '칸반',
-  flow: '작업 네트워크',
-  gantt: '간트 차트',
+  get tree() {
+    return messages.tree;
+  },
+  get board() {
+    return messages.kanban;
+  },
+  get flow() {
+    return messages.workNetwork;
+  },
+  get gantt() {
+    return messages.gantt;
+  },
 };
 export function Content({
   store,
@@ -90,8 +99,8 @@ export function Content({
         ))}
         <input
           id="search"
-          aria-label="작업 검색"
-          placeholder="ID, 작업명, 담당자 검색"
+          aria-label={messages.searchTasks}
+          placeholder={messages.searchPlaceholder}
           value={state.query}
           onChange={(event) => {
             capture();
@@ -101,13 +110,13 @@ export function Content({
         <FilterDropdown
           key={'owner:' + active?.path + state.page + state.settingsOpen}
           id="owner"
-          label="담당자 필터"
+          label={messages.ownerFilter}
           value={state.owner}
           options={[
-            { value: 'all', label: '전체 담당자' },
+            { value: 'all', label: messages.allOwners },
             ...owners.map((owner) => ({
               value: 'owner:' + owner,
-              label: owner === '-' ? '담당 미정' : owner,
+              label: owner === '-' ? messages.unassigned : owner,
             })),
           ]}
           disabled={state.settingsOpen}
@@ -119,14 +128,14 @@ export function Content({
         <FilterDropdown
           key={'status:' + active?.path + state.page + state.settingsOpen}
           id="status"
-          label="상태 필터"
+          label={messages.statusFilter}
           value={state.status}
           options={[
-            { value: 'all', label: '전체 상태' },
-            { value: 'todo', label: '시작 전' },
-            { value: 'doing', label: '진행 중' },
-            { value: 'blocked', label: '막힘' },
-            { value: 'done', label: '완료' },
+            { value: 'all', label: messages.allStatuses },
+            { value: 'todo', label: messages.todo },
+            { value: 'doing', label: messages.doing },
+            { value: 'blocked', label: messages.blocked },
+            { value: 'done', label: messages.done },
           ]}
           disabled={state.settingsOpen}
           onChange={(status) => {
@@ -141,14 +150,14 @@ export function Content({
         ) : state.page === 'analytics' ? (
           <Analytics model={model ?? null} />
         ) : !active ? (
-          <div className="empty">우측 하단 + 버튼으로 문서를 열거나 파일을 끌어오세요.</div>
+          <div className="empty">{messages.openFileHint}</div>
         ) : !model ? (
           <div className="document-unavailable">
-            <strong>문서를 표시할 수 없습니다.</strong>
-            <p>하단 상태 표시줄의 오류를 눌러 원인과 수정 방법을 확인하세요.</p>
+            <strong>{messages.documentUnavailable}</strong>
+            <p>{messages.checkProblemsHint}</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="empty">조건에 맞는 작업이 없습니다.</div>
+          <div className="empty">{messages.noMatchingTasks}</div>
         ) : state.page === 'tasks' ? (
           <AllTasks
             rows={filtered}

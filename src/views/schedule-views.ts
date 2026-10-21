@@ -1,7 +1,8 @@
+import { messages } from '../i18n/messages';
 import type { WorkRow } from '../domain/types';
 import { escapeHtml as escape } from './html';
 const DAY = 86400000;
-const stateName = { todo: '시작 전', doing: '진행 중', blocked: '막힘', done: '완료' };
+import { STATUS_NAMES as stateName } from '../app/types';
 const dateString = (time: number) => new Date(time).toISOString().slice(0, 10);
 
 export function graphLayout(rows: WorkRow[]) {
@@ -61,7 +62,7 @@ export function renderDependencies(
   selected: string | null,
   label: (id: string) => string,
 ) {
-  if (!matched.length) return '<div class="empty">조건에 맞는 작업이 없습니다.</div>';
+  if (!matched.length) return `<div class="empty">${escape(messages.noMatchingTasks)}</div>`;
   const visible = new Set<string>();
   for (const r of matched) for (const id of relatedIds(rows, r.id)) visible.add(id);
   const nodes = rows.filter((r) => visible.has(r.id));
@@ -73,7 +74,7 @@ export function renderDependencies(
   const titles = layout.layers
     .map(
       (_layer, i) =>
-        `<text x="${24 + i * 280}" y="26" class="stage-label">${i === 0 ? '선행 작업 없음' : `선행 단계 ${i}`}</text>`,
+        `<text x="${24 + i * 280}" y="26" class="stage-label">${i === 0 ? messages.noPredecessors : messages.dependencyStage(i)}</text>`,
     )
     .join('');
   const edges = nodes
@@ -97,19 +98,19 @@ export function renderDependencies(
     })
     .join('');
   const current = focus ? byId.get(focus) : undefined;
-  const preceding = current?.deps.map((id) => label(id)).join(', ') || '없음';
+  const preceding = current?.deps.map((id) => label(id)).join(', ') || messages.none;
   const following = current
     ? layout.children
         .get(current.id)!
         .map((id) => label(id))
-        .join(', ') || '없음'
+        .join(', ') || messages.none
     : '';
   const info = current
-    ? `<div class="dependency-focus"><div><strong>${escape(label(current.id) + ' · ' + current.name)}</strong><div class="sub">직접 선행: ${escape(preceding)} / 직접 후속: ${escape(following)}</div></div><button data-id="${current.id}">작업 상세</button><button data-clear-focus>강조 해제</button></div>`
-    : '<div class="notice">작업 간 선행·후속 관계를 표시합니다. 왼쪽에서 오른쪽으로 진행합니다. 작업을 선택하면 선행·후속 경로가 강조됩니다. 단계는 일정이나 작업 가능 상태를 뜻하지 않습니다.</div>';
+    ? `<div class="dependency-focus"><div><strong>${escape(label(current.id) + ' · ' + current.name)}</strong><div class="sub">${escape(messages.directPredecessorsPrefix)}${escape(preceding)}${escape(messages.directSuccessorsPrefix)}${escape(following)}</div></div><button data-id="${current.id}">${escape(messages.networkDetails)}</button><button data-clear-focus>${escape(messages.clearHighlight)}</button></div>`
+    : `<div class="notice">${escape(messages.networkHint)}</div>`;
   return (
     info +
-    `<div class="diagram-scroll" tabindex="0" aria-label="작업 네트워크"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="작업 의존 관계"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${titles}${edges}${cards}</svg></div><p class="sub">필터와 일치하는 작업 외에도 연결 확인에 필요한 선행·후속 작업을 함께 표시합니다. 빈 공간을 드래그하면 화면이 이동합니다. 노드를 두 번 클릭하면 상세를 엽니다.</p>`
+    `<div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${titles}${edges}${cards}</svg></div><p class="sub">${escape(messages.networkFilterHint)}</p>`
   );
 }
 
@@ -132,11 +133,11 @@ export function renderGantt(
   today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }),
   availableWidth = 960,
 ) {
-  if (!rows.length) return '<div class="empty">조건에 맞는 작업이 없습니다.</div>';
+  if (!rows.length) return `<div class="empty">${escape(messages.noMatchingTasks)}</div>`;
   const known = rows.filter((r) => r.start !== '-'),
     unknown = rows.filter((r) => r.start === '-'),
     range = timelineRange(rows, unit, Math.max(240, availableWidth - 242));
-  let result = `<div class="schedule-toolbar"><div><strong>간트 차트</strong><span class="sub"> · 일정 입력 ${known.length} / 미정 ${unknown.length}</span></div><label>날짜 축 <select id="ganttUnit" aria-label="간트 날짜 축"><option value="day" ${unit === 'day' ? 'selected' : ''}>일 단위</option><option value="week" ${unit === 'week' ? 'selected' : ''}>주 단위</option></select></label></div>`;
+  let result = `<div class="schedule-toolbar"><div><strong>${escape(messages.gantt)}</strong><span class="sub">${escape(messages.ganttScheduledPrefix)}${known.length}${escape(messages.ganttUnknownPrefix)}${unknown.length}</span></div><label>${escape(messages.dateAxis + ' ')}<select id="ganttUnit" aria-label="${escape(messages.ganttDateAxis)}"><option value="day" ${unit === 'day' ? 'selected' : ''}>${escape(messages.dayUnit)}</option><option value="week" ${unit === 'week' ? 'selected' : ''}>${escape(messages.weekUnit)}</option></select></label></div>`;
   if (range) {
     const { start, days, dayWidth, width, step } = range;
     let grid = '',
@@ -150,9 +151,9 @@ export function renderGantt(
     const todayOffset = (Date.parse(today) - start) / DAY;
     const todayLine =
       todayOffset >= 0 && todayOffset < days
-        ? `<path d="M${todayOffset * dayWidth + dayWidth / 2} 0v48" class="today-line"><title>오늘 ${today}</title></path>`
+        ? `<path d="M${todayOffset * dayWidth + dayWidth / 2} 0v48" class="today-line"><title>${escape(messages.todayPrefix)}${today}</title></path>`
         : '';
-    result += `<p class="sub">${dateString(start)} ~ ${dateString(range.end)} · 표시된 날짜는 시작일과 종료일을 모두 포함합니다. 붉은 선은 오늘입니다. 빈 공간 드래그로 이동할 수 있습니다.</p><div class="gantt-scroll" tabindex="0" aria-label="작업 일정 가로 스크롤"><table class="gantt-table"><thead><tr><th scope="col">작업 목록</th><th scope="col"><svg width="${width}" height="38" aria-label="날짜 축">${ticks}</svg></th></tr></thead><tbody>`;
+    result += `<p class="sub">${dateString(start)} ~ ${dateString(range.end)}${escape(messages.ganttRangeHint)}</p><div class="gantt-scroll" tabindex="0" aria-label="${escape(messages.ganttScrollLabel)}"><table class="gantt-table"><thead><tr><th scope="col">${escape(messages.workList)}</th><th scope="col"><svg width="${width}" height="38" aria-label="${escape(messages.dateAxis)}">${ticks}</svg></th></tr></thead><tbody>`;
     result += known
       .map((r) => {
         const x = ((Date.parse(r.start) - start) / DAY) * dayWidth,
@@ -165,12 +166,10 @@ export function renderGantt(
       })
       .join('');
     result += '</tbody></table></div>';
-  } else
-    result +=
-      '<div class="empty">일정이 아직 입력되지 않았습니다. 시작일·종료일을 작성하면 이곳에 간트 차트가 표시됩니다.</div>';
+  } else result += `<div class="empty">${escape(messages.ganttEmpty)}</div>`;
   if (unknown.length)
     result +=
-      `<details class="unscheduled" open><summary>일정 미정 · ${unknown.length}개</summary><div class="unscheduled-list">` +
+      `<details class="unscheduled" open><summary>${escape(messages.unscheduledPrefix)}${unknown.length}${escape(messages.countSuffix)}</summary><div class="unscheduled-list">` +
       unknown
         .map(
           (r) =>

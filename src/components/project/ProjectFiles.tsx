@@ -1,8 +1,9 @@
+import { messages } from '../../i18n/messages';
 import { Icon } from '../shared/Icon';
 export function ProjectFiles({ path, onSelect }: { path: string | null; onSelect: () => void }) {
   const name = path?.split(/[\\/]/).at(-1);
   return (
-    <ul id="projectFiles" className="project-files" aria-label="프로젝트 WBS 파일">
+    <ul id="projectFiles" className="project-files" aria-label={messages.projectWbsFiles}>
       {path && name && /\.wbs$/i.test(name) ? (
         <li>
           <button
@@ -18,7 +19,7 @@ export function ProjectFiles({ path, onSelect }: { path: string | null; onSelect
           </button>
         </li>
       ) : (
-        <li className="project-files-empty">표시할 WBS 파일 없음</li>
+        <li className="project-files-empty">{messages.noWbsFiles}</li>
       )}
     </ul>
   );

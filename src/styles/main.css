@@ -274,7 +274,7 @@ header.titlebar {
   color: var(--color-text);
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--color-header-titlebar-border-bottom);
+  border-bottom: 0;
   user-select: none;
 }
 header .app-mark {
@@ -283,7 +283,7 @@ header .app-mark {
   font-weight: 800;
   color: var(--color-primary);
   letter-spacing: 0.5px;
-  margin: 0 12px 0 16px;
+  margin: 0;
   pointer-events: none;
   border: 0;
   border-radius: 4px;
@@ -311,7 +311,7 @@ header h1 {
   flex-shrink: 0;
 }
 .window-controls button {
-  width: 46px;
+  width: var(--titlebar-control-width, 48px);
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -472,7 +472,7 @@ main {
   gap: 2px;
   padding: 0 9px;
   margin-right: 4px;
-  border-right: 1px solid var(--color-header-titlebar-border-bottom);
+  border-right: 0;
   flex-shrink: 0;
 }
 .header-actions button {

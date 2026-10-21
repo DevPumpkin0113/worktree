@@ -5,9 +5,11 @@ import type { WorkspaceStore } from '../../app/workspace-store';
 export function Titlebar({
   store,
   settingsOpen,
+  collapsed,
 }: {
   store: WorkspaceStore;
   settingsOpen: boolean;
+  collapsed: boolean;
 }) {
   const [maximized, setMaximized] = useState(false);
   useEffect(() => {
@@ -33,19 +35,30 @@ export function Titlebar({
       .catch((error) => store.report(error, '', messages.windowControlError));
   return (
     <header className="titlebar">
-      <img className="app-mark" src="/worktree-icon.png" alt="" width={20} height={20} />
-      <div className="header-actions header-actions-left">
-        <button
-          id="reload"
-          aria-label={messages.reloadSource}
-          title={messages.reloadSource}
-          disabled={!store.activeProject}
-          onClick={() => {
-            void store.refreshProject();
-          }}
-        >
-          <Icon name="reload" />
-        </button>
+      <div
+        className="titlebar-workspace"
+        onMouseDown={(event) => {
+          if (event.button !== 0 || (event.target as Element).closest('button')) return;
+          event.preventDefault();
+          control(event.detail === 2 ? 'maximize' : 'drag');
+        }}
+      >
+        {!collapsed ? (
+          <img className="app-mark" src="/worktree-icon.png" alt="" width={20} height={20} />
+        ) : null}
+        <div className="header-actions header-actions-left">
+          <button
+            id="reload"
+            aria-label={messages.reloadSource}
+            title={messages.reloadSource}
+            disabled={!store.activeProject}
+            onClick={() => {
+              void store.refreshProject();
+            }}
+          >
+            <Icon name="reload" />
+          </button>
+        </div>
       </div>
       <div
         id="titleDrag"

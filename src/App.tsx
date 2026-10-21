@@ -71,7 +71,7 @@ export function App({ store }: { store: WorkspaceStore }) {
   }, [store, state.settingsOpen, state.selectedId, state.problemsOpen, state.settings.detailMode]);
   return (
     <>
-      <Titlebar store={store} settingsOpen={state.settingsOpen} />
+      <Titlebar store={store} settingsOpen={state.settingsOpen} collapsed={collapsed} />
       <WorkspaceNav
         projectTitle={
           model?.title ?? (state.activeProjectPath ? folderName(state.activeProjectPath) : null)

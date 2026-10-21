@@ -642,3 +642,38 @@ test('읽기 오류 중에도 프로젝트 설정 초안을 유지하고 프로�
     await f.close();
   }
 });
+
+test('타이틀바 좌측은 패널 접힘에 따라 아이콘만 숨기고 새로고침·창 제어를 유지한다', async () => {
+  const f = await fixture();
+  try {
+    assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
+    assert.ok(f.host.querySelector('.titlebar-workspace #reload'));
+    assert.equal(f.host.querySelector('.titlebar-workspace #settingsOpen'), null);
+    await f.click('#workspaceCollapse');
+    assert.equal(f.host.querySelector('.titlebar .app-mark'), null);
+    assert.ok(f.host.querySelector('.titlebar-workspace #reload'));
+    const before = f.calls.filter((call) => call.command === 'scan_project').length;
+    await f.click('#reload');
+    assert.equal(f.calls.filter((call) => call.command === 'scan_project').length, before + 1);
+    const controls: string[] = [];
+    f.platform.control = async (action) => {
+      controls.push(action);
+    };
+    await f.click('#windowMinimize');
+    await f.click('#windowMaximize');
+    await f.click('#windowClose');
+    await act(() => {
+      f.element('.titlebar-workspace').dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 1 }),
+      );
+    });
+    assert.deepEqual(controls, ['minimize', 'maximize', 'close', 'drag']);
+    await f.click('#settingsOpen');
+    assert.equal(f.store.getSnapshot().settingsOpen, true);
+    await f.click('#settingsOpen');
+    await f.click('#workspaceCollapse');
+    assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
+  } finally {
+    await f.close();
+  }
+});

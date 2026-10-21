@@ -1,5 +1,9 @@
 :root {
   --workspace-nav-width: 208px;
+  --workspace-nav-padding: 16px;
+  --workspace-content-padding: 24px;
+  --workspace-top-gap: 12px;
+  --titlebar-control-width: 48px;
 }
 .workspace-nav {
   position: fixed;
@@ -9,7 +13,7 @@
     var(--document-dock-height) + var(--statusbar-height) + var(--problems-panel-height)
   );
   width: var(--workspace-nav-width);
-  padding: 24px 14px;
+  padding: var(--workspace-top-gap) var(--workspace-nav-padding) 16px;
   background: var(--color-sidebar);
   border-right: 1px solid var(--color-header-titlebar-border-bottom);
   display: flex;
@@ -68,6 +72,7 @@ main#workspace {
   max-width: none;
   margin-left: var(--workspace-nav-width);
   margin-right: 0;
+  padding: var(--workspace-top-gap) var(--workspace-content-padding) 16px;
 }
 body:has(#detail.sidebar[open]) main#workspace {
   width: calc(100% - var(--workspace-nav-width) - var(--detail-panel-width));
@@ -79,8 +84,8 @@ body:has(#detail.sidebar[open]) main#workspace {
   justify-content: space-between;
   align-items: center;
   gap: 15px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -213,12 +218,11 @@ body:has(#detail.sidebar[open]) main#workspace {
 @media (max-width: 900px) {
   :root {
     --workspace-nav-width: 164px;
-  }
-  .workspace-nav {
-    padding: 20px 8px;
+    --workspace-nav-padding: 8px;
+    --workspace-content-padding: 16px;
   }
   .workspace-page-heading {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .workspace-page-heading h2 {
     font-size: 18px;
@@ -258,6 +262,7 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .workspace-nav-collapsed {
   --workspace-nav-width: 64px;
+  --workspace-nav-padding: 8px;
 }
 .workspace-nav-collapsed .workspace-nav {
   padding-inline: 8px;
@@ -442,4 +447,42 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .unassigned-tasks .task-count-progress {
   margin-left: 12px;
+}
+
+/* Share the sidebar width and colors while keeping the titlebar a separate region. */
+.titlebar-workspace {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 var(--workspace-nav-width);
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--workspace-nav-padding);
+  background: var(--color-sidebar);
+  border-right: 1px solid var(--color-header-titlebar-border-bottom);
+}
+.titlebar-workspace .header-actions-left {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.workspace-nav-collapsed .titlebar-workspace {
+  justify-content: center;
+  padding: 0;
+}
+
+.titlebar-workspace .app-mark {
+  margin-inline: 6px;
+}
+.titlebar-workspace .header-actions-left button {
+  width: 32px;
+  height: 30px;
+}
+.titlebar > .header-actions {
+  padding: 0 4px;
+  margin: 0;
+}
+.titlebar > .header-actions button {
+  width: calc(var(--titlebar-control-width) - 8px);
+  height: 30px;
 }

@@ -82,7 +82,7 @@ export function TaskEditorFields({
           value={draft.parent}
           disabled={disabled}
           options={[
-            { value: '-', label: messages.rootTask },
+            { value: '-', label: messages.unassignedMilestone },
             ...model.rows
               .filter((row) => row.type === 'group' && row.id !== id)
               .map((row) => ({

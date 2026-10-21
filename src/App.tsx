@@ -1,3 +1,4 @@
+import { ProjectTaskTypeContext, EMPTY_TASK_TYPE_COLORS } from './app/project-task-type-context';
 import {
   TaskDeleteDialog,
   type TaskDeleteSession,
@@ -13,6 +14,7 @@ import { WorkspaceNav } from './components/layout/WorkspaceNav';
 import { Content } from './components/workspace/Content';
 import { ProjectDock } from './components/project/ProjectDock';
 import { folderName } from './domain/project-paths';
+import { ProjectDateFormatProvider } from './components/project/ProjectDateFormatProvider';
 import { TaskDetail } from './components/task-detail/TaskDetail';
 import { Settings } from './components/settings/Settings';
 import { Problems } from './components/problems/Problems';
@@ -36,9 +38,9 @@ export function App({ store }: { store: WorkspaceStore }) {
   const labels = useMemo(
     () =>
       model
-        ? (createIdLabels(model, state.settings.separator) as Map<string, string>)
+        ? (createIdLabels(model, model.idSeparator ?? 'none') as Map<string, string>)
         : new Map<string, string>(),
-    [model, state.settings.separator],
+    [model],
   );
   const label = useMemo(() => (id: string) => labels.get(id) ?? id, [labels]);
   const summary = useMemo(() => (model ? summarizeWork(model.rows) : null), [model]);
@@ -73,117 +75,119 @@ export function App({ store }: { store: WorkspaceStore }) {
     return () => document.removeEventListener('keydown', keydown);
   }, [store, state.settingsOpen, state.selectedId, state.problemsOpen, state.settings.detailMode]);
   return (
-    <>
-      <Titlebar store={store} settingsOpen={state.settingsOpen} collapsed={collapsed} />
-      <WorkspaceNav
-        initializationStep={initializationStep}
-        onInitializationStep={setInitializationStep}
-        projectTitle={
-          model?.title ?? (state.activeProjectPath ? folderName(state.activeProjectPath) : null)
-        }
-        onManage={() => {
-          store.setPage('project');
-        }}
-        page={page}
-        collapsed={collapsed}
-        onPage={(page) => store.setPage(page)}
-        onCollapse={() => setCollapsed((value) => !value)}
-        inert={state.settingsOpen}
-      />
-      <Content
-        initializationStep={initializationStep}
-        onInitializationStep={setInitializationStep}
-        store={store}
-        state={{ ...state, page }}
-        label={label}
-        onAddTask={() => openEditor()}
-        onAddMilestone={() => openEditor(undefined, 'milestone')}
-      />
-      <Problems
-        problems={problems}
-        open={state.problemsOpen}
-        inert={state.settingsOpen}
-        onClose={() => {
-          store.closeProblems();
-          document.getElementById('error')?.focus();
-        }}
-      />
-      <ProjectDock store={store} state={state} />
-      <footer
-        id="appStatusbar"
-        className="app-statusbar"
-        aria-label={messages.documentStatus}
-        inert={state.settingsOpen}
-      >
-        <button
-          id="error"
-          className="statusbar-error"
-          aria-expanded={state.problemsOpen}
-          aria-controls="documentProblems"
-          aria-live="polite"
-          hidden={!problems.length}
-          onClick={() => store.toggleProblems()}
-          title={problems[0] ? messages.toggleProblemsPrefix + problems[0].message : ''}
-        >
-          {problems[0]
-            ? '⚠ ' +
-              problems[0].kind +
-              ' ' +
-              problems.length +
-              messages.issueCountSeparator +
-              problems[0].message
-            : ''}
-        </button>
-        <span
-          id="notice"
-          className="statusbar-notice"
-          role="status"
-          aria-live="polite"
-          title={notice}
-          hidden={!!problems.length}
-        >
-          {notice}
-        </span>
-        <span id="source" className="source-status" title={state.activePath ?? ''}>
-          {state.activePath ?? state.activeProjectPath ?? messages.noOpenProject}
-        </span>
-        <span className="statusbar-mode">{messages.localDocument}</span>
-      </footer>
-      <TaskDetail
-        model={model}
-        path={state.activePath}
-        id={state.selectedId}
-        mode={state.settings.detailMode}
-        settingsOpen={state.settingsOpen || !!editor || !!deletion}
-        collapsed={collapsed}
-        label={label}
-        onSelect={(id) => store.selectWork(id)}
-        onEdit={(id) => openEditor(id)}
-        onDelete={(id) => {
-          const doc = store.active;
-          if (doc?.model) setDeletion({ path: doc.path, text: doc.text, id });
-        }}
-        onClose={() => store.selectWork(null)}
-      />
-      <Settings store={store} state={state} />
-      {deletion ? (
-        <TaskDeleteDialog
-          session={deletion}
-          onDelete={(options) =>
-            store.deleteTask(deletion.path, deletion.text, deletion.id, options)
+    <ProjectTaskTypeContext.Provider value={model?.taskTypeColors ?? EMPTY_TASK_TYPE_COLORS}>
+      <ProjectDateFormatProvider dateFormat={model?.dateFormat} timeFormat={model?.timeFormat}>
+        <Titlebar store={store} settingsOpen={state.settingsOpen} collapsed={collapsed} />
+        <WorkspaceNav
+          initializationStep={initializationStep}
+          onInitializationStep={setInitializationStep}
+          projectTitle={
+            model?.title ?? (state.activeProjectPath ? folderName(state.activeProjectPath) : null)
           }
-          onClose={() => setDeletion(null)}
-        />
-      ) : null}
-      {editor ? (
-        <TaskEditor
-          session={editor}
-          onSave={async (draft) => {
-            await store.saveTask(editor.path, editor.text, draft, editor.id);
+          onManage={() => {
+            store.setPage('project');
           }}
-          onClose={() => setEditor(null)}
+          page={page}
+          collapsed={collapsed}
+          onPage={(page) => store.setPage(page)}
+          onCollapse={() => setCollapsed((value) => !value)}
+          inert={state.settingsOpen}
         />
-      ) : null}
-    </>
+        <Content
+          initializationStep={initializationStep}
+          onInitializationStep={setInitializationStep}
+          store={store}
+          state={{ ...state, page }}
+          label={label}
+          onAddTask={() => openEditor()}
+          onAddMilestone={() => openEditor(undefined, 'milestone')}
+        />
+        <Problems
+          problems={problems}
+          open={state.problemsOpen}
+          inert={state.settingsOpen}
+          onClose={() => {
+            store.closeProblems();
+            document.getElementById('error')?.focus();
+          }}
+        />
+        <ProjectDock store={store} state={state} />
+        <footer
+          id="appStatusbar"
+          className="app-statusbar"
+          aria-label={messages.documentStatus}
+          inert={state.settingsOpen}
+        >
+          <button
+            id="error"
+            className="statusbar-error"
+            aria-expanded={state.problemsOpen}
+            aria-controls="documentProblems"
+            aria-live="polite"
+            hidden={!problems.length}
+            onClick={() => store.toggleProblems()}
+            title={problems[0] ? messages.toggleProblemsPrefix + problems[0].message : ''}
+          >
+            {problems[0]
+              ? '⚠ ' +
+                problems[0].kind +
+                ' ' +
+                problems.length +
+                messages.issueCountSeparator +
+                problems[0].message
+              : ''}
+          </button>
+          <span
+            id="notice"
+            className="statusbar-notice"
+            role="status"
+            aria-live="polite"
+            title={notice}
+            hidden={!!problems.length}
+          >
+            {notice}
+          </span>
+          <span id="source" className="source-status" title={state.activePath ?? ''}>
+            {state.activePath ?? state.activeProjectPath ?? messages.noOpenProject}
+          </span>
+          <span className="statusbar-mode">{messages.localDocument}</span>
+        </footer>
+        <TaskDetail
+          model={model}
+          path={state.activePath}
+          id={state.selectedId}
+          mode={state.settings.detailMode}
+          settingsOpen={state.settingsOpen || !!editor || !!deletion}
+          collapsed={collapsed}
+          label={label}
+          onSelect={(id) => store.selectWork(id)}
+          onEdit={(id) => openEditor(id)}
+          onDelete={(id) => {
+            const doc = store.active;
+            if (doc?.model) setDeletion({ path: doc.path, text: doc.text, id });
+          }}
+          onClose={() => store.selectWork(null)}
+        />
+        <Settings store={store} state={state} />
+        {deletion ? (
+          <TaskDeleteDialog
+            session={deletion}
+            onDelete={(options) =>
+              store.deleteTask(deletion.path, deletion.text, deletion.id, options)
+            }
+            onClose={() => setDeletion(null)}
+          />
+        ) : null}
+        {editor ? (
+          <TaskEditor
+            session={editor}
+            onSave={async (draft) => {
+              await store.saveTask(editor.path, editor.text, draft, editor.id);
+            }}
+            onClose={() => setEditor(null)}
+          />
+        ) : null}
+      </ProjectDateFormatProvider>
+    </ProjectTaskTypeContext.Provider>
   );
 }

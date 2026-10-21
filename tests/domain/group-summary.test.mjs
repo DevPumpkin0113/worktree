@@ -11,7 +11,7 @@ test('마일스톤의 하위 작업만 집계하고 필터와 무관하게 합�
  const original=structuredClone(rows),summary=summarizeGroups(rows).get('MS001');
  assert.equal(summary.effort,8);assert.equal(summary.completedEffort,2);assert.equal(summary.progress,25);assert.equal(summary.taskCount,2);
  assert.equal(summary.start,'2026-10-20');assert.equal(summary.end,'2026-10-24');assert.deepEqual(rows,original);
- assert.match(renderTaskDetail({rows},'MS001',id=>id).body,/집계 공수/);
+ assert.match(renderTaskDetail({rows},'MS001',id=>id).body,/예상 작업 시간 합계/);
  assert.match(renderTree(rows,()=>true,id=>id),/1\/2/);
  assert.match(renderTree(rows,item=>item.id==='W003',id=>id),/1\/2/);
 });
@@ -27,7 +27,7 @@ test('미정·일부 일정·소수 공수·빈 마일스톤의 표시를 구분
 
 test('문서 공수 숨김은 트리와 그룹·작업 상세에 함께 적용된다',()=>{
  const rows=[row('W001','-','group'),row('W002','W001','task','4')];
- assert.doesNotMatch(renderTree(rows,()=>true,id=>id,false),/공수|진척도/);
- for(const id of ['W001','W002'])assert.doesNotMatch(renderTaskDetail({rows,useEffort:false},id,id=>id).body,/집계 공수|예상 공수|진척도/);
- assert.match(renderTaskDetail({rows,useEffort:true},'W002',id=>id).body,/예상 공수/);
+ assert.doesNotMatch(renderTree(rows,()=>true,id=>id,false),/예상 작업 시간|진척도/);
+ for(const id of ['W001','W002'])assert.doesNotMatch(renderTaskDetail({rows,useEffort:false},id,id=>id).body,/예상 작업 시간 합계|예상 작업 시간|진행률/);
+ assert.match(renderTaskDetail({rows,useEffort:true},'W002',id=>id).body,/예상 작업 시간/);
 });

@@ -53,7 +53,25 @@ export function TaskEditorFields({
         <input value={id} readOnly />
       </label>
       {text('name', messages.taskName)}
-      {text('owner', messages.owner, 'text')}
+      <div className="task-editor-field task-field-owner">
+        <span>{messages.owner}</span>
+        <FilterDropdown
+          id="taskEditor-owner"
+          label={messages.owner}
+          value={draft.owner || '-'}
+          disabled={disabled}
+          options={[
+            { value: '-', label: messages.unassignedAssignee },
+            ...[
+              ...new Set([
+                ...(model.assignees ?? []),
+                ...(draft.owner && draft.owner !== '-' ? [draft.owner] : []),
+              ]),
+            ].map((value) => ({ value, label: value })),
+          ]}
+          onChange={(value) => change('owner', value)}
+        />
+      </div>
       <div className="task-editor-field">
         <span>{messages.status}</span>
         <FilterDropdown

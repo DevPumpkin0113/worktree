@@ -1,3 +1,4 @@
+import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { UnassignedTasks } from './UnassignedTasks';
 import { MilestoneSummary } from './MilestoneSummary';
 import { messages } from '../../i18n/messages';
@@ -20,6 +21,7 @@ export function TreeView({
   onToggle: () => void;
   showEmptyMilestones?: boolean;
 }) {
+  const { date } = useProjectDates();
   const summaries = useMemo(() => summarizeGroups(rows), [rows]);
   const children = useMemo(() => {
     const map = new Map<string, WorkRow[]>();
@@ -71,7 +73,7 @@ export function TreeView({
                 <MilestoneSummary row={row} summary={summary} />
               ) : (
                 <span className="group-summary">
-                  {groupSchedule(summary)}
+                  {groupSchedule(summary, date)}
                   {useEffort ? ' · ' + groupEffort(summary) + ' · ' + groupProgress(summary) : ''}
                 </span>
               )}

@@ -26,10 +26,17 @@ export interface WorkModel {
   nextMilestoneNumber?: string;
   title: string;
   idPrefix: string;
+  idSeparator?: 'none' | 'hyphen';
   useEffort: boolean;
+  dateFormat?: import('./project-display').DateFormat;
+  timeFormat?: import('./project-display').TimeFormat;
   rows: WorkRow[];
   taskTypes?: string[];
+  taskTypeColors?: import('./task-type-colors').TaskTypeColors;
   labels?: string[];
+  commonLabels?: string[];
+  priorities?: import('./project-priorities').ProjectPriority[];
+  assignees?: string[];
   dataDirectory?: string;
 }
 export interface Problem {

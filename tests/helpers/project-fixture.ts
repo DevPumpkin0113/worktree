@@ -1,3 +1,4 @@
+import { DEFAULT_TASK_TYPES, defaultTaskTypeColors } from '../../src/domain/default-task-types';
 import { serializeSource, type ProjectSource } from '../../src/domain/project-source';
 import { writeTaskFile } from '../../src/domain/task-file';
 export const timestamp = '2026-10-21T00:00:00.000Z';
@@ -7,7 +8,8 @@ export function projectFixture(name = 'Test project', prefix = 'W') {
     name,
     taskPrefix: prefix,
     useEffort: false,
-    taskTypes: ['feature', 'bug', 'improvement', 'task'],
+    taskTypes: [...DEFAULT_TASK_TYPES],
+    taskTypeColors: defaultTaskTypeColors(),
     labels: ['ui'],
     nextTaskNumber: 3,
     nextMilestoneNumber: 2,

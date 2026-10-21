@@ -1,3 +1,4 @@
+import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { messages } from '../../i18n/messages';
 import { TaskMetadata } from './TaskMetadata';
 import { summarizeGroups } from '../../domain/group-summary';
@@ -14,6 +15,7 @@ export function TaskInfo({
   label: (id: string) => string;
   onSelect: (id: string) => void;
 }) {
+  const { date } = useProjectDates();
   const byId = new Map(model.rows.map((item) => [item.id, item]));
   const ancestors: WorkRow[] = [];
   let parent = byId.get(row.parent);
@@ -31,7 +33,7 @@ export function TaskInfo({
           ? [
               [
                 messages.targetPeriod,
-                row.start === '-' ? messages.unscheduled : row.start + ' ~ ' + row.end,
+                row.start === '-' ? messages.unscheduled : date(row.start) + ' ~ ' + date(row.end),
               ],
               [
                 messages.milestoneTaskProgress,
@@ -40,7 +42,7 @@ export function TaskInfo({
               ],
             ]
           : []),
-        [messages.aggregateSchedule, groupSchedule(group)],
+        [messages.aggregateSchedule, groupSchedule(group, date)],
         [messages.aggregateEffort, groupEffort(group)],
         [
           messages.children,
@@ -51,8 +53,8 @@ export function TaskInfo({
     : [
         [messages.owner, row.owner === '-' ? messages.unknown : row.owner],
         [messages.effort, row.effort === '-' ? messages.unknown : row.effort + ' h'],
-        [messages.startDate, row.start === '-' ? messages.unknown : row.start],
-        [messages.endDate, row.end === '-' ? messages.unknown : row.end],
+        [messages.startDate, row.start === '-' ? messages.unknown : date(row.start)],
+        [messages.endDate, row.end === '-' ? messages.unknown : date(row.end)],
       ];
   const links = (items: WorkRow[]) =>
     items.length ? (
@@ -113,7 +115,7 @@ export function TaskInfo({
           ) : null}
         </section>
       ) : null}
-      <TaskMetadata row={row} />
+      <TaskMetadata row={row} priorities={model.priorities} />
       {children.length ? (
         <section className="detail-section">
           <h3>

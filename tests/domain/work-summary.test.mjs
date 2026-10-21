@@ -26,9 +26,9 @@ test('작업 개수 진행률은 공수 미정과 무관하며 작업 없음·0%
 
 test('공수 미사용 문서는 공수 지표를 숨기고 개수 게이지를 유지한다',()=>{
  const summary=summarizeWork([{type:'task',effort:'-',status:'done',start:'-'}]);
- assert.doesNotMatch(renderMetrics(summary,false),/공수/);
+ assert.doesNotMatch(renderMetrics(summary,false),/예상 시간|예상 작업 시간/);
  assert.equal((renderMetrics(summary,false).match(/class="metric(?: |")/g)||[]).length,3);
  assert.match(renderMetrics(summary,false),/value="100"/);
- assert.doesNotMatch(renderStatusNotice(summary,false),/공수/);
- assert.match(renderStatusNotice(summary),/공수 미정/);
+ assert.doesNotMatch(renderStatusNotice(summary,false),/예상 시간|예상 작업 시간/);
+ assert.match(renderStatusNotice(summary),/예상 시간 미정/);
 });

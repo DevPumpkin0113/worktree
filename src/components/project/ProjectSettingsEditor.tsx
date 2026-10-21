@@ -22,10 +22,18 @@ export function ProjectSettingsEditor({
   return (
     <form
       autoComplete="off"
+      noValidate
+      onInvalidCapture={(event) => event.preventDefault()}
       id="projectSettingsForm"
       className="project-settings-editor"
       onSubmit={async (event) => {
         event.preventDefault();
+        if (!event.currentTarget.checkValidity()) {
+          [...event.currentTarget.querySelectorAll<HTMLInputElement>('input, select, textarea')]
+            .find((input) => !input.validity.valid)
+            ?.focus();
+          return;
+        }
         if (await form.save()) onSaved();
       }}
     >

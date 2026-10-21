@@ -1,12 +1,21 @@
+import { validPriorities, type ProjectPriority } from './project-priorities';
+import { validTaskTypeColors, type TaskTypeColors } from './task-type-colors';
+import { DATE_FORMATS, TIME_FORMATS, type DateFormat, type TimeFormat } from './project-display';
 import { messages } from '../i18n/messages';
 
 export interface ProjectConfig {
   schemaVersion: 1;
   name: string;
   taskPrefix: string;
+  idSeparator?: 'none' | 'hyphen';
   useEffort: boolean;
+  dateFormat?: DateFormat;
+  timeFormat?: TimeFormat;
   taskTypes: string[];
+  taskTypeColors?: TaskTypeColors;
   labels: string[];
+  priorities?: ProjectPriority[];
+  assignees?: string[];
   nextTaskNumber: number;
   nextMilestoneNumber: number;
 }
@@ -29,7 +38,6 @@ export class ProjectValidationError extends Error {
     super(messages.invalidProjectField(file, field));
   }
 }
-export const PRIORITIES = ['urgent', 'high', 'normal', 'low'] as const;
 export function serializeSource(source: ProjectSource) {
   return JSON.stringify({
     dataDirectory: source.dataDirectory,
@@ -79,6 +87,12 @@ export function projectConfig(source: ProjectSource): ProjectConfig {
     config.taskPrefix === 'MS'
   )
     fail('taskPrefix');
+  if (config.idSeparator !== undefined && !['none', 'hyphen'].includes(config.idSeparator))
+    fail('idSeparator');
+  if (config.dateFormat !== undefined && !DATE_FORMATS.includes(config.dateFormat))
+    fail('dateFormat');
+  if (config.timeFormat !== undefined && !TIME_FORMATS.includes(config.timeFormat))
+    fail('timeFormat');
   if (typeof config.useEffort !== 'boolean') fail('useEffort');
   for (const key of ['taskTypes', 'labels'] as const) {
     if (
@@ -88,7 +102,22 @@ export function projectConfig(source: ProjectSource): ProjectConfig {
     )
       fail(key);
   }
+  if (config.priorities !== undefined && !validPriorities(config.priorities)) fail('priorities');
+  if (
+    config.assignees !== undefined &&
+    (!Array.isArray(config.assignees) ||
+      !config.assignees.every(
+        (v) => typeof v === 'string' && v.trim() === v && !!v && v !== '-' && !/[\r\n\0,]/.test(v),
+      ) ||
+      new Set(config.assignees).size !== config.assignees.length)
+  )
+    fail('assignees');
   if (!config.taskTypes.length) fail('taskTypes');
+  if (
+    config.taskTypeColors !== undefined &&
+    !validTaskTypeColors(config.taskTypeColors, config.taskTypes)
+  )
+    fail('taskTypeColors');
   for (const key of ['nextTaskNumber', 'nextMilestoneNumber'] as const)
     if (!Number.isSafeInteger(config[key]) || config[key] < 1) fail(key);
   return config;

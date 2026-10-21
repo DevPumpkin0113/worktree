@@ -88,6 +88,8 @@ async function fixture(options: { sessionFailure?: boolean; language?: 'ko' | 'e
         config.nextTaskNumber = 1;
         config.nextMilestoneNumber = 1;
         config.useEffort = args?.useEffort;
+        config.idSeparator = args?.idSeparator;
+        Object.assign(config, args?.rules);
         source.dataDirectory = String(args?.dataDirectory);
         source.files = { 'project.json': JSON.stringify(config) };
         files.set(key, serializeSource(source));
@@ -132,6 +134,14 @@ async function fixture(options: { sessionFailure?: boolean; language?: 'ko' | 'e
       Object.getOwnPropertyDescriptor(prototype, 'value')!.set!.call(node, value);
       node.dispatchEvent(new Event('input', { bubbles: true }));
     });
+  const addBadge = async (selector: string, text: string) => {
+    await value(selector, text);
+    await click(selector + '-add');
+  };
+  const clearBadges = async (selector: string) => {
+    while (host.querySelector(selector + '-badges .value-badge > button:not(:disabled)'))
+      await click(selector + '-badges .value-badge > button:not(:disabled)');
+  };
   const submit = async () =>
     act(async () => {
       element('#taskEditor form').dispatchEvent(
@@ -148,6 +158,8 @@ async function fixture(options: { sessionFailure?: boolean; language?: 'ko' | 'e
     click,
     value,
     submit,
+    addBadge,
+    clearBadges,
     setSaveFailure: (value: boolean) => {
       saveFailure = value;
     },
@@ -565,8 +577,8 @@ test('프로젝트 관리는 조회·수정의 항목 순서를 유지하고 고
       assert.ok(f.element('#projectFixed-' + i).matches(':disabled'));
     }
     await f.value('#projectSettings-name', '프로젝트 변경');
-    await f.value('#projectSettings-taskTypes', 'feature, bug, improvement, task, 운영');
-    await f.value('#projectSettings-labels', 'ui, backend');
+    await f.addBadge('#projectSettings-taskTypes', '운영');
+    await f.addBadge('#projectSettings-labels', 'backend');
     await f.click('#projectSettings-useEffort');
     await act(async () => {
       const form = f.element('#projectSettingsForm');
@@ -600,9 +612,14 @@ test('프로젝트 설정의 저장 실패와 사용 중인 유형 제거는 입
     assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '저장할 이름');
     assert.equal(f.files.get(first), original);
     f.setSaveFailure(false);
-    await f.value('#projectSettings-taskTypes', 'bug');
-    await f.click('#projectSettings-save');
-    assert.match(f.element('#projectSettings-error').textContent ?? '', /feature/);
+    assert.equal(
+      f.element<HTMLButtonElement>(
+        '#projectSettings-taskTypes-badges [data-value="feature"] .value-badge > button',
+      ).disabled,
+      true,
+    );
+    await f.click('#projectSettings-taskTypes-badges [data-value="feature"] .value-badge > button');
+    assert.ok(f.host.querySelector('#projectSettings-taskTypes-badges [data-value="feature"]'));
     assert.equal(f.files.get(first), original);
     await f.click('#projectSettings-reset');
     assert.equal(f.host.querySelector('#projectSettingsForm'), null);
@@ -721,6 +738,95 @@ test('프로젝트별 페이지는 갱신·탭 닫기에도 해당 프로젝트�
   }
 });
 
+test('하이픈 표시는 프로젝트에 저장하며 전환·재열기 시 분리하고 앱 설정에는 표시하지 않는다', async () => {
+  const f = await fixture();
+  try {
+    const before = readSource(f.files.get(first)!);
+    await f.click('#settingsOpen');
+    assert.equal(f.host.querySelector('#idSeparator'), null);
+    await f.click('#settingsOpen');
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.click('#projectSettings-idSeparator');
+    await f.click('#projectSettings-idSeparator-option-1');
+    await f.click('#projectSettings-save');
+    assert.equal(f.store.active?.model?.idSeparator, 'hyphen');
+    assert.equal(
+      JSON.parse(readSource(f.files.get(first)!).files['project.json']).idSeparator,
+      'hyphen',
+    );
+    for (const [file, content] of Object.entries(before.files))
+      if (file !== 'project.json')
+        assert.equal(readSource(f.files.get(first)!).files[file], content);
+    await f.click('[data-workspace-page="tasks"]');
+    assert.ok(f.element('.all-tasks').textContent?.includes('W-001'));
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.active?.model?.idSeparator, 'none');
+    await act(() => f.store.closeProject('C:/QA'));
+    await act(() => f.store.open('C:/QA'));
+    assert.equal(f.store.active?.model?.idSeparator, 'hyphen');
+    assert.ok(!f.calls.some((call) => call.command === 'save_settings'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 날짜·시간 형식 저장 후 상세 시각에 적용하고 다른 프로젝트와 분리한다', async () => {
+  const f = await fixture();
+  try {
+    const original = readSource(f.files.get(first)!);
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.click('#projectSettings-format-date-separator');
+    await f.click('#projectSettings-format-date-separator-option-1');
+    await f.click('#projectSettings-format-time');
+    await f.click('#projectSettings-format-time-option-1');
+    await f.click('#projectSettings-save');
+    assert.equal(f.store.active?.model?.dateFormat, 'yyyy.MM.dd');
+    assert.equal(f.store.active?.model?.timeFormat, '12h');
+    await act(() => f.store.selectWork('W001'));
+    const shown = f.element('#detail [title="2026-10-21T00:00:00.000Z"]').textContent ?? '';
+    assert.match(shown, /\d{4}\.\d{2}\.\d{2}/);
+    assert.match(shown, /오전|오후|AM|PM/);
+    for (const [file, text] of Object.entries(original.files))
+      if (file !== 'project.json') assert.equal(readSource(f.files.get(first)!).files[file], text);
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.active?.model?.dateFormat, 'yyyy-MM-dd');
+    assert.equal(f.store.active?.model?.timeFormat, '24h');
+  } finally {
+    await f.close();
+  }
+});
+
+test('날짜 순서와 구분기호는 독립 변경하고 시간 형식과 다른 선택을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.click('#projectSettings-format-date-order');
+    await f.click('#projectSettings-format-date-order-option-1');
+    await f.click('#projectSettings-format-date-separator');
+    await f.click('#projectSettings-format-date-separator-option-1');
+    assert.ok(f.element('.date-time-format-input small').textContent?.includes('21.10.2026'));
+    await f.click('#projectSettings-format-time');
+    await f.click('#projectSettings-format-time-option-1');
+    await f.click('#projectSettings-format-date-order');
+    await f.click('#projectSettings-format-date-order-option-2');
+    assert.equal(
+      f.element('#projectSettings-format-date-separator').textContent?.includes('.'),
+      true,
+    );
+    await f.click('#projectSettings-save');
+    assert.equal(f.store.active?.model?.dateFormat, 'MM.dd.yyyy');
+    assert.equal(f.store.active?.model?.timeFormat, '12h');
+    await f.click('#projectEditOpen');
+    assert.ok(f.element('#projectSettings-format-date-order').textContent?.includes('MM dd yyyy'));
+    assert.ok(f.element('#projectSettings-format-date-separator').textContent?.includes('.'));
+  } finally {
+    await f.close();
+  }
+});
+
 test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정하고 키보드·바깥 클릭으로 닫힌다', async () => {
   const f = await fixture();
   const prototype = HTMLElement.prototype;
@@ -788,5 +894,275 @@ test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정
     else Reflect.deleteProperty(prototype, 'showPopover');
     if (originalHide) Object.defineProperty(prototype, 'hidePopover', originalHide);
     else Reflect.deleteProperty(prototype, 'hidePopover');
+  }
+});
+
+test('유형·공통 라벨 뱃지는 추가·중복 차단·삭제하며 유형 색상은 저장 실패와 재열기에도 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.value('#projectSettings-taskTypes', '검토');
+    await act(() =>
+      f
+        .element('#projectSettings-taskTypes')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.ok(f.host.querySelector('#projectSettings-taskTypes-badges [data-value="검토"]'));
+    await f.addBadge('#projectSettings-labels', 'team');
+    await f.addBadge('#projectSettings-labels', 'team');
+    assert.ok(f.host.querySelector('#projectSettings-labels-error'));
+    assert.equal(
+      f.host.querySelectorAll('#projectSettings-labels-badges [data-value="team"]').length,
+      1,
+    );
+    await f.value('#projectSettings-labels', '');
+    await f.click('#projectSettings-labels-badges [data-value="team"] button');
+    assert.equal(f.host.querySelector('#projectSettings-labels-badges [data-value="team"]'), null);
+    await f.click('#projectSettings-taskTypes-badges [data-value="feature"] .badge-color-control');
+    await f.value(
+      '#projectSettings-taskTypes-badges [data-value="feature"] input[type="color"]',
+      '#cc3300',
+    );
+    const badge = () =>
+      f.element<HTMLElement>(
+        '#projectSettings-taskTypes-badges [data-value="feature"] .value-badge',
+      );
+    assert.equal(badge().style.getPropertyValue('--badge-color'), '#cc3300');
+    f.setSaveFailure(true);
+    await f.click('#projectSettings-save');
+    assert.ok(f.host.querySelector('#projectSettingsForm'));
+    assert.equal(badge().style.getPropertyValue('--badge-color'), '#cc3300');
+    f.setSaveFailure(false);
+    await f.click('#projectSettings-save');
+    assert.equal(f.store.active?.model?.taskTypeColors?.feature, '#cc3300');
+    assert.ok(f.store.active?.model?.taskTypes?.includes('검토'));
+    await f.click('[data-workspace-page="tasks"]');
+    assert.equal(
+      f
+        .element<HTMLElement>('.all-task-link[data-id="W001"] .value-badge')
+        .style.getPropertyValue('--badge-color'),
+      '#cc3300',
+    );
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.active?.model?.taskTypeColors?.feature, '#a2eeef');
+    await act(() => f.store.closeProject('C:/QA'));
+    await act(() => f.store.open('C:/QA'));
+    assert.equal(f.store.active?.model?.taskTypeColors?.feature, '#cc3300');
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 우선순위 정렬·이름·추가와 담당자는 저장 실패 후에도 유지되고 작업 선택에 반영된다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    const ids = () =>
+      [...f.host.querySelectorAll('#projectSettings-priorities li')].map(
+        (node) => (node as HTMLElement).dataset.priorityId,
+      );
+    assert.deepEqual(ids(), ['high', 'normal', 'low']);
+    assert.equal(
+      f.host.querySelectorAll(
+        '#projectSettings-priorities .priority-unassigned button:not(:disabled)',
+      ).length,
+      0,
+    );
+    assert.equal(
+      f.element<HTMLButtonElement>(
+        '#projectSettings-priorities [data-priority-id="normal"] button:last-child',
+      ).disabled,
+      true,
+    );
+    await act(async () => {
+      f.element(
+        '#projectSettings-priorities [data-priority-id="high"] .priority-drag',
+      ).dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'ArrowDown',
+          altKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    assert.deepEqual(ids(), ['normal', 'high', 'low']);
+    await f.value('#projectSettings-priorities [data-priority-id="normal"] input', '기본');
+    await f.click('#projectSettings-priorities .priority-add');
+    const customId = ids()[3]!;
+    await f.value(
+      '#projectSettings-priorities [data-priority-id="' + customId + '"] input',
+      '긴급 검토',
+    );
+    await f.addBadge('#projectSettings-assignees', '팀원');
+    f.setSaveFailure(true);
+    await f.click('#projectSettings-save');
+    assert.ok(f.host.querySelector('#projectSettingsForm'));
+    assert.equal(
+      f.element<HTMLInputElement>('#projectSettings-priorities [data-priority-id="normal"] input')
+        .value,
+      '기본',
+    );
+    f.setSaveFailure(false);
+    await f.click('#projectSettings-save');
+    assert.deepEqual(
+      f.store.active?.model?.priorities?.map((p) => p.id),
+      ['normal', 'high', 'low', customId],
+    );
+    assert.deepEqual(f.store.active?.model?.assignees, ['팀원']);
+    await f.click('[data-workspace-page="tasks"]');
+    await f.click('#taskAddOpen');
+    assert.ok(f.element('#taskEditor-priority').textContent?.includes('미지정'));
+    await f.click('#taskEditor-priority');
+    await f.click('#taskEditor-priority-options [data-value="' + customId + '"]');
+    await f.click('#taskEditor-owner');
+    await f.click('#taskEditor-owner-options [data-value="팀원"]');
+    await f.value('#taskEditor-name', '사용자 우선순위 작업');
+    await f.submit();
+    const row = f.store.active?.model?.rows.find((r) => r.name === '사용자 우선순위 작업');
+    assert.equal(row?.priority, customId);
+    assert.equal(row?.owner, '팀원');
+    assert.ok(f.host.textContent?.includes('긴급 검토'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('우선순위 포인터 정렬·취소와 중복 이름 검사·기존 담당자 보존', async () => {
+  const f = await fixture();
+  const descriptor = Object.getOwnPropertyDescriptor(document, 'elementFromPoint');
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    const ids = () =>
+      [...f.host.querySelectorAll('#projectSettings-priorities li')].map(
+        (node) => (node as HTMLElement).dataset.priorityId,
+      );
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: () => f.element('#projectSettings-priorities [data-priority-id="low"]'),
+    });
+    const handle = f.element(
+      '#projectSettings-priorities [data-priority-id="high"] .priority-drag',
+    );
+    await act(async () => {
+      handle.dispatchEvent(new window.MouseEvent('pointerdown', { bubbles: true, button: 0 }));
+    });
+    await act(async () => {
+      handle.dispatchEvent(new window.MouseEvent('pointermove', { bubbles: true }));
+    });
+    assert.deepEqual(ids(), ['normal', 'low', 'high']);
+    assert.ok(f.host.querySelector('[data-priority-id="high"].priority-item-dragging'));
+    assert.equal(f.element('#projectSettings-priorities ol').getAttribute('data-dragging'), 'true');
+    await act(async () => {
+      handle.dispatchEvent(new window.MouseEvent('pointercancel', { bubbles: true }));
+    });
+    assert.deepEqual(ids(), ['high', 'normal', 'low']);
+    assert.equal(f.host.querySelector('.priority-item-dragging'), null);
+    await f.value('#projectSettings-priorities [data-priority-id="low"] input', '중');
+    await f.click('#projectSettings-save');
+    assert.ok(f.host.querySelector('#projectSettingsForm'));
+    await f.value('#projectSettings-priorities [data-priority-id="low"] input', '하');
+    await f.click('#projectSettings-save');
+    await f.click('[data-workspace-page="tasks"]');
+    await f.click('[data-id="W001"]');
+    await f.click('#taskEditOpen');
+    assert.ok(f.element('#taskEditor-owner').textContent?.includes('codex'));
+    await f.click('#taskEditor-owner');
+    assert.ok(f.host.querySelector('#taskEditor-owner-options [data-value="codex"]'));
+  } finally {
+    if (descriptor) Object.defineProperty(document, 'elementFromPoint', descriptor);
+    else Reflect.deleteProperty(document, 'elementFromPoint');
+    await f.close();
+  }
+});
+
+test('영어 미지정은 우선순위·담당자·마일스톤 맥락에 맞게 분리한다', async () => {
+  const f = await fixture({ language: 'en' });
+  try {
+    await f.click('#projectManageOpen');
+    assert.ok(
+      f.element<HTMLInputElement>('.priority-summary .priority-unassigned input').value ===
+        'No priority',
+    );
+    assert.equal(f.host.querySelectorAll('.priority-summary li').length, 3);
+    await f.click('#projectEditOpen');
+    assert.doesNotMatch(f.element('#projectSettings-priorities').textContent ?? '', /Alt\+/);
+    await f.click('#projectSettings-reset');
+    await f.click('[data-workspace-page="tasks"]');
+    await f.click('#taskAddOpen');
+    assert.ok(f.element('#taskEditor-priority').textContent?.includes('No priority'));
+    assert.ok(f.element('#taskEditor-owner').textContent?.includes('Unassigned'));
+    assert.ok(f.element('#taskEditor-parent').textContent?.includes('No milestone'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('우선순위 색상은 이름 대신 순서·개수로 갱신되며 미지정은 색상을 표시하지 않는다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    const color = (id: string) =>
+      f
+        .element<HTMLElement>('#projectSettings-priorities [data-priority-id="' + id + '"]')
+        .style.getPropertyValue('--priority-color');
+    assert.equal(color('high'), 'var(--color-priority-high)');
+    assert.equal(color('normal'), 'var(--color-priority-middle)');
+    assert.equal(color('low'), 'var(--color-priority-low)');
+    await f.click('#projectSettings-priorities .priority-add');
+    await f.click('#projectSettings-priorities .priority-add');
+    assert.equal(color('low'), 'var(--color-priority-middle)');
+    assert.match(color('normal'), /high.*50%.*middle/);
+    const priorities = f.host.querySelectorAll<HTMLElement>(
+      '#projectSettings-priorities [data-priority-id]',
+    );
+    assert.equal(
+      priorities[4].style.getPropertyValue('--priority-color'),
+      'var(--color-priority-low)',
+    );
+    assert.equal(
+      f
+        .element<HTMLElement>('#projectSettings-priorities .priority-unassigned')
+        .style.getPropertyValue('--priority-color'),
+      '',
+    );
+    await f.value('#projectSettings-priorities [data-priority-id="high"] input', '名前');
+    assert.equal(color('high'), 'var(--color-priority-high)');
+    await act(async () => {
+      f.element(
+        '#projectSettings-priorities [data-priority-id="high"] .priority-drag',
+      ).dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'ArrowDown',
+          altKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    assert.equal(color('normal'), 'var(--color-priority-high)');
+    await f.click('#projectSettings-save');
+    await f.click('[data-workspace-page="tasks"]');
+    await f.click('#taskAddOpen');
+    assert.equal(f.host.querySelector('#taskEditor-priority .value-badge'), null);
+    await f.click('#taskEditor-priority');
+    assert.equal(
+      f.host.querySelector('#taskEditor-priority-options [data-value="-"] .value-badge'),
+      null,
+    );
+    assert.equal(
+      f
+        .element<HTMLElement>('#taskEditor-priority-options [data-value="normal"] .value-badge')
+        .style.getPropertyValue('--badge-color'),
+      'var(--color-priority-high)',
+    );
+  } finally {
+    await f.close();
   }
 });

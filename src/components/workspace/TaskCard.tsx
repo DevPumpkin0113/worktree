@@ -1,5 +1,6 @@
+import { TaskTypeBadge } from '../shared/TaskTypeBadge';
 import { messages } from '../../i18n/messages';
-import { STATUS_NAMES, TYPE_NAMES, type WorkRow } from '../../app/types';
+import { STATUS_NAMES, type WorkRow } from '../../app/types';
 export function TaskCard({
   row,
   label,
@@ -30,7 +31,7 @@ export function TaskCard({
       <div>
         {row.name}
         <div className="sub">
-          <span className={'work-type-badge work-type-' + row.type}>{TYPE_NAMES[row.type]}</span> ·{' '}
+          <TaskTypeBadge type={row.taskType ?? 'task'} /> ·{' '}
           {row.owner === '-' ? messages.unassigned : row.owner}
         </div>
       </div>

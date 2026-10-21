@@ -1,21 +1,4 @@
-import { messages } from '../i18n/messages';
 import type { WorkModel } from './types';
-interface IdStorage {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): unknown;
-}
-const KEY = 'worktree.id-separator';
-export function readSeparator(storage: Pick<IdStorage, 'getItem'>) {
-  try {
-    return storage.getItem(KEY) === 'hyphen' ? 'hyphen' : 'none';
-  } catch {
-    return 'none';
-  }
-}
-export function saveSeparator(storage: IdStorage, value: string) {
-  if (!['none', 'hyphen'].includes(value)) throw Error(messages.invalidIdSeparator);
-  return storage.setItem(KEY, value);
-}
 export function createIdLabels(model: WorkModel, separator: string) {
   const labels = new Map<string, string>(),
     counts = new Map<string, number>();

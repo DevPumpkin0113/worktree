@@ -1,3 +1,4 @@
+import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { STATUS_NAMES, type WorkRow } from '../../app/types';
 import { messages } from '../../i18n/messages';
 import { ganttBar, type GanttGeometry, type ganttTicks } from '../../views/gantt-timeline';
@@ -22,6 +23,7 @@ export function GanttTaskRow({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const { date } = useProjectDates();
   const bar = ganttBar(row, start, geometry);
   return (
     <tr>
@@ -53,7 +55,7 @@ export function GanttTaskRow({
           className={'timeline-row' + (selected ? ' detail-selected' : '')}
           role="button"
           tabIndex={0}
-          aria-label={`${row.name} ${row.start} ~ ${row.end}`}
+          aria-label={`${row.name} ${date(row.start)} ~ ${date(row.end)}`}
           aria-current={selected ? 'true' : undefined}
           onClick={onSelect}
           onKeyDown={(event) => {
@@ -63,7 +65,7 @@ export function GanttTaskRow({
             }
           }}
         >
-          <title>{`${row.name} · ${row.start} ~ ${row.end} · ${STATUS_NAMES[row.status]}`}</title>
+          <title>{`${row.name} · ${date(row.start)} ~ ${date(row.end)} · ${STATUS_NAMES[row.status]}`}</title>
           {ticks.map((tick) => (
             <path key={tick.time} d={`M${tick.x} 0v48`} className="date-grid" />
           ))}

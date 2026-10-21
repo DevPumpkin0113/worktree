@@ -34,7 +34,6 @@ export interface DownloadEvent {
 }
 export interface Settings {
   language: Language;
-  separator: 'none' | 'hyphen';
   detailMode: DetailMode;
   ready: boolean;
   error: string;

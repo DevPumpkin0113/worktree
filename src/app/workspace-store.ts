@@ -9,7 +9,6 @@ import { projectSession } from './project-session';
 import type { Session } from '../platform/session-storage';
 import { messages, setLanguage, isLanguage } from '../i18n/messages';
 import { ko } from '../i18n/ko';
-import { readSeparator, saveSeparator } from '../domain/id-display';
 import { readDetailMode, saveDetailMode } from '../domain/detail-settings';
 import { describeDocumentErrors } from '../domain/document-errors';
 import { createSettingsStorage } from '../platform/settings-storage';
@@ -51,7 +50,6 @@ export class WorkspaceStore {
     operationProblems: [],
     settings: {
       language: 'ko',
-      separator: 'none',
       detailMode: 'sidebar',
       ready: false,
       error: '',
@@ -113,7 +111,6 @@ export class WorkspaceStore {
       this.patch({
         settings: {
           language,
-          separator: readSeparator(this.storage),
           detailMode: readDetailMode(this.storage),
           ready: true,
           error: this.storage.warning,
@@ -473,7 +470,7 @@ export class WorkspaceStore {
       });
     }
   }
-  async saveSetting(key: 'separator' | 'detailMode' | 'language', value: string) {
+  async saveSetting(key: 'detailMode' | 'language', value: string) {
     if (this.state.settings.saving) return;
     this.patch({ settings: { ...this.state.settings, saving: true, error: '' } });
     try {
@@ -481,8 +478,7 @@ export class WorkspaceStore {
         if (!isLanguage(value)) throw Error(messages.invalidSetting);
         await this.storage.setItem('worktree.language', value);
         setLanguage(value);
-      } else if (key === 'separator') await saveSeparator(this.storage, value);
-      else await saveDetailMode(this.storage, value);
+      } else await saveDetailMode(this.storage, value);
       this.patch({ settings: { ...this.state.settings, [key]: value, saving: false } });
     } catch (error) {
       this.patch({

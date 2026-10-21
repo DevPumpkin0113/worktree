@@ -1,9 +1,11 @@
+import { Badge } from './Badge';
 import { useFloatingList } from '../../hooks/use-floating-list';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Icon } from './Icon';
 export interface FilterOption {
   value: string;
   label: string;
+  color?: string;
 }
 export function FilterDropdown({
   id,
@@ -117,7 +119,13 @@ export function FilterDropdown({
           setOpen(!expanded);
         }}
       >
-        <span>{options[selected]?.label}</span>
+        <span>
+          {options[selected]?.color ? (
+            <Badge label={options[selected].label} color={options[selected].color} />
+          ) : (
+            options[selected]?.label
+          )}
+        </span>
         <Icon name="chevron-right" className="filter-chevron" />
       </button>
       {expanded ? (
@@ -142,7 +150,9 @@ export function FilterDropdown({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => choose(index)}
             >
-              <span>{option.label}</span>
+              <span>
+                {option.color ? <Badge label={option.label} color={option.color} /> : option.label}
+              </span>
               {option.value === value ? (
                 <span className="filter-check" aria-hidden="true">
                   ✓

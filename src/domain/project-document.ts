@@ -1,9 +1,9 @@
+import { legacyPriorities } from './project-priorities';
 import type { WorkModel, WorkRow, Status } from './types';
 import {
   readSource,
   projectConfig,
   ProjectValidationError,
-  PRIORITIES,
   isRelativePath,
   type TaskReference,
 } from './project-source';
@@ -71,7 +71,12 @@ export function parseProject(text: string): WorkModel {
     const taskType = string('type', config.taskTypes[0]);
     if (!milestone && !config.taskTypes.includes(taskType)) fail('type');
     const priority = string('priority', 'normal');
-    if (!PRIORITIES.includes(priority as (typeof PRIORITIES)[number])) fail('priority');
+    if (
+      !milestone &&
+      priority !== '-' &&
+      !(config.priorities ?? legacyPriorities()).some((p) => p.id === priority)
+    )
+      fail('priority');
     const labels = list('labels');
     if (
       new Set(labels).size !== labels.length ||
@@ -180,10 +185,21 @@ export function parseProject(text: string): WorkModel {
   return {
     title: config.name,
     idPrefix: config.taskPrefix,
+    idSeparator: config.idSeparator ?? 'none',
     useEffort: config.useEffort,
+    dateFormat: config.dateFormat ?? 'yyyy-MM-dd',
+    timeFormat: config.timeFormat ?? '24h',
     nextTaskNumber: String(config.nextTaskNumber),
     nextMilestoneNumber: String(config.nextMilestoneNumber),
+    commonLabels: config.labels,
+    priorities:
+      config.priorities ??
+      legacyPriorities().filter(
+        (p) => p.id !== 'urgent' || rows.some((row) => !row.milestone && row.priority === 'urgent'),
+      ),
+    assignees: config.assignees ?? [],
     taskTypes: config.taskTypes,
+    taskTypeColors: config.taskTypeColors ?? {},
     labels: [...new Set([...config.labels, ...rows.flatMap((row) => row.labels ?? [])])],
     dataDirectory: source.dataDirectory,
     rows,

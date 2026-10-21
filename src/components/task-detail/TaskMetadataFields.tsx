@@ -1,6 +1,7 @@
-import { priorityLabel, taskTypeLabel } from './task-labels';
+import { priorityColor } from '../../views/priority-color';
+import { priorityLabel } from './task-labels';
 import { messages } from '../../i18n/messages';
-import { PRIORITIES } from '../../domain/project-source';
+import { legacyPriorities } from '../../domain/project-priorities';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import { TaskReferenceFields } from './TaskReferenceFields';
 import type { ProjectTaskDraft } from '../../domain/task-editing';
@@ -27,7 +28,14 @@ export function TaskMetadataFields({
           label={messages.priority}
           value={draft.priority}
           disabled={disabled}
-          options={PRIORITIES.map((value) => ({ value, label: priorityLabel(value) }))}
+          options={[
+            { value: '-', label: messages.unassignedPriority },
+            ...(model.priorities ?? legacyPriorities()).map((p, index, priorities) => ({
+              value: p.id,
+              label: priorityLabel(p.id, model.priorities),
+              color: priorityColor(index, priorities.length),
+            })),
+          ]}
           onChange={(value) => change('priority', value)}
         />
       </div>
@@ -38,7 +46,7 @@ export function TaskMetadataFields({
           label={messages.taskType}
           value={draft.taskType}
           disabled={disabled}
-          options={model.taskTypes!.map((value) => ({ value, label: taskTypeLabel(value) }))}
+          options={model.taskTypes!.map((value) => ({ value, label: value }))}
           onChange={(value) => change('taskType', value)}
         />
       </div>

@@ -34,7 +34,7 @@ export function projectTaskDraft(text: string, id?: string): ProjectTaskDraft {
     end: row?.end ?? '-',
     effort: row?.effort ?? '-',
     deps: row?.deps.join(', ') || '-',
-    priority: row?.priority ?? 'normal',
+    priority: row?.priority ?? '-',
     taskType: row?.taskType ?? model.taskTypes![0],
     labels: row?.labels?.join(', ') ?? '',
     blockedReason: row?.blockedReason ?? '',

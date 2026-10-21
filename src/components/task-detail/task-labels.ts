@@ -1,17 +1,11 @@
 import { messages } from '../../i18n/messages';
-export function taskTypeLabel(type: string) {
-  return (
-    (
-      {
-        feature: messages.featureType,
-        bug: messages.bugType,
-        improvement: messages.improvementType,
-        task: messages.generalTaskType,
-      } as Record<string, string>
-    )[type] ?? type
-  );
-}
-export function priorityLabel(priority: string) {
+export function priorityLabel(
+  priority: string,
+  priorities?: import('../../domain/project-priorities').ProjectPriority[],
+) {
+  if (priority === '-') return messages.unassignedPriority;
+  const option = priorities?.find((p) => p.id === priority);
+  if (option) return option.name;
   return (
     (
       {

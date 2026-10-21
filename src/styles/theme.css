@@ -2,6 +2,9 @@
 :root,
 :root[data-theme='light'] {
   color-scheme: light;
+  --color-priority-high: #d73a4a;
+  --color-priority-middle: #eab308;
+  --color-priority-low: #2da44e;
   --color-primary: #176b73; /* 강조색 */
   --color-accent: #267d83; /* 보조 강조색 */
   --color-focus-ring: #176b7333; /* 검색 포커스 링 */

@@ -172,7 +172,12 @@ export class WorkspaceStore {
           path: savedProject.path,
         });
         if (projects.some((project) => pathKey(project.path) === pathKey(scanned.path))) continue;
-        const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
+        const project: OpenProject = {
+          path: scanned.path,
+          files: scanned.files,
+          activePath: null,
+          page: 'board',
+        };
         for (const tab of saved.tabs.filter((tab) =>
           scanned.files.some((file) => pathKey(file) === pathKey(tab.path)),
         )) {
@@ -252,7 +257,12 @@ export class WorkspaceStore {
         scanned.files.find((file) => pathKey(file) === pathKey(previous?.activePath ?? '')) ??
         scanned.files[0] ??
         null;
-      const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
+      const project: OpenProject = {
+        path: scanned.path,
+        files: scanned.files,
+        activePath: null,
+        page: 'board',
+      };
       let document: OpenDocument | undefined;
       let errors: Problem[] = [];
       if (selected) {
@@ -268,15 +278,21 @@ export class WorkspaceStore {
       }
       if (revision !== this.openRevision) return;
       project.activePath = document?.path ?? null;
+      project.page =
+        this.state.projects.find((item) => pathKey(item.path) === pathKey(project.path))?.page ??
+        'board';
       const same = project.activePath === this.state.activePath;
       this.patch({
         projects: previous
-          ? this.state.projects.map((item) => (item === previous ? project : item))
+          ? this.state.projects.map((item) =>
+              pathKey(item.path) === pathKey(project.path) ? project : item,
+            )
           : [...this.state.projects, project],
         documents: document
           ? [...this.state.documents.filter((doc) => doc.path !== document.path), document]
           : this.state.documents,
         activeProjectPath: project.path,
+        page: project.page,
         activePath: project.activePath,
         selectedId: same ? this.validSelection(document?.model ?? null) : null,
         owner: same ? this.state.owner : 'all',
@@ -335,6 +351,7 @@ export class WorkspaceStore {
         ? {
             activeProjectPath: selected?.path ?? null,
             activePath: selected?.activePath ?? null,
+            page: selected?.page ?? 'board',
             selectedId: null,
             owner: 'all',
             operationProblems: [],
@@ -384,7 +401,13 @@ export class WorkspaceStore {
     this.saveSession();
   }
   setPage(page: Page) {
-    this.patch({ page, selectedId: null });
+    this.patch({
+      page,
+      selectedId: null,
+      projects: this.state.projects.map((project) =>
+        project.path === this.state.activeProjectPath ? { ...project, page } : project,
+      ),
+    });
   }
   setFilters(filters: Partial<Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status'>>) {
     this.patch(filters);

@@ -41,6 +41,7 @@ export interface Settings {
   saving: boolean;
 }
 export interface OpenProject {
+  page: Page;
   path: string;
   files: string[];
   activePath: string | null;

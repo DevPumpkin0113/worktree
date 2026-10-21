@@ -170,8 +170,13 @@ test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 
     assert.ok(f.host.textContent?.includes('첫 프로젝트'));
     await f.click('[data-workspace-page="tasks"]');
     await act(() => f.store.selectProject('C:/QB'));
-    assert.equal(f.store.getSnapshot().page, 'tasks');
+    assert.equal(f.store.getSnapshot().page, 'board');
     assert.equal(f.store.active?.model?.title, '둘째 프로젝트');
+    await f.click('[data-workspace-page="analytics"]');
+    await act(() => f.store.selectProject('C:/QA'));
+    assert.equal(f.store.getSnapshot().page, 'tasks');
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.getSnapshot().page, 'analytics');
     await f.click('#projectManageOpen');
     assert.ok(f.host.textContent?.includes('docs/worktree'));
     assert.equal(f.host.querySelector('#projectSettingsForm'), null);
@@ -650,6 +655,8 @@ test('읽기 오류 중에도 프로젝트 설정 초안을 유지하고 프로�
     assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '보존할 초안');
     await act(() => f.store.selectProject('C:/QB'));
     assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    assert.equal(f.store.getSnapshot().page, 'board');
+    await f.click('#projectManageOpen');
     await f.click('#projectEditOpen');
     assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '둘째 프로젝트');
   } finally {
@@ -687,6 +694,28 @@ test('타이틀바 좌측은 패널 접힘에 따라 아이콘만 숨기고 새�
     await f.click('#settingsOpen');
     await f.click('#workspaceCollapse');
     assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트별 페이지는 갱신·탭 닫기에도 해당 프로젝트의 마지막 위치를 따른다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setPage('project'));
+    await act(() => f.store.refreshProject());
+    assert.equal(f.store.getSnapshot().page, 'project');
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.getSnapshot().page, 'board');
+    await act(() => f.store.setPage('analytics'));
+    await act(() => f.store.selectProject('C:/QA'));
+    assert.equal(f.store.getSnapshot().page, 'project');
+    await act(() => f.store.closeProject('C:/QA'));
+    assert.equal(f.store.getSnapshot().page, 'analytics');
+    await act(() => f.store.closeProject('C:/QB'));
+    assert.equal(f.store.getSnapshot().page, 'board');
+    await act(() => f.store.open('C:/QA'));
+    assert.equal(f.store.getSnapshot().page, 'board');
   } finally {
     await f.close();
   }

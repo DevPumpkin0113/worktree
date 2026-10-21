@@ -1,4 +1,9 @@
 import type { WorkRow } from '../domain/types';
+const unassignedKey = '@unassigned';
+const groupSelector = 'summary[data-work-id], summary[data-view-group="unassigned"]';
+const groupKey = (summary: HTMLElement) =>
+  summary.dataset.workId ??
+  (summary.dataset.viewGroup === 'unassigned' ? unassignedKey : undefined);
 const scrollers = ['.diagram-scroll', '.gantt-scroll'];
 
 export function createDocumentViewState() {
@@ -29,23 +34,28 @@ export function createDocumentViewState() {
         const node = root.querySelector?.<HTMLElement>(selector);
         if (node) scroll.nested[selector] = { left: node.scrollLeft, top: node.scrollTop };
       }
-      for (const summary of root.querySelectorAll?.<HTMLElement>('summary[data-work-id]') || [])
-        current.groups.set(
-          summary.dataset.workId!,
-          (summary.parentElement as HTMLDetailsElement).open,
-        );
+      for (const summary of root.querySelectorAll?.<HTMLElement>(groupSelector) || []) {
+        const key = groupKey(summary);
+        if (key) current.groups.set(key, (summary.parentElement as HTMLDetailsElement).open);
+      }
       current.views.set(view, scroll);
     },
-    restore(path: string, view: string, root: HTMLElement, rows: Pick<WorkRow, 'id'>[]) {
+    restore(
+      path: string,
+      view: string,
+      root: HTMLElement,
+      rows: (Pick<WorkRow, 'id'> & Partial<Pick<WorkRow, 'type' | 'parent'>>)[],
+    ) {
       const current = documents.get(path);
       if (current) {
         const ids = new Set(rows.map((row) => row.id));
+        if (rows.some((row) => row.type === 'task' && row.parent === '-')) ids.add(unassignedKey);
         for (const id of current.groups.keys()) if (!ids.has(id)) current.groups.delete(id);
-        for (const summary of root.querySelectorAll?.<HTMLElement>('summary[data-work-id]') || [])
-          if (current.groups.has(summary.dataset.workId!))
-            (summary.parentElement as HTMLDetailsElement).open = current.groups.get(
-              summary.dataset.workId!,
-            )!;
+        for (const summary of root.querySelectorAll?.<HTMLElement>(groupSelector) || []) {
+          const key = groupKey(summary);
+          if (key && current.groups.has(key))
+            (summary.parentElement as HTMLDetailsElement).open = current.groups.get(key)!;
+        }
       }
       const scroll = current?.views.get(view);
       root.scrollLeft = scroll?.left || 0;

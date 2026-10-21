@@ -1,6 +1,29 @@
 import type { ko } from './ko';
 
 export const en = {
+  unassignedMilestone: 'No milestone',
+  edit: 'Edit',
+  delete: 'Delete',
+  deletingTask: 'Deleting…',
+  deleteFailed: 'Could not delete: ',
+  deleteConflict:
+    'The document changed externally and nothing was deleted. Cancel, review the latest document, and try again.',
+
+  invalidIdSequence: 'Set next_task_number and next_milestone_number to positive integers.',
+  deleteTask: 'Delete task',
+  deleteMilestone: 'Delete milestone',
+  deleteSourceHint:
+    'Delete the selected items from the source WBS. Review the scope below. Undo is not supported in the app.',
+  deleteChildrenTitle: (count: string | number) => `Handle ${count} child tasks`,
+  deleteKeepChildren: 'Keep tasks and remove their milestone assignment',
+  deleteWithChildren: 'Delete child tasks too',
+  deleteDependentTitle: (count: string | number) =>
+    `${count} tasks with affected predecessor links`,
+  deleteDetachPredecessors: 'Keep the tasks above and remove only links to deleted items',
+  deleteReferencesRequired: 'Choose whether to remove the affected predecessor links.',
+  invalidDeleteOption: 'Invalid deletion option.',
+  confirmDeleteCount: (count: string | number) => `Delete ${count} items`,
+
   parentMilestone: 'Milestone',
   milestoneDetailSuffix: ' milestone details',
 

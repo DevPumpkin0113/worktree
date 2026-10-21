@@ -16,6 +16,8 @@ export interface WorkRow {
 }
 export interface WorkModel {
   schemaVersion?: 2;
+  nextTaskNumber?: string;
+  nextMilestoneNumber?: string;
   title: string;
   idPrefix: string;
   useEffort: boolean;

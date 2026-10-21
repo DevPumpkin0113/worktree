@@ -210,7 +210,7 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 
 - 좌측 문서 선택은 현재 콘텐츠 페이지를 유지한다. 프로젝트 관리·작업 목록·인사이트를 작업 보드로 강제 전환하지 않으며 현재 선택한 문서의 정보를 표시한다.
 
-- 작업 편집: TaskEditor와 TaskEditorFields는 명시적 저장·취소 폼이다. task-editing.ts가 원본 셀 패치·행 추가·원본 ID 발급·결과 검증을 담당한다. 기존 ID·유형은 유지하며 새 항목은 task/milestone만 허용한다. 문서 전체 재직렬화·메타데이터 자동 수정은 하지 않는다.
+- 작업 편집: TaskEditor와 TaskEditorFields는 명시적 저장·취소 폼이다. task-editing.ts가 원본 셀 패치·행 추가·원본 ID 발급·결과 검증을 담당한다. 기존 ID·유형은 유지하며 새 항목은 task/milestone만 허용한다. 문서 전체 재직렬화는 하지 않는다. 삭제 시 번호 재사용 방지를 위한 next_task_number·next_milestone_number 메타데이터만 갱신한다.
 - 문서 저장: document_write.rs에서 파일 내용 스냅샷 비교·임시 파일 동기화·교체와 실패 처리를 담당한다. 편집 중 polling은 유지하되 폼 스냅샷은 바꾸지 않는다. 충돌이나 쓰기 실패 시 폼을 닫지 않는다. WBS 본문은 원본 파일에만 쓰고 설정·세션에는 쓰지 않는다. 저장 정책과 한계는 docs/adr/0010-task-editing-and-saving.md를 따른다.
 
 - 콘텐츠 제목·진행률은 하나의 헤더 영역으로 구분선을 둔다. 작업 추가 버튼은 헤더가 아닌 아래 도구 모음 우측에 두고 SVG + 아이콘과 텍스트를 함께 표시한다.
@@ -222,3 +222,7 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 - 새 문서의 최상위 묶음은 milestone이며 제목·선택 목표 기간으로 생성한다. 상태 auto, 공수·상위·선행은 -이며 빈 상태를 허용한다. 날짜형 승인·출시 항목은 task로 작성한다.
 - 새 milestone은 MS 내부 번호를 별도로 발급하고 UI에서 숨긴다. 일반 작업 번호와 참조는 유지한다. WBS는 schema_version: 2를 필수로 명시하며 v1·규격 누락·원본 group·날짜형 milestone은 거부한다. 자동 변환은 하지 않는다. 내부 group 타입은 v2 마일스톤 집계 재사용 경계일 뿐 파일 유형이 아니다. 결정은 docs/adr/0012-wbs-v2-only.md를 따른다.
 - 현재 배포 양식은 프로젝트 templates를 따른다. 외부 공용 양식은 이번 프로젝트 내부 정리 범위에서 수정하지 않았다.
+
+- 작업 삭제는 task-deletion.ts에서 영향 범위·하위 작업 유지/삭제·외부 선행 참조 해제 동의를 검증한다. TaskDeleteDialog의 확정 시에만 원본 비교 저장하며 실패·충돌 시 선택을 유지한다. 정책은 docs/adr/0013-task-deletion.md를 따른다.
+
+- 트리 보기의 상위 ID가 -인 일반 작업은 실제 마일스톤 아래 미지정 가상 묶음으로 표시한다. 해당 작업이 없거나 필터 결과가 없으면 숨긴다. 진행률은 필터와 무관한 전체 미지정 작업 기준이며 마일스톤 수에 포함하지 않는다. 문서에 가상 ID나 행을 쓰지 않고 접힘은 문서별 메모리 보기 상태로 유지한다.

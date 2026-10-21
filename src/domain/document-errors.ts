@@ -71,13 +71,29 @@ function buildDocumentProblems(
   return entries.map((entry) => {
     const issue = typeof entry === 'string' ? undefined : entry;
     const code = issue?.code;
-    const metadataKey = (
-      {
-        INVALID_ID_PREFIX: 'id_prefix',
-        INVALID_USE_EFFORT: 'use_effort',
-        UNSUPPORTED_SCHEMA: 'schema_version',
-      } as Record<string, string>
-    )[code ?? ''];
+    const sequenceLine =
+      code === 'INVALID_ID_SEQUENCE' && /^\uFEFF?---$/.test(sourceLines[0]?.raw || '')
+        ? sourceLines
+            .slice(
+              1,
+              sourceLines.findIndex((item, index) => index > 0 && item.raw === '---'),
+            )
+            .find((item) => {
+              const match = item.raw.match(/^(next_task_number|next_milestone_number):[ \t]*(.*)$/);
+              return match && !/^[1-9]\d*$/.test(match[2].trim().replace(/^(["'])(.*)\1$/, '$2'));
+            })
+        : undefined;
+    const metadataKey =
+      code === 'INVALID_ID_SEQUENCE'
+        ? sequenceLine?.raw.split(':')[0]
+        : (
+            {
+              INVALID_ID_PREFIX: 'id_prefix',
+              INVALID_USE_EFFORT: 'use_effort',
+              UNSUPPORTED_SCHEMA: 'schema_version',
+            } as Record<string, string>
+          )[code ?? ''];
+
     const matches =
       documentKind && issue && 'taskId' in issue
         ? rows.filter((row) => row.cells[0] === issue.taskId)
@@ -150,6 +166,7 @@ function buildDocumentProblems(
       hint = messages.columnsFixHint;
     else if (code === 'MISSING_WORK_SECTION') hint = messages.sectionFixHint;
     else if (code === 'INVALID_USE_EFFORT') hint = messages.useEffortFixHint;
+    else if (code === 'INVALID_ID_SEQUENCE') hint = messages.invalidIdSequence;
     else if (code === 'UNSUPPORTED_SCHEMA') hint = messages.unsupportedWbsSchema;
     else if (code === 'INVALID_ID_PREFIX') hint = messages.prefixFixHint;
     else if (kindKey === 'fileReadError') hint = messages.fileReadFixHint;

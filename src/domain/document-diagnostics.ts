@@ -3,6 +3,7 @@ import { messages } from '../i18n/messages';
 
 type DocumentCode =
   | 'UNSUPPORTED_SCHEMA'
+  | 'INVALID_ID_SEQUENCE'
   | 'INVALID_USE_EFFORT'
   | 'INVALID_ID_PREFIX'
   | 'MISSING_WORK_SECTION'
@@ -36,6 +37,8 @@ export function diagnosticReason(
   resource: typeof ko = messages,
 ): string {
   switch (issue.code) {
+    case 'INVALID_ID_SEQUENCE':
+      return resource.invalidIdSequence;
     case 'UNSUPPORTED_SCHEMA':
       return resource.unsupportedWbsSchema;
     case 'INVALID_MILESTONE_CONTAINER':

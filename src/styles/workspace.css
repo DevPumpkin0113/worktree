@@ -420,7 +420,7 @@ body:has(#detail.sidebar[open]) main#workspace {
   font-size: 11px;
   color: var(--color-text-secondary);
 }
-.milestone-summary progress {
+.task-count-progress progress {
   width: 100px;
   height: 5px;
   accent-color: var(--color-primary);
@@ -430,4 +430,16 @@ body:has(#detail.sidebar[open]) main#workspace {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+
+.task-count-progress {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.unassigned-tasks .task-count-progress {
+  margin-left: 12px;
 }

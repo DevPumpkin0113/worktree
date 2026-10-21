@@ -1018,3 +1018,103 @@ test('이전 WBS는 변환·저장하지 않고 규격 오류를 표시하며 v2
     await f.close();
   }
 });
+
+test('작업 삭제는 취소·참조 해제 선택·저장 오류·외부 충돌을 처리한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('[data-id="W002"].task');
+    await f.click('#taskDeleteOpen');
+    assert.equal(f.element<HTMLButtonElement>('#taskDeleteConfirm').disabled, true);
+    await f.click('#taskDeleteCancel');
+    assert.equal(f.files.get(first), source);
+    await f.click('#taskDeleteOpen');
+    await f.click('#deleteDetachPredecessors');
+    f.setDocumentSaveFailure(true);
+    await f.click('#taskDeleteConfirm');
+    assert.match(f.element('#taskDeleteError').textContent!, /디스크 쓰기 오류/);
+    assert.equal(f.element<HTMLInputElement>('#deleteDetachPredecessors').checked, true);
+    assert.equal(f.files.get(first), source);
+    f.setDocumentSaveFailure(false);
+    f.files.set(first, source.replace('입력 확인', '외부 수정'));
+    await f.click('#taskDeleteConfirm');
+    assert.match(f.element('#taskDeleteError').textContent!, /외부에서/);
+    assert.match(f.files.get(first)!, /외부 수정/);
+    await f.click('#taskDeleteCancel');
+    await act(async () => f.store.poll());
+    await f.click('[data-id="W002"].task');
+    await f.click('#taskDeleteOpen');
+    await f.click('#deleteDetachPredecessors');
+    await f.click('#taskDeleteConfirm');
+    assert.equal(f.host.querySelector('#taskDeleteDialog'), null);
+    assert.doesNotMatch(f.files.get(first)!, /\| W002 \|/);
+    assert.equal(f.store.active?.model?.rows.find((row) => row.id === 'W003')?.deps.length, 0);
+  } finally {
+    await f.close();
+  }
+});
+
+test('마일스톤 삭제창의 기본 선택은 하위 작업 유지이며 함께 삭제도 선택할 수 있다', async () => {
+  for (const removeChildren of [false, true]) {
+    const f = await fixture();
+    try {
+      await f.click('.group-detail[data-id="W001"]');
+      await f.click('#taskDeleteOpen');
+      assert.ok(f.element<HTMLInputElement>('input[name="deleteChildren"][value="keep"]').checked);
+      if (removeChildren) await f.click('input[name="deleteChildren"][value="delete"]');
+      await f.click('#taskDeleteConfirm');
+      assert.equal(f.store.active?.model?.rows.length, removeChildren ? 0 : 2);
+      assert.ok(f.store.active?.model?.rows.every((row) => row.parent === '-'));
+      if (removeChildren) assert.equal(f.host.querySelector('.unassigned-tasks'), null);
+      else assert.match(f.element('.unassigned-tasks summary').textContent!, /미지정.*1\/2 · 50%/);
+      assert.equal(f.store.active?.model?.rows.filter((row) => row.milestone).length, 0);
+    } finally {
+      await f.close();
+    }
+  }
+});
+
+test('미지정 묶음은 마일스톤 아래에 표시하고 전체 진행률·필터·접힘을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    assert.equal(f.host.querySelector('.unassigned-tasks'), null);
+    const text =
+      source +
+      '| W004 | - | task | 미소속 구현 | 확인 | codex | todo | - | - | - | - |\n| W005 | - | task | 미소속 검토 | 확인 | 박대호 | done | - | - | - | - |\n';
+    f.files.set(first, text);
+    await act(async () => f.store.open(first));
+    const groups = [...f.host.querySelectorAll('#content > details.group')];
+    assert.equal(groups.length, 2);
+    assert.ok(groups[1].classList.contains('unassigned-tasks'));
+    assert.match(f.element('.unassigned-tasks summary').textContent!, /미지정.*1\/2 · 50%/);
+    assert.equal(f.host.querySelector('.unassigned-tasks [data-work-id]'), null);
+    assert.equal(f.host.querySelector('.unassigned-tasks .group-detail'), null);
+    assert.equal(f.store.active?.model?.rows.filter((row) => row.milestone).length, 1);
+    await act(async () => {
+      const group = f.element<HTMLDetailsElement>('.unassigned-tasks');
+      group.open = false;
+      group.dispatchEvent(new Event('toggle'));
+    });
+    await f.click('[data-view="board"]');
+    await f.click('[data-view="tree"]');
+    assert.equal(f.element<HTMLDetailsElement>('.unassigned-tasks').open, false);
+    await f.value('#search', '댓글');
+    assert.equal(f.host.querySelector('.unassigned-tasks'), null);
+    await f.value('#search', '미소속 구현');
+    assert.equal(f.element<HTMLDetailsElement>('.unassigned-tasks').open, false);
+    assert.match(f.element('.unassigned-tasks summary').textContent!, /1\/2 · 50%/);
+    assert.equal(f.host.querySelectorAll('.unassigned-tasks .task').length, 1);
+    await f.value('#search', '');
+    await f.click('.unassigned-tasks .task[data-id="W004"]');
+    assert.match(f.element('#detailTitle').textContent!, /미소속 구현/);
+    f.files.set(first, text.replace('미소속 구현', '미소속 구현 변경'));
+    await act(async () => f.store.poll());
+    assert.equal(f.element<HTMLDetailsElement>('.unassigned-tasks').open, false);
+    assert.equal(f.files.get(first), text.replace('미소속 구현', '미소속 구현 변경'));
+    assert.equal(
+      f.calls.some((call) => call.command === 'save_document'),
+      false,
+    );
+  } finally {
+    await f.close();
+  }
+});

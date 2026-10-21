@@ -1,3 +1,4 @@
+import { deleteTaskSource, type DeleteOptions } from '../domain/task-deletion';
 import { updateTaskSource, type TaskDraft } from '../domain/task-editing';
 import { pathKey, folderName, withinProject } from '../domain/project-paths';
 import { projectSession } from './project-session';
@@ -425,24 +426,37 @@ export class WorkspaceStore {
   }
   async saveTask(path: string, expected: string, draft: TaskDraft, id?: string) {
     const update = updateTaskSource(expected, draft, id);
+    await this.saveTaskSource(path, expected, update.text, update.id);
+    return update.id;
+  }
+  async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
+    const text = deleteTaskSource(expected, id, options);
+    await this.saveTaskSource(path, expected, text, null, messages.deleteConflict);
+  }
+  private async saveTaskSource(
+    path: string,
+    expected: string,
+    text: string,
+    selectedId: string | null,
+    conflictMessage = messages.taskSaveConflict,
+  ) {
     const result = await this.platform.invoke<'saved' | 'conflict'>('save_document', {
       path,
       expected,
-      text: update.text,
+      text,
     });
-    if (result === 'conflict') throw Error(messages.taskSaveConflict);
+    if (result === 'conflict') throw Error(conflictMessage);
     if (result !== 'saved') throw Error(messages.invalidUpdateResponse);
     const previous = this.state.documents.find((doc) => doc.path === path);
     if (previous) {
-      const next = this.document(path, update.text, previous);
+      const next = this.document(path, text, previous);
       this.patch({
         documents: this.state.documents.map((doc) => (doc.path === path ? next : doc)),
         ...(this.state.activePath === path
-          ? { selectedId: update.id, operationProblems: [], problemsOpen: false }
+          ? { selectedId, operationProblems: [], problemsOpen: false }
           : {}),
       });
     }
-    return update.id;
   }
   async saveSetting(key: 'separator' | 'detailMode' | 'language', value: string) {
     if (this.state.settings.saving) return;

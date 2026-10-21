@@ -14,6 +14,13 @@ export function parseWbs(markdown: string): WorkModel {
   };
   const schemaVersion = meta('schema_version');
   if (schemaVersion !== '2') throw new DocumentValidationError([{ code: 'UNSUPPORTED_SCHEMA' }]);
+  const nextTaskNumber = meta('next_task_number');
+  const nextMilestoneNumber = meta('next_milestone_number');
+  for (const key of ['next_task_number', 'next_milestone_number']) {
+    const value = meta(key);
+    if (new RegExp('^' + key + ':', 'm').test(frontmatter) && (!value || !/^[1-9]\d*$/.test(value)))
+      throw new DocumentValidationError([{ code: 'INVALID_ID_SEQUENCE' }]);
+  }
   const container = (row: ParsedRow | undefined) => row?.type === 'milestone';
   const effortSetting = frontmatter.match(/^use_effort:[ \t]*(.*)$/m);
   if (effortSetting && !/^(true|false)$/.test(effortSetting[1].trim()))
@@ -146,6 +153,8 @@ export function parseWbs(markdown: string): WorkModel {
   }
   return {
     schemaVersion: 2,
+    nextTaskNumber,
+    nextMilestoneNumber,
     title: meta('title') || 'WBS',
     idPrefix,
     useEffort,

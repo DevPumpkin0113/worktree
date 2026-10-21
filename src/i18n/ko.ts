@@ -1,4 +1,26 @@
 export const ko = {
+  unassignedMilestone: '미지정',
+  edit: '수정',
+  delete: '삭제',
+  deletingTask: '삭제 중…',
+  deleteFailed: '삭제하지 못했습니다: ',
+  deleteConflict:
+    '외부에서 문서가 변경되어 삭제하지 않았습니다. 취소한 뒤 최신 문서를 확인하고 다시 시도해 주세요.',
+
+  invalidIdSequence: 'next_task_number·next_milestone_number는 1 이상의 정수로 작성하세요.',
+  deleteTask: '작업 삭제',
+  deleteMilestone: '마일스톤 삭제',
+  deleteSourceHint:
+    '선택한 항목을 원본 WBS에서 삭제합니다. 삭제 범위를 확인해 주세요. 앱에서 실행 취소는 지원하지 않습니다.',
+  deleteChildrenTitle: (count: string | number) => `하위 작업 ${count}개 처리`,
+  deleteKeepChildren: '작업을 유지하고 마일스톤 소속만 해제',
+  deleteWithChildren: '하위 작업도 함께 삭제',
+  deleteDependentTitle: (count: string | number) => `선행 참조가 변경되는 작업 ${count}개`,
+  deleteDetachPredecessors: '위 작업은 유지하고 삭제 항목의 선행 참조만 해제',
+  deleteReferencesRequired: '연결된 작업의 선행 참조를 해제할지 선택해 주세요.',
+  invalidDeleteOption: '올바르지 않은 삭제 옵션입니다.',
+  confirmDeleteCount: (count: string | number) => `${count}개 항목 삭제`,
+
   parentMilestone: '마일스톤',
   milestoneDetailSuffix: ' 마일스톤 상세',
 

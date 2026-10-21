@@ -17,6 +17,7 @@ export function TaskDetail({
   onSelect,
   onClose,
   onEdit,
+  onDelete,
 }: {
   model: WorkModel | null;
   path: string | null;
@@ -28,6 +29,7 @@ export function TaskDetail({
   onSelect: (id: string) => void;
   onClose: () => void;
   onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const comments = useCommentThreads();
   const visible = !!model && !!id && !settingsOpen;
@@ -112,7 +114,17 @@ export function TaskDetail({
               className="task-edit-open"
               onClick={() => onEdit(row.id)}
             >
-              {row.milestone ? messages.editMilestone : messages.editTask}
+              {messages.edit}
+            </button>
+          ) : null}
+          {row ? (
+            <button
+              type="button"
+              id="taskDeleteOpen"
+              className="task-delete-open"
+              onClick={() => onDelete(row.id)}
+            >
+              {messages.delete}
             </button>
           ) : null}
           <button

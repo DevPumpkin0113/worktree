@@ -57,18 +57,21 @@ export function nextTaskId(text: string) {
       return number > maximum ? number : maximum;
     }, 0n);
   const used = new Set(model.rows.map((row) => row.id));
-  let number = largest + 1n;
+  const sequence = BigInt(model.nextTaskNumber ?? '1');
+  let number = sequence > largest ? sequence : largest + 1n;
   while (used.has(model.idPrefix + String(number).padStart(3, '0'))) number++;
   return model.idPrefix + String(number).padStart(3, '0');
 }
 export function nextMilestoneId(text: string) {
-  const rows = parseWbs(text).rows;
+  const model = parseWbs(text);
+  const rows = model.rows;
   const maximum = rows.reduce((maximum, row) => {
     const match = row.id.match(/^MS(\d{3,})$/);
     const number = match ? BigInt(match[1]) : 0n;
     return number > maximum ? number : maximum;
   }, 0n);
-  return 'MS' + String(maximum + 1n).padStart(3, '0');
+  const sequence = BigInt(model.nextMilestoneNumber ?? '1');
+  return 'MS' + String(sequence > maximum ? sequence : maximum + 1n).padStart(3, '0');
 }
 export function updateTaskSource(text: string, draft: TaskDraft, taskId?: string) {
   parseWbs(text);

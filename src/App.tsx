@@ -1,3 +1,7 @@
+import {
+  TaskDeleteDialog,
+  type TaskDeleteSession,
+} from './components/task-detail/TaskDeleteDialog';
 import { TaskEditor, type TaskEditorSession } from './components/task-detail/TaskEditor';
 import { messages } from './i18n/messages';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
@@ -21,6 +25,7 @@ export function App({ store }: { store: WorkspaceStore }) {
     const doc = store.active;
     if (doc?.model) setEditor({ path: doc.path, text: doc.text, id, kind });
   };
+  const [deletion, setDeletion] = useState<TaskDeleteSession | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     document.documentElement.lang = state.settings.language;
@@ -144,14 +149,27 @@ export function App({ store }: { store: WorkspaceStore }) {
         path={state.activePath}
         id={state.selectedId}
         mode={state.settings.detailMode}
-        settingsOpen={state.settingsOpen || !!editor}
+        settingsOpen={state.settingsOpen || !!editor || !!deletion}
         collapsed={collapsed}
         label={label}
         onSelect={(id) => store.selectWork(id)}
         onEdit={(id) => openEditor(id)}
+        onDelete={(id) => {
+          const doc = store.active;
+          if (doc?.model) setDeletion({ path: doc.path, text: doc.text, id });
+        }}
         onClose={() => store.selectWork(null)}
       />
       <Settings store={store} state={state} />
+      {deletion ? (
+        <TaskDeleteDialog
+          session={deletion}
+          onDelete={(options) =>
+            store.deleteTask(deletion.path, deletion.text, deletion.id, options)
+          }
+          onClose={() => setDeletion(null)}
+        />
+      ) : null}
       {editor ? (
         <TaskEditor
           session={editor}

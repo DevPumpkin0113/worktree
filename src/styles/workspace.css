@@ -393,3 +393,41 @@ body:has(#detail.sidebar[open]) main#workspace {
   height: 16px;
   flex-shrink: 0;
 }
+
+.workspace-create-actions {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.workspace-create-actions .task-add-button {
+  margin-left: 0;
+}
+.milestone-label {
+  font-size: 10px;
+  color: var(--color-primary);
+  background: var(--color-option-selected);
+  border-radius: 4px;
+  padding: 3px 6px;
+  margin-right: 8px;
+}
+.milestone-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.milestone-summary progress {
+  width: 100px;
+  height: 5px;
+  accent-color: var(--color-primary);
+}
+.milestone-empty {
+  padding: 10px 8px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}

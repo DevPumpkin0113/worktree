@@ -91,3 +91,22 @@
   color: var(--color-text-secondary);
   margin: 0 0 12px;
 }
+
+.milestone-editor-fields {
+  display: grid;
+  gap: 16px;
+}
+.milestone-period {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.milestone-period legend {
+  font-size: 12px;
+  padding: 0;
+  margin-bottom: 8px;
+}

@@ -1,13 +1,15 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
-import { parseWbs } from '../../domain/model';
-import { nextTaskId, taskDraft, type TaskDraft } from '../../domain/task-editing';
+import { parseWorkspaceWbs as parseWbs } from '../../domain/wbs-migration';
+import { MilestoneEditorFields } from './MilestoneEditorFields';
+import { nextTaskId, nextMilestoneId, taskDraft, type TaskDraft } from '../../domain/task-editing';
 import { TaskEditorFields } from './TaskEditorFields';
 import { Icon } from '../shared/Icon';
 export interface TaskEditorSession {
   path: string;
   text: string;
   id?: string;
+  kind?: 'task' | 'milestone';
 }
 export function TaskEditor({
   session,
@@ -19,12 +21,22 @@ export function TaskEditor({
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [draft, setDraft] = useState(() => taskDraft(session.text, session.id));
+  const [draft, setDraft] = useState(() => {
+    const draft = taskDraft(session.text, session.id);
+    return !session.id && session.kind === 'milestone'
+      ? { ...draft, type: 'milestone' as const, criteria: '-', status: 'auto', effort: '-' }
+      : draft;
+  });
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const [error, setError] = useState('');
   const model = useMemo(() => parseWbs(session.text), [session.text]);
-  const id = useMemo(() => session.id ?? nextTaskId(session.text), [session.id, session.text]);
+  const id = useMemo(
+    () =>
+      session.id ??
+      (session.kind === 'milestone' ? nextMilestoneId(session.text) : nextTaskId(session.text)),
+    [session.id, session.text, session.kind],
+  );
   useLayoutEffect(() => {
     const node = dialog.current!;
     node.showModal();
@@ -67,7 +79,15 @@ export function TaskEditor({
         }}
       >
         <div className="task-editor-heading">
-          <h2 id="taskEditorTitle">{session.id ? messages.editTask : messages.addTask}</h2>
+          <h2 id="taskEditorTitle">
+            {draft.type === 'milestone'
+              ? session.id
+                ? messages.editMilestone
+                : messages.addMilestone
+              : session.id
+                ? messages.editTask
+                : messages.addTask}
+          </h2>
           <button
             type="button"
             className="modal-close"
@@ -88,14 +108,18 @@ export function TaskEditor({
           </span>{' '}
           {messages.requiredFieldsHint}
         </p>
-        <TaskEditorFields
-          draft={draft}
-          model={model}
-          id={id}
-          creating={!session.id}
-          disabled={saving}
-          onChange={setDraft}
-        />
+        {draft.type === 'milestone' ? (
+          <MilestoneEditorFields draft={draft} disabled={saving} onChange={setDraft} />
+        ) : (
+          <TaskEditorFields
+            draft={draft}
+            model={model}
+            id={id}
+            creating={!session.id}
+            disabled={saving}
+            onChange={setDraft}
+          />
+        )}
         {error ? (
           <p id="taskEditorError" className="task-editor-error" role="alert">
             {error}

@@ -4,7 +4,7 @@ import {taskDraft,updateTaskSource,nextTaskId} from '../../src/domain/task-editi
 import {parseWbs} from '../../src/domain/model.ts';
 const header='## 작업 목록\n| ID | 상위 ID | 유형 | 작업명 | 산출물 / 완료 기준 | 담당자 | 상태 | 시작일 | 종료일 | 예상 공수(h) | 선행 작업 |\n|---|---|---|---|---|---|---|---|---|---|---|\n';
 const row='| W002 | W001 | task | 작업 | 확인 | codex | todo | - | - | 2 | - |';
-const source='---\ntitle: 테스트\nid_prefix: OBS\n---\n설명 그대로\n\n'+header+'| W001 | - | group | 그룹 | 완료 | - | auto | - | - | - | - |\n'+row+'\n\n## 참고\n| 설명 | 표 |\n원문';
+const source='---\nschema_version: 2\ntitle: 테스트\nid_prefix: OBS\n---\n설명 그대로\n\n'+header+'| W001 | - | milestone | 그룹 | 완료 | - | auto | - | - | - | - |\n'+row+'\n\n## 참고\n| 설명 | 표 |\n원문';
 
 test('한 셀 수정은 BOM·CRLF·다른 셀 공백·설명·표·그룹 auto를 보존한다',()=>{
  const text='\uFEFF'+source.replaceAll('\n','\r\n').replace('| 작업 |','|  작업  |');
@@ -35,8 +35,9 @@ test('순환·잘못된 날짜·0 공수·원본 유형 변경과 줄바꿈을 �
  assert.throws(()=>updateTaskSource(source,original,'W999'));
  assert.equal(taskDraft(source,'W002').name,'작업');
 });
-test('새 마일스톤은 공수 0을 기록하고 관계·기존 ID를 유지한다',()=>{
- const draft={...taskDraft(source),type:'milestone',name:'승인',criteria:'승인 기록',parent:'W001',deps:'W002',effort:'7'};
- const result=updateTaskSource(source,draft);assert.equal(parseWbs(result.text).rows.at(-1).effort,'0');
- assert.equal(parseWbs(result.text).rows.at(-1).deps[0],'W002');
+test('새 마일스톤은 선택 기간과 공수 미사용으로 만들고 빈 상태를 허용한다',()=>{
+ const draft={...taskDraft(source),type:'milestone',name:'목표',criteria:'-',start:'2026-10-21',end:'2026-11-01'};
+ const result=updateTaskSource(source,draft);const row=parseWbs(result.text).rows.at(-1);
+ assert.equal(row.effort,'-');assert.equal(row.milestone,true);assert.equal(row.status,'todo');
+ assert.deepEqual(row.deps,[]);assert.equal(row.end,'2026-11-01');
 });

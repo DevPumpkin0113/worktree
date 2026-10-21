@@ -1,5 +1,7 @@
 export type Status = 'todo' | 'doing' | 'blocked' | 'done';
 export interface WorkRow {
+  /** v2 milestone containers use the shared group rendering/aggregation model. */
+  milestone?: boolean;
   id: string;
   parent: string;
   type: 'group' | 'task' | 'milestone';
@@ -13,6 +15,7 @@ export interface WorkRow {
   deps: string[];
 }
 export interface WorkModel {
+  schemaVersion?: 1 | 2;
   title: string;
   idPrefix: string;
   useEffort: boolean;

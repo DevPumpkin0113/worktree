@@ -10,9 +10,9 @@ import type { Platform } from '../../src/app/types';
 const header =
   '## 작업 목록\n| ID | 상위 ID | 유형 | 작업명 | 산출물 / 완료 기준 | 담당자 | 상태 | 시작일 | 종료일 | 예상 공수(h) | 선행 작업 |\n|---|---|---|---|---|---|---|---|---|---|---|\n';
 const source =
-  '---\nid_prefix: OBS\nuse_effort: false\n---\n' +
+  '---\nschema_version: 2\nid_prefix: OBS\nuse_effort: false\n---\n' +
   header +
-  '| W001 | - | group | 화면 작업 | 확인 | - | auto | - | - | - | - |\n| W002 | W001 | task | 댓글 구현 | 입력 확인 | codex | doing | 2026-10-20 | 2026-10-21 | - | - |\n| W003 | W001 | task | UI 확인 | 인수 확인 | 박대호 | done | 2026-10-22 | 2026-10-23 | 2 | W002 |\n';
+  '| W001 | - | milestone | 화면 작업 | 확인 | - | auto | - | - | - | - |\n| W002 | W001 | task | 댓글 구현 | 입력 확인 | codex | doing | 2026-10-20 | 2026-10-21 | - | - |\n| W003 | W001 | task | UI 확인 | 인수 확인 | 박대호 | done | 2026-10-22 | 2026-10-23 | 2 | W002 |\n';
 const first = 'C:\\QA\\first.wbs',
   second = 'C:\\QB\\second.wbs';
 async function fixture(

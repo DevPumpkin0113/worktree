@@ -26,16 +26,33 @@ export function TaskInfo({
   const group = row.type === 'group' ? summarizeGroups(model.rows).get(row.id) : null;
   const facts = group
     ? [
+        ...(row.milestone
+          ? [
+              [
+                messages.targetPeriod,
+                row.start === '-' ? messages.unscheduled : row.start + ' ~ ' + row.end,
+              ],
+              [
+                messages.milestoneTaskProgress,
+                (group.taskCount ? Math.round((group.completedTasks / group.taskCount) * 100) : 0) +
+                  '%',
+              ],
+            ]
+          : []),
         [messages.aggregateSchedule, groupSchedule(group)],
         [messages.aggregateEffort, groupEffort(group)],
         [
           messages.children,
           group.completedTasks + ' / ' + group.taskCount + messages.completedSuffix,
         ],
-        [
-          messages.milestone,
-          group.completedMilestones + ' / ' + group.milestoneCount + messages.completedSuffix,
-        ],
+        ...(!row.milestone
+          ? [
+              [
+                messages.milestone,
+                group.completedMilestones + ' / ' + group.milestoneCount + messages.completedSuffix,
+              ],
+            ]
+          : []),
         [messages.progress, groupProgress(group)],
       ]
     : [
@@ -53,7 +70,7 @@ export function TaskInfo({
           data-detail={item.id}
           onClick={() => onSelect(item.id)}
         >
-          <span className="detail-link-id">{label(item.id)}</span>
+          {!item.milestone ? <span className="detail-link-id">{label(item.id)}</span> : null}
           <span className="detail-link-name">{item.name}</span>
           <span className={'detail-status ' + item.status}>{STATUS_NAMES[item.status]}</span>
           <span aria-hidden="true">›</span>
@@ -124,17 +141,25 @@ export function TaskInfo({
           </section>
         ))}
       </div>
-      <details className="detail-identifiers">
-        <summary>{messages.identifiers}</summary>
-        <dl>
-          <dt>{messages.displayId}</dt>
-          <dd>{label(row.id)}</dd>
-          <dt>{messages.sourceId}</dt>
-          <dd>{row.id}</dd>
-          <dt>{messages.parentId}</dt>
-          <dd>{row.parent === '-' ? messages.none : row.parent}</dd>
-        </dl>
-      </details>
+      {!row.milestone ? (
+        <details className="detail-identifiers">
+          <summary>{messages.identifiers}</summary>
+          <dl>
+            <dt>{messages.displayId}</dt>
+            <dd>{label(row.id)}</dd>
+            <dt>{messages.sourceId}</dt>
+            <dd>{row.id}</dd>
+            <dt>{messages.parentId}</dt>
+            <dd>
+              {row.parent === '-'
+                ? messages.none
+                : byId.get(row.parent)?.milestone
+                  ? byId.get(row.parent)!.name
+                  : row.parent}
+            </dd>
+          </dl>
+        </details>
+      ) : null}
     </>
   );
 }

@@ -2,6 +2,7 @@ import { ko } from '../i18n/ko';
 import { messages } from '../i18n/messages';
 
 type DocumentCode =
+  | 'UNSUPPORTED_SCHEMA'
   | 'INVALID_USE_EFFORT'
   | 'INVALID_ID_PREFIX'
   | 'MISSING_WORK_SECTION'
@@ -9,6 +10,7 @@ type DocumentCode =
   | 'INVALID_SEPARATOR'
   | 'INVALID_COLUMN_COUNT';
 type RowCode =
+  | 'INVALID_MILESTONE_CONTAINER'
   | 'INVALID_ID'
   | 'DUPLICATE_ID'
   | 'INVALID_TYPE'
@@ -37,6 +39,10 @@ export function diagnosticReason(
   resource: typeof ko = messages,
 ): string {
   switch (issue.code) {
+    case 'UNSUPPORTED_SCHEMA':
+      return resource.unsupportedWbsSchema;
+    case 'INVALID_MILESTONE_CONTAINER':
+      return resource.invalidMilestoneContainer;
     case 'INVALID_USE_EFFORT':
       return resource.invalidUseEffort;
     case 'INVALID_ID_PREFIX':

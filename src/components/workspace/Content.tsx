@@ -33,11 +33,13 @@ export function Content({
   state,
   label,
   onAddTask,
+  onAddMilestone,
 }: {
   store: WorkspaceStore;
   state: WorkspaceSnapshot;
   label: (id: string) => string;
   onAddTask: () => void;
+  onAddMilestone: () => void;
 }) {
   const active = store.active,
     model = active?.model;
@@ -56,6 +58,7 @@ export function Content({
       ) ?? [],
     [rows, state.query, state.status, state.owner, label],
   );
+  const showEmptyMilestones = !state.query && state.owner === 'all' && state.status === 'all';
   const visibleIds = useMemo(() => new Set(filtered.map((row) => row.id)), [filtered]);
   const owners = useMemo(() => (rows ? (workOwners(rows) as string[]) : []), [rows]);
   const capture = () => {
@@ -146,10 +149,21 @@ export function Content({
           }}
         />
         {model ? (
-          <button id="taskAddOpen" className="task-add-button" type="button" onClick={onAddTask}>
-            <Icon name="plus" />
-            <span>{messages.addTask}</span>
-          </button>
+          <div className="workspace-create-actions">
+            <button
+              id="milestoneAddOpen"
+              className="task-add-button"
+              type="button"
+              onClick={onAddMilestone}
+            >
+              <Icon name="plus" />
+              <span>{messages.addMilestone}</span>
+            </button>
+            <button id="taskAddOpen" className="task-add-button" type="button" onClick={onAddTask}>
+              <Icon name="plus" />
+              <span>{messages.addTask}</span>
+            </button>
+          </div>
         ) : null}
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
@@ -170,7 +184,13 @@ export function Content({
             <strong>{messages.documentUnavailable}</strong>
             <p>{messages.checkProblemsHint}</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 &&
+          !(
+            showEmptyMilestones &&
+            state.page === 'board' &&
+            active.view === 'tree' &&
+            model.rows.some((row) => row.milestone)
+          ) ? (
           <div className="empty">{messages.noMatchingTasks}</div>
         ) : state.page === 'tasks' ? (
           <AllTasks
@@ -183,6 +203,7 @@ export function Content({
           <TreeView
             rows={model.rows}
             visibleIds={visibleIds}
+            showEmptyMilestones={showEmptyMilestones}
             useEffort={model.useEffort}
             label={label}
             selectedId={selectedId}

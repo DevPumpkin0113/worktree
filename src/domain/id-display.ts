@@ -20,6 +20,10 @@ export function createIdLabels(model: WorkModel, separator: string) {
   const labels = new Map<string, string>(),
     counts = new Map<string, number>();
   for (const row of model.rows) {
+    if (row.milestone) {
+      labels.set(row.id, row.id);
+      continue;
+    }
     const number = row.id.match(/(\d+)$/)?.[1];
     const label = model.idPrefix + (separator === 'hyphen' ? '-' : '') + number;
     labels.set(row.id, label);

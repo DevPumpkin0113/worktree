@@ -1,3 +1,5 @@
+import { upgradeWbsSource } from './wbs-migration';
+import { patchWorkRow, sourceLines } from './work-source';
 import { messages } from '../i18n/messages';
 import { parseWbs } from './model';
 import { findWorkTable } from './work-table';
@@ -15,6 +17,7 @@ export interface TaskDraft {
   deps: string;
 }
 export function taskDraft(text: string, id?: string): TaskDraft {
+  text = upgradeWbsSource(text);
   const row = id
     ? findWorkTable(text)
         .table.slice(2)
@@ -48,24 +51,40 @@ export function taskDraft(text: string, id?: string): TaskDraft {
       };
 }
 export function nextTaskId(text: string) {
-  const model = parseWbs(text);
-  const largest = model.rows.reduce((maximum, row) => {
-    const number = BigInt(row.id.match(/\d+$/)![0]);
+  const model = parseWbs(upgradeWbsSource(text));
+  const largest = model.rows
+    .filter((row) => !row.milestone)
+    .reduce((maximum, row) => {
+      const number = BigInt(row.id.match(/\d+$/)![0]);
+      return number > maximum ? number : maximum;
+    }, 0n);
+  const used = new Set(model.rows.map((row) => row.id));
+  let number = largest + 1n;
+  while (used.has(model.idPrefix + String(number).padStart(3, '0'))) number++;
+  return model.idPrefix + String(number).padStart(3, '0');
+}
+export function nextMilestoneId(text: string) {
+  const rows = parseWbs(upgradeWbsSource(text)).rows;
+  const maximum = rows.reduce((maximum, row) => {
+    const match = row.id.match(/^MS(\d{3,})$/);
+    const number = match ? BigInt(match[1]) : 0n;
     return number > maximum ? number : maximum;
   }, 0n);
-  return model.idPrefix + String(largest + 1n).padStart(3, '0');
+  return 'MS' + String(maximum + 1n).padStart(3, '0');
 }
 export function updateTaskSource(text: string, draft: TaskDraft, taskId?: string) {
+  text = upgradeWbsSource(text);
   parseWbs(text);
   const { table } = findWorkTable(text);
   const target = taskId ? table.slice(2).find((row) => row.cells[0] === taskId) : undefined;
   if (taskId && !target) throw Error(messages.editTaskMissing);
-  if (!draft.name.trim() || !draft.criteria.trim()) throw Error(messages.taskRequiredFields);
+  if (!draft.name.trim() || (draft.type !== 'milestone' && !draft.criteria.trim()))
+    throw Error(messages.taskRequiredFields);
   if (Object.values(draft).some((value) => /[\r\n\0]/.test(value) || value.includes('&#124;')))
     throw Error(messages.taskSingleLine);
   if (target && target.cells[2] !== draft.type) throw Error(messages.taskTypeLocked);
   if (!target && !['task', 'milestone'].includes(draft.type)) throw Error(messages.taskTypeLocked);
-  const id = taskId ?? nextTaskId(text);
+  const id = taskId ?? (draft.type === 'milestone' ? nextMilestoneId(text) : nextTaskId(text));
   const values = [
     id,
     draft.parent || '-',
@@ -73,25 +92,17 @@ export function updateTaskSource(text: string, draft: TaskDraft, taskId?: string
     draft.name.trim(),
     draft.criteria.trim(),
     draft.owner.trim() || '-',
-    draft.type === 'group' ? 'auto' : draft.status,
+    draft.type === 'group' || draft.type === 'milestone' ? 'auto' : draft.status,
     draft.type === 'group' ? '-' : draft.start || '-',
     draft.type === 'group' ? '-' : draft.end || '-',
-    draft.type === 'milestone' ? '0' : draft.type === 'group' ? '-' : draft.effort || '-',
-    draft.type === 'group' ? '-' : draft.deps.trim() || '-',
+    draft.type === 'milestone' || draft.type === 'group' ? '-' : draft.effort || '-',
+    draft.type === 'group' || draft.type === 'milestone' ? '-' : draft.deps.trim() || '-',
   ];
   const encode = (value: string) => value.replaceAll('|', '&#124;');
-  const lines = text.match(/[^\n]*\n|[^\n]+$/g) ?? [];
+  const lines = sourceLines(text);
   if (target) {
-    const pieces = target.raw.split('|');
-    values.forEach((value, index) => {
-      if (value === target.cells[index]) return;
-      const original = pieces[index + 1];
-      const leading = original.match(/^\s*/)?.[0] ?? '';
-      const trailing = original.match(/\s*$/)?.[0] ?? '';
-      pieces[index + 1] = leading + encode(value) + trailing;
-    });
     const ending = lines[target.line - 1].match(/\r?\n$/)?.[0] ?? '';
-    lines[target.line - 1] = pieces.join('|') + ending;
+    lines[target.line - 1] = patchWorkRow(target.raw, target.cells, values) + ending;
   } else {
     const last = table.at(-1)!;
     const ending = lines[last.line - 1].match(/\r?\n$/)?.[0];

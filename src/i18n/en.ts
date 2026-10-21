@@ -1,6 +1,18 @@
 import type { ko } from './ko';
 
 export const en = {
+  optionalTargetPeriod: 'Target period (optional)',
+  unsupportedWbsSchema: 'Unsupported WBS schema_version. Use 1 or 2.',
+  invalidMilestoneContainer: 'Milestones must be at the root with - for effort and dependencies.',
+  milestoneContainerHint:
+    'Milestones group tasks by title and optional target period. Use - for parent, effort and predecessors.',
+  addMilestone: 'Add milestone',
+  editMilestone: 'Edit milestone',
+  targetPeriod: 'Target period',
+  milestoneTitle: 'Milestone title',
+  noMilestoneTasks: 'No tasks yet. Add a task to get started.',
+  milestoneTaskProgress: 'Task progress',
+
   requiredField: 'Required',
   requiredFieldsHint: 'Required fields',
   searchPredecessors: 'Search by task name or ID',

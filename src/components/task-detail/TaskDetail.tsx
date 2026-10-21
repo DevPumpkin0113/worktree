@@ -93,12 +93,16 @@ export function TaskDetail({
               </button>
               {row ? (
                 <>
-                  <span className="detail-type">{TYPE_NAMES[row.type]}</span>
+                  <span className="detail-type">
+                    {row.milestone ? messages.milestone : TYPE_NAMES[row.type]}
+                  </span>
                   <span className={'detail-status ' + row.status}>{STATUS_NAMES[row.status]}</span>
                 </>
               ) : null}
             </div>
-            <h2 id="detailTitle">{row ? label(row.id) + ' · ' + row.name : ''}</h2>
+            <h2 id="detailTitle">
+              {row ? (row.milestone ? row.name : label(row.id) + ' · ' + row.name) : ''}
+            </h2>
           </div>
 
           {row ? (
@@ -108,7 +112,7 @@ export function TaskDetail({
               className="task-edit-open"
               onClick={() => onEdit(row.id)}
             >
-              {messages.editTask}
+              {row.milestone ? messages.editMilestone : messages.editTask}
             </button>
           ) : null}
           <button

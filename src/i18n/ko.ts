@@ -1,4 +1,16 @@
 export const ko = {
+  optionalTargetPeriod: '목표 기간 (선택)',
+  unsupportedWbsSchema: '지원하지 않는 WBS schema_version입니다. 1 또는 2를 사용하세요.',
+  invalidMilestoneContainer: '마일스톤은 최상위에 두고 공수·선행 작업을 -로 작성하세요.',
+  milestoneContainerHint:
+    '마일스톤은 제목과 선택 기간으로 작업을 묶습니다. 상위 ID·공수·선행 작업은 -로 입력하세요.',
+  addMilestone: '마일스톤 추가',
+  editMilestone: '마일스톤 수정',
+  targetPeriod: '목표 기간',
+  milestoneTitle: '마일스톤 제목',
+  noMilestoneTasks: '아직 작업이 없습니다. 작업을 추가해 주세요.',
+  milestoneTaskProgress: '작업 진행률',
+
   requiredField: '필수 입력',
   requiredFieldsHint: '필수 입력 항목',
   searchPredecessors: '작업명 또는 ID로 검색',

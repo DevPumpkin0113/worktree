@@ -17,9 +17,9 @@ export function App({ store }: { store: WorkspaceStore }) {
   const state = useWorkspace(store),
     model = store.active?.model ?? null;
   const [editor, setEditor] = useState<TaskEditorSession | null>(null);
-  const openEditor = (id?: string) => {
+  const openEditor = (id?: string, kind: 'task' | 'milestone' = 'task') => {
     const doc = store.active;
-    if (doc?.model) setEditor({ path: doc.path, text: doc.text, id });
+    if (doc?.model) setEditor({ path: doc.path, text: doc.text, id, kind });
   };
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
@@ -82,7 +82,13 @@ export function App({ store }: { store: WorkspaceStore }) {
         onCollapse={() => setCollapsed((value) => !value)}
         inert={state.settingsOpen}
       />
-      <Content store={store} state={state} label={label} onAddTask={() => openEditor()} />
+      <Content
+        store={store}
+        state={state}
+        label={label}
+        onAddTask={() => openEditor()}
+        onAddMilestone={() => openEditor(undefined, 'milestone')}
+      />
       <Problems
         problems={problems}
         open={state.problemsOpen}

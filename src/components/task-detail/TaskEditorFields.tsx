@@ -55,15 +55,9 @@ export function TaskEditorFields({
           value={draft.type}
           disabled={disabled || !creating}
           options={Object.entries(TYPE_NAMES)
-            .filter(([type]) => (creating ? type !== 'group' : type === draft.type))
+            .filter(([type]) => (creating ? type === 'task' : type === draft.type))
             .map(([value, label]) => ({ value, label }))}
-          onChange={(value) =>
-            onChange({
-              ...draft,
-              type: value as TaskDraft['type'],
-              effort: value === 'milestone' ? '0' : '-',
-            })
-          }
+          onChange={(value) => onChange({ ...draft, type: value as TaskDraft['type'] })}
         />
       </div>
       {text('name', messages.taskName)}
@@ -95,7 +89,10 @@ export function TaskEditorFields({
             { value: '-', label: messages.rootTask },
             ...model.rows
               .filter((row) => row.type === 'group' && row.id !== id)
-              .map((row) => ({ value: row.id, label: row.id + ' · ' + row.name })),
+              .map((row) => ({
+                value: row.id,
+                label: row.milestone ? row.name : row.id + ' · ' + row.name,
+              })),
           ]}
           onChange={(value) => change('parent', value)}
         />
@@ -111,7 +108,10 @@ export function TaskEditorFields({
           placeholder={messages.searchPredecessors}
           options={model.rows
             .filter((row) => row.type !== 'group' && row.id !== id)
-            .map((row) => ({ value: row.id, label: row.id + ' · ' + row.name }))}
+            .map((row) => ({
+              value: row.id,
+              label: row.milestone ? row.name : row.id + ' · ' + row.name,
+            }))}
           value={
             draft.deps === '-'
               ? []

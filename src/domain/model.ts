@@ -12,6 +12,12 @@ export function parseWbs(markdown: string): WorkModel {
     if (!value) return undefined;
     return value.replace(/^(["'])(.*)\1$/, '$2');
   };
+  const schemaVersion = meta('schema_version') ?? '1';
+  if (!['1', '2'].includes(schemaVersion))
+    throw new DocumentValidationError([{ code: 'UNSUPPORTED_SCHEMA' }]);
+  const modern = schemaVersion === '2';
+  const container = (row: ParsedRow | undefined) =>
+    !!row && (row.type === 'group' || (modern && row.type === 'milestone'));
   const effortSetting = frontmatter.match(/^use_effort:[ \t]*(.*)$/m);
   if (effortSetting && !/^(true|false)$/.test(effortSetting[1].trim()))
     throw new DocumentValidationError([{ code: 'INVALID_USE_EFFORT' }]);
@@ -53,14 +59,18 @@ export function parseWbs(markdown: string): WorkModel {
   for (const r of rows) {
     const parts = r.id.match(/^([A-Z]+)-?(\d{3,})$/);
     if (!parts) errors.push({ code: 'INVALID_ID', taskId: r.id });
-    else if (parts[1] !== idPrefix && parts[1] !== 'W')
+    else if (
+      parts[1] !== idPrefix &&
+      parts[1] !== 'W' &&
+      !(modern && r.type === 'milestone' && parts[1] === 'MS')
+    )
       errors.push({ code: 'PREFIX_MISMATCH', taskId: r.id, prefix: idPrefix });
     if (byId.has(r.id)) errors.push({ code: 'DUPLICATE_ID', taskId: r.id });
     byId.set(r.id, r);
     if (!['group', 'task', 'milestone'].includes(r.type))
       errors.push({ code: 'INVALID_TYPE', taskId: r.id });
     if (
-      !(r.type === 'group'
+      !(container(r)
         ? r.status === 'auto'
         : ['todo', 'doing', 'blocked', 'done'].includes(r.status))
     )
@@ -74,8 +84,10 @@ export function parseWbs(markdown: string): WorkModel {
       (r.start !== '-' && (!validDate(r.start) || !validDate(r.end) || r.start > r.end))
     )
       errors.push({ code: 'INVALID_DATE', taskId: r.id });
-    if (r.type === 'milestone' && (r.start !== r.end || r.effort !== '0'))
+    if (!modern && r.type === 'milestone' && (r.start !== r.end || r.effort !== '0'))
       errors.push({ code: 'INVALID_MILESTONE', taskId: r.id });
+    if (modern && r.type === 'milestone' && (r.parent !== '-' || r.effort !== '-' || r.deps.length))
+      errors.push({ code: 'INVALID_MILESTONE_CONTAINER', taskId: r.id });
     if (
       r.type === 'task' &&
       r.effort !== '-' &&
@@ -89,13 +101,13 @@ export function parseWbs(markdown: string): WorkModel {
       errors.push({ code: 'INVALID_GROUP_FIELDS', taskId: r.id });
   }
   for (const r of rows) {
-    if (r.parent !== '-' && byId.get(r.parent)?.type !== 'group')
+    if (r.parent !== '-' && !container(byId.get(r.parent)))
       errors.push({ code: 'INVALID_PARENT', taskId: r.id });
     if (r.type === 'group' && !rows.some((x) => x.parent === r.id))
       errors.push({ code: 'EMPTY_GROUP', taskId: r.id });
     for (const id of r.deps) {
       const dep = byId.get(id);
-      if (!dep || dep.type === 'group')
+      if (!dep || container(dep))
         errors.push({
           code: 'INVALID_DEPENDENCY',
           taskId: r.id,
@@ -125,17 +137,30 @@ export function parseWbs(markdown: string): WorkModel {
   cycle((r) => (r.parent && r.parent !== '-' ? [r.parent] : []), 'parent');
   cycle((r) => r.deps || [], 'deps');
   if (errors.length) throw new DocumentValidationError(errors);
+  for (const row of rows)
+    if (modern && row.type === 'milestone') {
+      row.type = 'group';
+      row.milestone = true;
+    }
   const leaves = (id: string): ParsedRow[] =>
     rows.filter((r) => r.parent === id).flatMap((r) => (r.type === 'group' ? leaves(r.id) : [r]));
   for (const r of rows.filter((r) => r.type === 'group')) {
     const children = leaves(r.id);
-    r.status = children.every((x) => x.status === 'done')
-      ? 'done'
-      : children.some((x) => x.status === 'blocked')
-        ? 'blocked'
-        : children.every((x) => x.status === 'todo')
-          ? 'todo'
-          : 'doing';
+    r.status = !children.length
+      ? 'todo'
+      : children.every((x) => x.status === 'done')
+        ? 'done'
+        : children.some((x) => x.status === 'blocked')
+          ? 'blocked'
+          : children.every((x) => x.status === 'todo')
+            ? 'todo'
+            : 'doing';
   }
-  return { title: meta('title') || 'WBS', idPrefix, useEffort, rows: rows as WorkRow[] };
+  return {
+    schemaVersion: modern ? 2 : 1,
+    title: meta('title') || 'WBS',
+    idPrefix,
+    useEffort,
+    rows: rows as WorkRow[],
+  };
 }

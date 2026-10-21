@@ -1,3 +1,4 @@
+import { MilestoneSummary } from './MilestoneSummary';
 import { messages } from '../../i18n/messages';
 import { useMemo } from 'react';
 import { summarizeGroups } from '../../domain/group-summary';
@@ -10,8 +11,14 @@ export function TreeView({
   visibleIds,
   useEffort,
   onToggle,
+  showEmptyMilestones = true,
   ...props
-}: ListProps & { visibleIds: Set<string>; useEffort: boolean; onToggle: () => void }) {
+}: ListProps & {
+  visibleIds: Set<string>;
+  useEffort: boolean;
+  onToggle: () => void;
+  showEmptyMilestones?: boolean;
+}) {
   const summaries = useMemo(() => summarizeGroups(rows), [rows]);
   const children = useMemo(() => {
     const map = new Map<string, WorkRow[]>();
@@ -25,7 +32,7 @@ export function TreeView({
           ? [<TaskCard key={row.id} row={row} {...props} selected={props.selectedId === row.id} />]
           : [];
       const content = branch(row.id);
-      if (!content.length) return [];
+      if (!content.length && !(row.milestone && showEmptyMilestones)) return [];
       const summary = summaries.get(row.id)!;
       return [
         <details className="group" key={row.id} open onToggle={onToggle}>
@@ -34,7 +41,8 @@ export function TreeView({
             className={props.selectedId === row.id ? 'detail-selected' : undefined}
             aria-current={props.selectedId === row.id ? 'true' : undefined}
           >
-            {props.label(row.id)} · {row.name}{' '}
+            {row.milestone ? <span className="milestone-label">{messages.milestone}</span> : null}
+            {row.milestone ? row.name : props.label(row.id) + ' · ' + row.name}{' '}
             <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>
             <button
               type="button"
@@ -49,12 +57,22 @@ export function TreeView({
             >
               {messages.details}
             </button>
-            <span className="group-summary">
-              {groupSchedule(summary)}
-              {useEffort ? ' · ' + groupEffort(summary) + ' · ' + groupProgress(summary) : ''}
-            </span>
+            {row.milestone ? (
+              <MilestoneSummary row={row} summary={summary} />
+            ) : (
+              <span className="group-summary">
+                {groupSchedule(summary)}
+                {useEffort ? ' · ' + groupEffort(summary) + ' · ' + groupProgress(summary) : ''}
+              </span>
+            )}
           </summary>
-          <div className="children">{content}</div>
+          <div className="children">
+            {content.length ? (
+              content
+            ) : (
+              <p className="milestone-empty">{messages.noMilestoneTasks}</p>
+            )}
+          </div>
         </details>,
       ];
     });

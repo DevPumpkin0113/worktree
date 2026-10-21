@@ -99,7 +99,13 @@ function buildDocumentProblems(
         key = 'parent';
       else if (['INVALID_ID', 'DUPLICATE_ID', 'PREFIX_MISMATCH'].includes(code || '')) key = 'id';
       else if (code === 'INVALID_STATUS') key = 'status';
-      else if (code === 'INVALID_TYPE') key = 'type';
+      else if (code === 'INVALID_MILESTONE_CONTAINER') {
+        field = messages.milestone;
+        hint = messages.milestoneContainerHint;
+        indexes = [1, 9, 10];
+        value = [row.cells[1], row.cells[9], row.cells[10]].join(' / ');
+        example = '- / - / -';
+      } else if (code === 'INVALID_TYPE') key = 'type';
       else if (code === 'INVALID_MILESTONE') {
         field = messages.milestoneFields;
         value = [row.cells[7], row.cells[8], row.cells[9]].join(' / ');

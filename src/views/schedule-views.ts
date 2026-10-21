@@ -94,7 +94,7 @@ export function renderDependencies(
       const p = layout.positions.get(r.id)!,
         dim = related ? !related.has(r.id) : !matchedIds.has(r.id);
       const name = r.name.length > 19 ? r.name.slice(0, 18) + '…' : r.name;
-      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><text x="${p.x + 28}" y="${p.y + 23}" class="graph-id">${escape(label(r.id))}</text><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape((r.type === 'milestone' ? '◇ ' : '') + name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
+      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><text x="${p.x + 28}" y="${p.y + 23}" class="graph-id">${escape(label(r.id))}</text><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape(name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
     })
     .join('');
   const current = focus ? byId.get(focus) : undefined;
@@ -158,10 +158,7 @@ export function renderGantt(
       .map((r) => {
         const x = ((Date.parse(r.start) - start) / DAY) * dayWidth,
           duration = ((Date.parse(r.end) - Date.parse(r.start)) / DAY + 1) * dayWidth;
-        const mark =
-          r.type === 'milestone'
-            ? `<path d="M${x + dayWidth / 2} 14l10 10-10 10-10-10z" class="schedule-bar state-${r.status}"/>`
-            : `<rect x="${x + 1}" y="14" width="${Math.max(2, duration - 2)}" height="20" rx="4" class="schedule-bar state-${r.status}"/>`;
+        const mark = `<rect x="${x + 1}" y="14" width="${Math.max(2, duration - 2)}" height="20" rx="4" class="schedule-bar state-${r.status}"/>`;
         return `<tr><th scope="row"><button class="gantt-label" data-id="${r.id}" title="${escape(r.name)}"><span class="id">${escape(label(r.id))}</span><span>${escape(r.name)}</span></button></th><td><svg width="${width}" height="48" data-id="${r.id}" class="timeline-row" role="button" tabindex="0" aria-label="${escape(r.name + ' ' + r.start + ' ~ ' + r.end)}"><title>${escape(r.name + ' · ' + r.start + ' ~ ' + r.end + ' · ' + stateName[r.status])}</title>${grid}${mark}${todayLine}</svg></td></tr>`;
       })
       .join('');

@@ -62,19 +62,15 @@ export function TaskEditorFields({
       </div>
       {text('name', messages.taskName)}
       {text('criteria', messages.criteria)}
-      {text('owner', messages.owner, 'text', draft.type === 'group')}
+      {text('owner', messages.owner, 'text')}
       <div className="task-editor-field">
         <span>{messages.status}</span>
         <FilterDropdown
           id="taskEditor-status"
           label={messages.status}
           value={draft.status}
-          disabled={disabled || draft.type === 'group'}
-          options={
-            draft.type === 'group'
-              ? [{ value: 'auto', label: messages.automatic }]
-              : Object.entries(STATUS_NAMES).map(([value, label]) => ({ value, label }))
-          }
+          disabled={disabled}
+          options={Object.entries(STATUS_NAMES).map(([value, label]) => ({ value, label }))}
           onChange={(value) => change('status', value)}
         />
       </div>
@@ -98,8 +94,8 @@ export function TaskEditorFields({
         />
       </div>
       {model.useEffort ? text('effort', messages.effort, 'number', draft.type !== 'task') : null}
-      {text('start', messages.startDate, 'date', draft.type === 'group')}
-      {text('end', messages.endDate, 'date', draft.type === 'group')}
+      {text('start', messages.startDate, 'date')}
+      {text('end', messages.endDate, 'date')}
       <div className="task-editor-field task-field-deps">
         <span>{messages.predecessors}</span>
         <SearchMultiSelect
@@ -124,7 +120,7 @@ export function TaskEditorFields({
                   ),
                 ]
           }
-          disabled={disabled || draft.type === 'group'}
+          disabled={disabled}
           onChange={(values) => change('deps', values.join(', ') || '-')}
         />
       </div>

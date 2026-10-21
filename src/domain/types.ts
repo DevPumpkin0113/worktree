@@ -4,7 +4,7 @@ export interface WorkRow {
   milestone?: boolean;
   id: string;
   parent: string;
-  type: 'group' | 'task' | 'milestone';
+  type: 'group' | 'task';
   name: string;
   criteria: string;
   owner: string;
@@ -15,7 +15,7 @@ export interface WorkRow {
   deps: string[];
 }
 export interface WorkModel {
-  schemaVersion?: 1 | 2;
+  schemaVersion?: 2;
   title: string;
   idPrefix: string;
   useEffort: boolean;

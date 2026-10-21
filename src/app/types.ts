@@ -83,7 +83,7 @@ export const STATUS_NAMES: Record<Status, string> = {
 };
 export const TYPE_NAMES = {
   get group() {
-    return messages.workGroup;
+    return messages.milestone;
   },
   get task() {
     return messages.task;

@@ -16,11 +16,8 @@ type RowCode =
   | 'INVALID_TYPE'
   | 'INVALID_STATUS'
   | 'INVALID_DATE'
-  | 'INVALID_MILESTONE'
   | 'INVALID_EFFORT'
-  | 'INVALID_GROUP_FIELDS'
-  | 'INVALID_PARENT'
-  | 'EMPTY_GROUP';
+  | 'INVALID_PARENT';
 export type DocumentDiagnostic =
   | { code: DocumentCode }
   | { code: RowCode; taskId: string }
@@ -29,7 +26,7 @@ export type DocumentDiagnostic =
       code: 'INVALID_DEPENDENCY';
       taskId: string;
       dependencyId: string;
-      target: 'group' | 'missing';
+      target: 'milestone' | 'missing';
     }
   | { code: 'INVALID_DEPENDENCY_DATE'; taskId: string; dependencyId: string }
   | { code: 'CYCLIC_REFERENCE'; taskId: string; relation: 'parent' | 'deps' };
@@ -67,22 +64,16 @@ export function diagnosticReason(
       return resource.invalidStatus;
     case 'INVALID_DATE':
       return resource.invalidDate;
-    case 'INVALID_MILESTONE':
-      return resource.invalidMilestone;
     case 'INVALID_EFFORT':
       return resource.invalidEffort;
-    case 'INVALID_GROUP_FIELDS':
-      return resource.invalidGroupFields;
     case 'INVALID_PARENT':
       return resource.invalidParent;
-    case 'EMPTY_GROUP':
-      return resource.emptyGroup;
     case 'INVALID_DEPENDENCY':
       return (
         resource.dependencyPrefix +
         issue.dependencyId +
-        (issue.target === 'group'
-          ? resource.groupDependencySuffix
+        (issue.target === 'milestone'
+          ? resource.milestoneDependencySuffix
           : resource.missingDependencySuffix)
       );
     case 'INVALID_DEPENDENCY_DATE':

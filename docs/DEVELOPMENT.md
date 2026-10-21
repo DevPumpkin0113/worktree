@@ -382,3 +382,9 @@ Rust save_document는 5MiB 제한·읽기 전용 검사·원본 내용 비교 �
 - Windows 설치 프로그램은 승인된 main 릴리즈 CI에서 생성하고 서명·변조 거부 검사를 수행한다.
 
 - 0.20.1 첫 CI는 Windows checkout의 CRLF 변환으로 포맷 검사에서 중단됐다. .gitattributes에서 TS·TSX·CSS·JSON을 LF로 고정해 로컬과 CI의 입력을 일치시켰다.
+
+## 0.21.0 WBS 호환 제거
+
+ADR 0012에 따라 WBS v2만 읽고 쓴다. v1·규격 누락·원본 group과 날짜형 milestone은 거부한다. 이전 자동 변환 모듈과 호환 예제를 제거했으며 오류 위치·원본 보존·정상 문서 복구를 테스트한다. 위의 0.20.1 호환 예제·자동 변환 관련 설명은 해당 버전의 기록이다.
+
+- 0.21.0 검증: Node 도메인·React DOM 테스트 97개 통과. 실제 WebView2 및 설치 프로그램 검증은 수행하지 않았다.

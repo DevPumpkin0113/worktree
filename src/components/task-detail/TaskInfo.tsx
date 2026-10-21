@@ -45,14 +45,6 @@ export function TaskInfo({
           messages.children,
           group.completedTasks + ' / ' + group.taskCount + messages.completedSuffix,
         ],
-        ...(!row.milestone
-          ? [
-              [
-                messages.milestone,
-                group.completedMilestones + ' / ' + group.milestoneCount + messages.completedSuffix,
-              ],
-            ]
-          : []),
         [messages.progress, groupProgress(group)],
       ]
     : [

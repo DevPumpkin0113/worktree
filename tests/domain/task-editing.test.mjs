@@ -23,11 +23,11 @@ test('추가 ID는 기존 모든 ID 이후의 문서 접두어를 쓰고 표 바
  assert.equal(nextTaskId(text),'OBS004');
 });
 test('마지막 개행이 없는 문서와 빈 작업 표에도 행을 추가한다',()=>{
- const single=header+row.replace('W001','-');
+ const single='---\nschema_version: 2\n---\n'+header+row.replace('W001','-');
  const draft={...taskDraft(single),name:'새 작업',criteria:'확인'};
  const update=updateTaskSource(single,draft);
  assert.ok(!update.text.endsWith('\n'));assert.equal(parseWbs(update.text).rows.length,2);
- assert.equal(parseWbs(updateTaskSource(header,draft).text).rows.length,1);
+ assert.equal(parseWbs(updateTaskSource('---\nschema_version: 2\n---\n'+header,draft).text).rows.length,1);
 });
 test('순환·잘못된 날짜·0 공수·원본 유형 변경과 줄바꿈을 거부한다',()=>{
  const original=taskDraft(source,'W002');

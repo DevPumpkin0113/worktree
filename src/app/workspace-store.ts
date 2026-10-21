@@ -6,7 +6,7 @@ import { messages, setLanguage, isLanguage } from '../i18n/messages';
 import { ko } from '../i18n/ko';
 import { readSeparator, saveSeparator } from '../domain/id-display';
 import { readDetailMode, saveDetailMode } from '../domain/detail-settings';
-import { parseWorkspaceWbs as parseWbs } from '../domain/wbs-migration';
+import { parseWbs } from '../domain/model';
 import { describeDocumentErrors } from '../domain/document-errors';
 import { createSettingsStorage } from '../platform/settings-storage';
 import {

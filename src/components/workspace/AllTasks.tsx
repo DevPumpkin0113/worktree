@@ -28,9 +28,6 @@ export function AllTasks(props: ListProps) {
                 >
                   <span className="id">{props.label(row.id)}</span>
                   <span>{row.name}</span>
-                  {row.type === 'milestone' ? (
-                    <span className="all-task-type">{messages.milestone}</span>
-                  ) : null}
                 </button>
               </td>
               <td>

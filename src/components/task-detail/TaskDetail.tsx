@@ -160,7 +160,7 @@ export function TaskDetail({
           ) : null}
         </div>
         <div className="detail-footer">
-          <p>{messages.detailReadOnlyHint}</p>
+          <p>{messages.detailEditHint}</p>
         </div>
       </dialog>
     </>

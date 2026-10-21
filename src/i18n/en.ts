@@ -1,16 +1,11 @@
 import type { ko } from './ko';
 
 export const en = {
-  modernDependencyHint:
-    'Enter an existing task ID. Milestones cannot be dependencies. Use - for none.',
-  modernParentHint:
-    'Enter an existing milestone ID. Legacy nested groups are also supported. Use - for a root task.',
-  modernStatusHint: 'Use auto for milestone/group and todo, doing, blocked, or done for task.',
   parentMilestone: 'Milestone',
   milestoneDetailSuffix: ' milestone details',
 
   optionalTargetPeriod: 'Target period (optional)',
-  unsupportedWbsSchema: 'Unsupported WBS schema_version. Use 1 or 2.',
+  unsupportedWbsSchema: 'Unsupported WBS schema_version. Specify 2.',
   invalidMilestoneContainer: 'Milestones must be at the root with - for effort and dependencies.',
   milestoneContainerHint:
     'Milestones group tasks by title and optional target period. Use - for parent, effort and predecessors.',
@@ -32,6 +27,7 @@ export const en = {
   taskName: 'Task name',
   localDocument: 'Local document',
   editTaskMissing: 'The task no longer exists. Reload the document.',
+  milestoneRequiredTitle: 'Enter a milestone title.',
   taskRequiredFields: 'Enter a task name and acceptance criteria.',
   taskSingleLine:
     'Use a single line for each field. Enter | instead of the literal &#124; sequence.',
@@ -76,7 +72,7 @@ export const en = {
   allStatuses: 'All statuses',
   analyticsPlaceholder: 'Analytics will appear here once data is connected.',
   ancestors: 'Parent tasks',
-  appDescription: 'A desktop app for reading and exploring WBS documents',
+  appDescription: 'A desktop app for creating and editing WBS tasks and viewing schedules',
   appError: 'Application error',
   appSettings: 'App settings',
   appSettingsMenu: 'App settings menu',
@@ -116,7 +112,7 @@ export const en = {
   columnOrder: 'Column names / order',
   columnsExample: 'Use 11 cells per row. Enter &#124; for a pipe character inside a cell.',
   columnsFixHint:
-    'Keep the 11 column names and their order from the shared template. Enter &#124; for a pipe character inside a cell.',
+    'Keep the 11 column names and their order from the WBS authoring template. Enter &#124; for a pipe character inside a cell.',
   commentAdded: 'Comment added temporarily. It is not saved to a file.',
   commentList: 'Comments',
   commentPlaceholder: 'Leave a question, review comment, or decision.',
@@ -127,7 +123,8 @@ export const en = {
   comments: 'Comments',
   commentShortcut: 'Ctrl+Enter to post · temporary storage',
   commit: 'Commit',
-  commonRulesHint: 'Task types and statuses currently follow the shared schema.',
+  commonRulesHint:
+    'WBS v2 supports tasks and milestones. Task statuses are set directly; milestone statuses are calculated from their tasks.',
   completedSuffix: ' completed',
   completedTotal: 'Completed / total',
   completionRate: 'Progress',
@@ -152,13 +149,13 @@ export const en = {
   dependencyDateHint:
     'Set the successor start date to the day after the predecessor ends or later.',
   dependencyFixHint:
-    'Enter the exact ID of an existing task or milestone. Enter - if there are no predecessors.',
+    'Enter an existing task ID. Milestones cannot be dependencies. Use - for none.',
   dependencyPrefix: 'Dependency ',
   dependencyStage: (stage: string | number) => `Dependency stage ${stage}`,
   detailDisplay: 'Task details display',
   detailDisplayHint: 'Choose how task details open when you select a task.',
-  detailReadOnlyHint:
-    'Task information is read-only. Comments are a UI preview and are not saved to a file.',
+  detailEditHint:
+    'Use the edit button above to change details. Comments are a UI preview and are not saved to a file.',
   details: 'Details',
   developmentBuild: 'Development',
   directPredecessorsPrefix: 'Direct predecessors: ',
@@ -183,8 +180,6 @@ export const en = {
   effortHours: 'Estimated effort (h)',
   effortProgress: 'Effort-weighted progress',
   effortSubtotalPrefix: 'Known effort subtotal: ',
-  emptyGroup: 'empty group',
-  emptyGroupHint: 'Add child tasks to the group or remove the unused group.',
   enabled: 'Enabled',
   endDate: 'End date',
   examplePrefix: 'Example: ',
@@ -207,14 +202,7 @@ export const en = {
   ganttScheduledPrefix: ' · Scheduled: ',
   ganttScrollLabel: 'Task schedule horizontal scroll',
   ganttUnknownPrefix: ' / unknown: ',
-  group: 'Group',
-  groupDependencySuffix: ' is a task collection and cannot be used as a dependency.',
-  groupDetailSuffix: ' — group details',
-  groupFields: 'Group aggregate fields',
-  groupFieldsExample: 'Start / end / estimated effort (h) / predecessors: - / - / - / -',
-  groupFieldsHint:
-    'Set the start date, end date, estimated effort, and predecessors of a group to -.',
-  groupParentExample: 'Use this group ID as the parent ID of its child tasks.',
+  milestoneDependencySuffix: ' is a milestone and cannot be used as a predecessor.',
   hideDetail: 'Hide details panel',
   hierarchy: 'Hierarchy',
   hintPrefix: 'How to fix: ',
@@ -224,7 +212,7 @@ export const en = {
   identifiers: 'Identifiers',
   idExample: 'W001 or W-001 (examples for a document with prefix W)',
   idFixHint:
-    'Use the document prefix followed by at least three digits. Check for duplicate IDs and update parent and predecessor references together.',
+    'Use the document prefix and at least three digits for tasks, or an internal ID such as MS001 for milestones. Check duplicate IDs and parent and predecessor references.',
   idPrefix: 'ID prefix',
   idSeparator: 'ID separator',
   idSeparatorHint: 'Show hyphens in task IDs. Original IDs and task relationships are preserved.',
@@ -253,12 +241,10 @@ export const en = {
     `must start after predecessor ${dependencyId} ends`,
   invalidDetailMode: 'Invalid task details display mode.',
   invalidEffort: 'invalid effort',
-  invalidGroupFields: 'leave group aggregate fields empty',
   invalidIdPrefix: 'Use uppercase letters for id_prefix, such as W or OBS.',
   invalidIdSeparator: 'Invalid ID separator setting.',
   invalidIdReason: 'invalid ID format (examples: W001, W-001, OBS001, OBS-001)',
-  invalidMilestone: 'invalid milestone date or effort',
-  invalidParent: 'invalid parent collection reference',
+  invalidParent: 'invalid parent milestone reference',
   invalidSeparator: 'The task table separator is missing or does not match the shared schema.',
   invalidSession: 'The session file version or values are invalid. The original file is preserved.',
   invalidSetting: 'Invalid setting value.',
@@ -279,8 +265,6 @@ export const en = {
     'This release does not support in-app installation. Download the installer from the release page.',
   maximizeWindow: 'Maximize',
   milestone: 'Milestone',
-  milestoneFields: 'Start date / end date / estimated effort (h)',
-  milestoneFixHint: 'Use the same start and end date for a milestone and set its effort to 0.',
   minimizeWindow: 'Minimize',
   missingDependencySuffix: ' is not in this document.',
   missingEffortNotice: (missingEfforts: string | number) => ` · Unknown effort: ${missingEfforts}`,
@@ -308,8 +292,7 @@ export const en = {
   openRelease: 'Open release',
   owner: 'Assignee',
   ownerFilter: 'Assignee filter',
-  parentFixHint:
-    'Enter the ID of an existing group. Use - for a root task and remove circular references.',
+  parentFixHint: 'Enter an existing milestone ID. Use - for a root task.',
   parentId: 'Parent ID',
   predecessorHint: 'Tasks that must finish before this task',
   predecessors: 'Predecessors',
@@ -329,7 +312,8 @@ export const en = {
   projectManagement: 'Project management',
   projectManagementDescription: 'View project information and task rules.',
   projectName: 'Project name',
-  projectReadOnlyHint: 'Based on the current WBS document. Make changes in the source document.',
+  projectReadOnlyHint:
+    'View the current project and selected WBS information here. Edit tasks and milestones using the edit button in their details.',
   projectWbsFiles: 'Project WBS files',
   readOnly: 'Read-only',
   reason: 'Cause',
@@ -359,7 +343,7 @@ export const en = {
   searchPlaceholder: 'Search ID, task name, or assignee',
   searchTasks: 'Search tasks',
   sectionFixHint:
-    'Add the ## 작업 목록 heading and the shared task table to the source document. Keep this schema heading in Korean.',
+    'Add the ## 작업 목록 heading and the WBS template task table to the source document. Keep this schema heading in Korean.',
   separator: 'Separator row',
   separatorFixHint:
     'Add a separator row with 11 columns (|---|---|…|) immediately after the header.',
@@ -373,9 +357,9 @@ export const en = {
   startDate: 'Start date',
   status: 'Status',
   statusFilter: 'Status filter',
-  statusFixHint: 'Use auto for a group; use todo, doing, blocked, or done for a task or milestone.',
+  statusFixHint: 'Use auto for milestone and todo, doing, blocked, or done for task.',
   structureNotice: (groupCount: string | number, missingDates: string | number) =>
-    `Structure validated · Groups: ${groupCount} · Unknown dates: ${missingDates}`,
+    `Structure validated · Milestones: ${groupCount} · Unknown dates: ${missingDates}`,
   submitComment: 'Post comment',
   successorHint: 'Tasks that follow this task',
   successors: 'Successors',
@@ -391,7 +375,7 @@ export const en = {
   toggleProblemsPrefix: 'Open or close the problems panel: ',
   tree: 'Tree',
   type: 'Type',
-  typeFixHint: 'Use group, task, or milestone.',
+  typeFixHint: 'Use task or milestone.',
   unassigned: 'Unassigned',
   unknown: 'Unknown',
   unknownLocation: 'Location unavailable',
@@ -418,7 +402,6 @@ export const en = {
   windowControlError: 'Window control error',
   workBoard: 'Task board',
   workBoardDescription: 'Explore your work in different views.',
-  workGroup: 'Task group',
   workList: 'Task list',
   workListDescription: 'Find and review document tasks in one list.',
   workNetwork: 'Task network',

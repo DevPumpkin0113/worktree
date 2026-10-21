@@ -12,12 +12,9 @@ export function parseWbs(markdown: string): WorkModel {
     if (!value) return undefined;
     return value.replace(/^(["'])(.*)\1$/, '$2');
   };
-  const schemaVersion = meta('schema_version') ?? '1';
-  if (!['1', '2'].includes(schemaVersion))
-    throw new DocumentValidationError([{ code: 'UNSUPPORTED_SCHEMA' }]);
-  const modern = schemaVersion === '2';
-  const container = (row: ParsedRow | undefined) =>
-    !!row && (row.type === 'group' || (modern && row.type === 'milestone'));
+  const schemaVersion = meta('schema_version');
+  if (schemaVersion !== '2') throw new DocumentValidationError([{ code: 'UNSUPPORTED_SCHEMA' }]);
+  const container = (row: ParsedRow | undefined) => row?.type === 'milestone';
   const effortSetting = frontmatter.match(/^use_effort:[ \t]*(.*)$/m);
   if (effortSetting && !/^(true|false)$/.test(effortSetting[1].trim()))
     throw new DocumentValidationError([{ code: 'INVALID_USE_EFFORT' }]);
@@ -62,12 +59,12 @@ export function parseWbs(markdown: string): WorkModel {
     else if (
       parts[1] !== idPrefix &&
       parts[1] !== 'W' &&
-      !(modern && r.type === 'milestone' && parts[1] === 'MS')
+      !(r.type === 'milestone' && parts[1] === 'MS')
     )
       errors.push({ code: 'PREFIX_MISMATCH', taskId: r.id, prefix: idPrefix });
     if (byId.has(r.id)) errors.push({ code: 'DUPLICATE_ID', taskId: r.id });
     byId.set(r.id, r);
-    if (!['group', 'task', 'milestone'].includes(r.type))
+    if (!['task', 'milestone'].includes(r.type))
       errors.push({ code: 'INVALID_TYPE', taskId: r.id });
     if (
       !(container(r)
@@ -84,9 +81,7 @@ export function parseWbs(markdown: string): WorkModel {
       (r.start !== '-' && (!validDate(r.start) || !validDate(r.end) || r.start > r.end))
     )
       errors.push({ code: 'INVALID_DATE', taskId: r.id });
-    if (!modern && r.type === 'milestone' && (r.start !== r.end || r.effort !== '0'))
-      errors.push({ code: 'INVALID_MILESTONE', taskId: r.id });
-    if (modern && r.type === 'milestone' && (r.parent !== '-' || r.effort !== '-' || r.deps.length))
+    if (r.type === 'milestone' && (r.parent !== '-' || r.effort !== '-' || r.deps.length))
       errors.push({ code: 'INVALID_MILESTONE_CONTAINER', taskId: r.id });
     if (
       r.type === 'task' &&
@@ -94,17 +89,10 @@ export function parseWbs(markdown: string): WorkModel {
       (!Number.isFinite(Number(r.effort)) || Number(r.effort) <= 0)
     )
       errors.push({ code: 'INVALID_EFFORT', taskId: r.id });
-    if (
-      (r.type === 'group' && [r.start, r.end, r.effort].some((x) => x !== '-')) ||
-      (r.type === 'group' && r.deps.length)
-    )
-      errors.push({ code: 'INVALID_GROUP_FIELDS', taskId: r.id });
   }
   for (const r of rows) {
     if (r.parent !== '-' && !container(byId.get(r.parent)))
       errors.push({ code: 'INVALID_PARENT', taskId: r.id });
-    if (r.type === 'group' && !rows.some((x) => x.parent === r.id))
-      errors.push({ code: 'EMPTY_GROUP', taskId: r.id });
     for (const id of r.deps) {
       const dep = byId.get(id);
       if (!dep || container(dep))
@@ -112,7 +100,7 @@ export function parseWbs(markdown: string): WorkModel {
           code: 'INVALID_DEPENDENCY',
           taskId: r.id,
           dependencyId: id,
-          target: dep ? 'group' : 'missing',
+          target: dep ? 'milestone' : 'missing',
         });
       else if (r.start !== '-' && dep.end !== '-' && r.start <= dep.end)
         errors.push({ code: 'INVALID_DEPENDENCY_DATE', taskId: r.id, dependencyId: id });
@@ -138,7 +126,7 @@ export function parseWbs(markdown: string): WorkModel {
   cycle((r) => r.deps || [], 'deps');
   if (errors.length) throw new DocumentValidationError(errors);
   for (const row of rows)
-    if (modern && row.type === 'milestone') {
+    if (row.type === 'milestone') {
       row.type = 'group';
       row.milestone = true;
     }
@@ -157,7 +145,7 @@ export function parseWbs(markdown: string): WorkModel {
             : 'doing';
   }
   return {
-    schemaVersion: modern ? 2 : 1,
+    schemaVersion: 2,
     title: meta('title') || 'WBS',
     idPrefix,
     useEffort,

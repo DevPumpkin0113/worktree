@@ -29,7 +29,7 @@ const examples = (messages: typeof ko) => ({
   id: messages.idExample,
   parent: messages.rootParentExample,
   type: 'task',
-  status: 'group: auto / task·milestone: todo',
+  status: 'milestone: auto / task: todo',
   start: messages.dateExample,
   effort: messages.effortExample,
   deps: messages.noDependencyExample,
@@ -52,8 +52,6 @@ function buildDocumentProblems(
   messages: typeof ko,
 ): Problem[] {
   const sourceLines = markdown.split(/\r?\n/).map((raw, index) => ({ raw, line: index + 1 }));
-  const metadata = markdown.match(/^\uFEFF?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1] ?? '';
-  const modern = /^schema_version:[ \t]*2[ \t]*$/m.test(metadata);
   const { table } = findWorkTable(markdown);
   const rows = table.slice(2);
   const diagnostics = error instanceof DocumentValidationError ? error.diagnostics : [];
@@ -73,6 +71,13 @@ function buildDocumentProblems(
   return entries.map((entry) => {
     const issue = typeof entry === 'string' ? undefined : entry;
     const code = issue?.code;
+    const metadataKey = (
+      {
+        INVALID_ID_PREFIX: 'id_prefix',
+        INVALID_USE_EFFORT: 'use_effort',
+        UNSUPPORTED_SCHEMA: 'schema_version',
+      } as Record<string, string>
+    )[code ?? ''];
     const matches =
       documentKind && issue && 'taskId' in issue
         ? rows.filter((row) => row.cells[0] === issue.taskId)
@@ -108,11 +113,7 @@ function buildDocumentProblems(
         value = [row.cells[1], row.cells[9], row.cells[10]].join(' / ');
         example = '- / - / -';
       } else if (code === 'INVALID_TYPE') key = 'type';
-      else if (code === 'INVALID_MILESTONE') {
-        field = messages.milestoneFields;
-        value = [row.cells[7], row.cells[8], row.cells[9]].join(' / ');
-        hint = messages.milestoneFixHint;
-      } else if (code === 'INVALID_DATE') key = 'start';
+      else if (code === 'INVALID_DATE') key = 'start';
       else if (code === 'INVALID_EFFORT') key = 'effort';
       if (key) {
         field = fields(messages)[key];
@@ -127,42 +128,22 @@ function buildDocumentProblems(
             ? messages.dependencyCycleHint
             : code === 'INVALID_DEPENDENCY_DATE'
               ? messages.dependencyDateHint
-              : modern
-                ? messages.modernDependencyHint
-                : messages.dependencyFixHint;
-      if (key === 'parent') hint = modern ? messages.modernParentHint : messages.parentFixHint;
+              : messages.dependencyFixHint;
+      if (key === 'parent') hint = messages.parentFixHint;
       if (key === 'id') hint = messages.idFixHint;
-      if (key === 'status') hint = modern ? messages.modernStatusHint : messages.statusFixHint;
+      if (key === 'status') hint = messages.statusFixHint;
       if (key === 'type') hint = messages.typeFixHint;
       if (key === 'start') hint = messages.dateFixHint;
       if (key === 'effort') hint = messages.effortFixHint;
-      if (code === 'EMPTY_GROUP') hint = messages.emptyGroupHint;
-      if (code === 'INVALID_GROUP_FIELDS') hint = messages.groupFieldsHint;
       indexes = key ? fieldColumns[key] : [];
       example = key ? examples(messages)[key] : example;
-      if (modern && key === 'status') example = 'milestone·group: auto / task: todo';
+      if (key === 'status') example = 'milestone: auto / task: todo';
       if (code === 'INVALID_MILESTONE_CONTAINER') indexes = [1, 9, 10];
       if (code === 'INVALID_DEPENDENCY_DATE') {
         indexes = [7];
         field = messages.startDate;
         value = row.cells[7];
         example = messages.dependencyDateExample;
-      }
-      if (code === 'INVALID_MILESTONE' && !key) {
-        indexes = [7, 8, 9];
-        example = '2026-10-20 / 2026-10-20 / 0';
-      }
-      if (code === 'INVALID_GROUP_FIELDS') {
-        indexes = [7, 8, 9, 10].filter((index) => row.cells[index] !== '-');
-        field = messages.groupFields;
-        value = indexes.map((index) => row.cells[index]).join(' / ');
-        example = messages.groupFieldsExample;
-      }
-      if (code === 'EMPTY_GROUP') {
-        indexes = [0];
-        field = 'ID';
-        value = row.cells[0];
-        example = messages.groupParentExample;
       }
     } else if (code === 'INVALID_SEPARATOR') hint = messages.separatorFixHint;
     else if (code === 'INVALID_COLUMN_ORDER' || code === 'INVALID_COLUMN_COUNT')
@@ -179,24 +160,11 @@ function buildDocumentProblems(
       else if (code === 'INVALID_SEPARATOR' && table[0]) locations = [table[1] || table[0]];
       else if (code === 'INVALID_COLUMN_COUNT')
         locations = rows.filter((item) => item.cells.length !== 11).slice(0, 1);
-      else if (
-        ['INVALID_ID_PREFIX', 'INVALID_USE_EFFORT', 'UNSUPPORTED_SCHEMA'].includes(code || '') &&
-        /^\uFEFF?---$/.test(sourceLines[0]?.raw || '')
-      ) {
+      else if (metadataKey && /^\uFEFF?---$/.test(sourceLines[0]?.raw || '')) {
         const end = sourceLines.findIndex((item, index) => index > 0 && item.raw === '---');
         const prefix = sourceLines
           .slice(1, end < 0 ? 1 : end)
-          .find((item) =>
-            new RegExp(
-              '^' +
-                (code === 'UNSUPPORTED_SCHEMA'
-                  ? 'schema_version'
-                  : code === 'INVALID_USE_EFFORT'
-                    ? 'use_effort'
-                    : 'id_prefix') +
-                ':',
-            ).test(item.raw),
-          );
+          .find((item) => new RegExp('^' + metadataKey + ':').test(item.raw));
         if (prefix) locations = [prefix];
       }
     }
@@ -233,17 +201,9 @@ function buildDocumentProblems(
           value = String((locations[0] as TableRow).cells.length);
         }
         example = messages.columnsExample;
-      } else if (
-        ['INVALID_ID_PREFIX', 'INVALID_USE_EFFORT', 'UNSUPPORTED_SCHEMA'].includes(code || '') &&
-        locations.length
-      ) {
+      } else if (metadataKey && locations.length) {
         const item = locations[0],
-          key =
-            code === 'UNSUPPORTED_SCHEMA'
-              ? 'schema_version'
-              : code === 'INVALID_USE_EFFORT'
-                ? 'use_effort'
-                : 'id_prefix',
+          key = metadataKey,
           prefix = item.raw.match(new RegExp('^' + key + ':[ \t]*'))![0];
         const column = Array.from(prefix).length + 1;
         positions = [
@@ -255,8 +215,9 @@ function buildDocumentProblems(
         ];
         field = key;
         value = item.raw.slice(prefix.length);
-        example =
-          key === 'schema_version'
+        example = key.startsWith('next_')
+          ? key + ': 1'
+          : key === 'schema_version'
             ? 'schema_version: 2'
             : key === 'use_effort'
               ? 'use_effort: false'

@@ -28,13 +28,10 @@ export function TaskCard({
     >
       <span className="id">{label(row.id)}</span>
       <div>
-        {row.type === 'milestone' ? <span aria-hidden="true">◇ </span> : null}
         {row.name}
         <div className="sub">
-          <span className={'work-type-badge work-type-' + row.type}>
-            {TYPE_NAMES[row.type] === messages.workGroup ? messages.group : TYPE_NAMES[row.type]}
-          </span>{' '}
-          · {row.owner === '-' ? messages.unassigned : row.owner}
+          <span className={'work-type-badge work-type-' + row.type}>{TYPE_NAMES[row.type]}</span> ·{' '}
+          {row.owner === '-' ? messages.unassigned : row.owner}
         </div>
       </div>
       <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>

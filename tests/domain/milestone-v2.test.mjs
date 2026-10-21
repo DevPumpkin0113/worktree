@@ -2,7 +2,6 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {parseWbs} from '../../src/domain/model.ts';
-import {upgradeWbsSource} from '../../src/domain/wbs-migration.ts';
 import {nextTaskId,nextMilestoneId} from '../../src/domain/task-editing.ts';
 import {describeDocumentErrors} from '../../src/domain/document-errors.ts';
 import {summarizeWork} from '../../src/domain/work-summary.ts';
@@ -13,13 +12,13 @@ test('v2 목표 기간과 하위 작업 수를 구분하고 번호를 분리한�
  assert.equal(summarizeWork(model.rows).taskCount,1);assert.equal(summarizeWork(model.rows).completedMilestones,1);
  assert.equal(nextTaskId(source),'W003');assert.equal(nextMilestoneId(source),'MS010');
 });
-test('v1 변환은 ID·참조와 BOM·개행을 보존하고 반복 적용해도 같다',()=>{
- const legacy='\uFEFF---\r\nschema_version: 1\r\n---\r\n'+header.replaceAll('\n','\r\n')+'| W001 | - | group | 목표 | 확인 | - | auto | - | - | - | - |\r\n| W002 | W001 | milestone | 승인 | 확인 | codex | done | 2026-10-21 | 2026-10-21 | 0 | - |\r\n';
- const upgraded=upgradeWbsSource(legacy);assert.ok(upgraded.startsWith('\uFEFF'));assert.equal(upgradeWbsSource(upgraded),upgraded);
- assert.ok(!upgraded.replaceAll('\r\n','').includes('\n'));const model=parseWbs(upgraded);assert.equal(model.rows[1].id,'W002');assert.equal(model.rows[1].parent,'W001');assert.equal(model.rows[1].type,'task');assert.equal(model.rows[1].effort,'-');
+test('v1·규격 누락·group·날짜형 milestone을 거부하고 원본을 변경하지 않는다',()=>{
+ for(const text of [source.replace('schema_version: 2','schema_version: 1'),source.replace('schema_version: 2',''),source.replace('| milestone |','| group |'),source.replace('| auto |','| done |').replace('| - | - |\n| W002','| 0 | - |\n| W002')]){
+  const original=text;assert.throws(()=>parseWbs(text));assert.equal(text,original);
+ }
 });
 test('v2 상태·의존 안내와 마일스톤 필드 위치는 현재 규칙을 따른다',()=>{
- for(const [text,pattern] of [[source.replace('| auto |','| todo |'),/milestone·group은 auto/],[source.replace('2 | - |','2 | MS009 |'),/task의 ID/]]){
+ for(const [text,pattern] of [[source.replace('| auto |','| todo |'),/milestone은 auto/],[source.replace('2 | - |','2 | MS009 |'),/task의 ID/]]){
   let error;try{parseWbs(text);}catch(e){error=e;}const [problem]=describeDocumentErrors(error,text);assert.match(problem.hint,pattern);
  }
  const text=source.replace('| - | - |\n| W002','| 0 | - |\n| W002');let error;try{parseWbs(text);}catch(e){error=e;}

@@ -995,3 +995,26 @@ test('마일스톤 생성·상세는 제목과 선택 기간을 사용하고 이
     await f.close();
   }
 });
+
+test('이전 WBS는 변환·저장하지 않고 규격 오류를 표시하며 v2로 복구할 수 있다', async () => {
+  const f = await fixture();
+  try {
+    const legacy = source.replace('schema_version: 2', 'schema_version: 1');
+    f.files.set(first, legacy);
+    await act(async () => f.store.open(first));
+    await f.click('#error');
+    assert.match(f.element('#problemsBody').textContent!, /schema_version/);
+    assert.equal(f.host.querySelector('#taskAddOpen'), null);
+    assert.equal(f.files.get(first), legacy);
+    assert.equal(
+      f.calls.some((call) => call.command === 'save_document'),
+      false,
+    );
+    f.files.set(first, source);
+    await act(async () => f.store.poll());
+    assert.match(f.element('#content').textContent!, /댓글 구현/);
+    assert.ok(f.element('#documentProblems').hidden);
+  } finally {
+    await f.close();
+  }
+});

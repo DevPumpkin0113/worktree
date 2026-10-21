@@ -220,5 +220,5 @@ src/components는 layout·workspace·task-detail·documents·settings·problems�
 ### WBS v2 마일스톤
 
 - 새 문서의 최상위 묶음은 milestone이며 제목·선택 목표 기간으로 생성한다. 상태 auto, 공수·상위·선행은 -이며 빈 상태를 허용한다. 날짜형 승인·출시 항목은 task로 작성한다.
-- 새 milestone은 MS 내부 번호를 별도로 발급하고 UI에서 숨긴다. 일반 작업 번호와 참조는 유지한다. v1 검증·읽기 변환과 중첩 group은 호환용으로 보존하며 내부 group 타입은 집계 재사용 경계다. 결정은 docs/adr/0011-milestone-containers.md를 따른다.
+- 새 milestone은 MS 내부 번호를 별도로 발급하고 UI에서 숨긴다. 일반 작업 번호와 참조는 유지한다. WBS는 schema_version: 2를 필수로 명시하며 v1·규격 누락·원본 group·날짜형 milestone은 거부한다. 자동 변환은 하지 않는다. 내부 group 타입은 v2 마일스톤 집계 재사용 경계일 뿐 파일 유형이 아니다. 결정은 docs/adr/0012-wbs-v2-only.md를 따른다.
 - 현재 배포 양식은 프로젝트 templates를 따른다. 외부 공용 양식은 이번 프로젝트 내부 정리 범위에서 수정하지 않았다.

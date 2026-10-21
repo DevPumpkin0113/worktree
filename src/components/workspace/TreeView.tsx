@@ -48,10 +48,7 @@ export function TreeView({
               type="button"
               className="group-detail"
               data-id={row.id}
-              aria-label={
-                row.name +
-                (row.milestone ? messages.milestoneDetailSuffix : messages.groupDetailSuffix)
-              }
+              aria-label={row.name + messages.milestoneDetailSuffix}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();

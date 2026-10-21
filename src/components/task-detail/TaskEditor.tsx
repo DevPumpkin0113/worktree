@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
-import { parseWorkspaceWbs as parseWbs } from '../../domain/wbs-migration';
+import { parseWbs } from '../../domain/model';
 import { MilestoneEditorFields } from './MilestoneEditorFields';
 import { nextTaskId, nextMilestoneId, taskDraft, type TaskDraft } from '../../domain/task-editing';
 import { TaskEditorFields } from './TaskEditorFields';

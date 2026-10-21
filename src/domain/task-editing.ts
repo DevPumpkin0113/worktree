@@ -1,11 +1,9 @@
-import { upgradeWbsSource } from './wbs-migration';
 import { patchWorkRow, sourceLines } from './work-source';
 import { messages } from '../i18n/messages';
 import { parseWbs } from './model';
 import { findWorkTable } from './work-table';
-import type { WorkRow } from './types';
 export interface TaskDraft {
-  type: WorkRow['type'];
+  type: 'task' | 'milestone';
   name: string;
   criteria: string;
   owner: string;
@@ -17,7 +15,7 @@ export interface TaskDraft {
   deps: string;
 }
 export function taskDraft(text: string, id?: string): TaskDraft {
-  text = upgradeWbsSource(text);
+  parseWbs(text);
   const row = id
     ? findWorkTable(text)
         .table.slice(2)
@@ -26,7 +24,7 @@ export function taskDraft(text: string, id?: string): TaskDraft {
   if (id && !row) throw Error(messages.editTaskMissing);
   return row
     ? {
-        type: row[2] as WorkRow['type'],
+        type: row[2] as TaskDraft['type'],
         name: row[3],
         criteria: row[4],
         owner: row[5],
@@ -51,7 +49,7 @@ export function taskDraft(text: string, id?: string): TaskDraft {
       };
 }
 export function nextTaskId(text: string) {
-  const model = parseWbs(upgradeWbsSource(text));
+  const model = parseWbs(text);
   const largest = model.rows
     .filter((row) => !row.milestone)
     .reduce((maximum, row) => {
@@ -64,7 +62,7 @@ export function nextTaskId(text: string) {
   return model.idPrefix + String(number).padStart(3, '0');
 }
 export function nextMilestoneId(text: string) {
-  const rows = parseWbs(upgradeWbsSource(text)).rows;
+  const rows = parseWbs(text).rows;
   const maximum = rows.reduce((maximum, row) => {
     const match = row.id.match(/^MS(\d{3,})$/);
     const number = match ? BigInt(match[1]) : 0n;
@@ -73,13 +71,14 @@ export function nextMilestoneId(text: string) {
   return 'MS' + String(maximum + 1n).padStart(3, '0');
 }
 export function updateTaskSource(text: string, draft: TaskDraft, taskId?: string) {
-  text = upgradeWbsSource(text);
   parseWbs(text);
   const { table } = findWorkTable(text);
   const target = taskId ? table.slice(2).find((row) => row.cells[0] === taskId) : undefined;
   if (taskId && !target) throw Error(messages.editTaskMissing);
   if (!draft.name.trim() || (draft.type !== 'milestone' && !draft.criteria.trim()))
-    throw Error(messages.taskRequiredFields);
+    throw Error(
+      draft.type === 'milestone' ? messages.milestoneRequiredTitle : messages.taskRequiredFields,
+    );
   if (Object.values(draft).some((value) => /[\r\n\0]/.test(value) || value.includes('&#124;')))
     throw Error(messages.taskSingleLine);
   if (target && target.cells[2] !== draft.type) throw Error(messages.taskTypeLocked);
@@ -92,11 +91,11 @@ export function updateTaskSource(text: string, draft: TaskDraft, taskId?: string
     draft.name.trim(),
     draft.criteria.trim(),
     draft.owner.trim() || '-',
-    draft.type === 'group' || draft.type === 'milestone' ? 'auto' : draft.status,
-    draft.type === 'group' ? '-' : draft.start || '-',
-    draft.type === 'group' ? '-' : draft.end || '-',
-    draft.type === 'milestone' || draft.type === 'group' ? '-' : draft.effort || '-',
-    draft.type === 'group' || draft.type === 'milestone' ? '-' : draft.deps.trim() || '-',
+    draft.type === 'milestone' ? 'auto' : draft.status,
+    draft.start || '-',
+    draft.end || '-',
+    draft.type === 'milestone' ? '-' : draft.effort || '-',
+    draft.type === 'milestone' ? '-' : draft.deps.trim() || '-',
   ];
   const encode = (value: string) => value.replaceAll('|', '&#124;');
   const lines = sourceLines(text);

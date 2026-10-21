@@ -73,11 +73,9 @@ export function App({ store }: { store: WorkspaceStore }) {
     <>
       <Titlebar store={store} settingsOpen={state.settingsOpen} />
       <WorkspaceNav
-        projectPath={state.activeProjectPath}
-        files={store.activeProject?.files ?? []}
-        activePath={state.activePath}
-        onFile={(path) => void store.selectDocument(path)}
-        projectTitle={state.activeProjectPath ? folderName(state.activeProjectPath) : null}
+        projectTitle={
+          model?.title ?? (state.activeProjectPath ? folderName(state.activeProjectPath) : null)
+        }
         onManage={() => {
           store.setPage('project');
         }}

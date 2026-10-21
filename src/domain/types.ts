@@ -1,12 +1,19 @@
 export type Status = 'todo' | 'doing' | 'blocked' | 'done';
 export interface WorkRow {
-  /** v2 milestone containers use the shared group rendering/aggregation model. */
+  /** Milestone containers share group rendering and aggregation. */
   milestone?: boolean;
   id: string;
   parent: string;
   type: 'group' | 'task';
   name: string;
-  criteria: string;
+  description: string;
+  priority?: string;
+  taskType?: string;
+  labels?: string[];
+  blockedReason?: string;
+  references?: import('./project-source').TaskReference[];
+  createdAt?: string;
+  updatedAt?: string;
   owner: string;
   status: Status;
   start: string;
@@ -15,13 +22,15 @@ export interface WorkRow {
   deps: string[];
 }
 export interface WorkModel {
-  schemaVersion?: 2;
   nextTaskNumber?: string;
   nextMilestoneNumber?: string;
   title: string;
   idPrefix: string;
   useEffort: boolean;
   rows: WorkRow[];
+  taskTypes?: string[];
+  labels?: string[];
+  dataDirectory?: string;
 }
 export interface Problem {
   category?: string;

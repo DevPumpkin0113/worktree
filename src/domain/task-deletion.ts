@@ -1,16 +1,19 @@
-import { nextTaskId, nextMilestoneId } from './task-editing';
-import { preserveIdSequences } from './task-id-sequence';
-import { parseWbs } from './model';
-import { findWorkTable } from './work-table';
-import { patchWorkRow, sourceLines } from './work-source';
 import { messages } from '../i18n/messages';
+import { parseProject } from './project-document';
+import { readSource, projectConfig, serializeSource } from './project-source';
+import { readTaskFile, writeTaskFile } from './task-file';
+import { nextProjectId } from './task-editing';
 export interface DeleteOptions {
   children: 'keep' | 'delete';
   detachPredecessors: boolean;
 }
-export function deletionImpact(text: string, id: string, children: DeleteOptions['children']) {
-  const model = parseWbs(text);
-  const target = model.rows.find((row) => row.id === id);
+export function projectDeletionImpact(
+  text: string,
+  id: string,
+  children: DeleteOptions['children'],
+) {
+  const model = parseProject(text),
+    target = model.rows.find((row) => row.id === id);
   if (!target) throw Error(messages.editTaskMissing);
   const childRows = model.rows.filter((row) => row.parent === id);
   const removed = new Set([id, ...(children === 'delete' ? childRows.map((row) => row.id) : [])]);
@@ -19,39 +22,41 @@ export function deletionImpact(text: string, id: string, children: DeleteOptions
     childRows,
     removed,
     dependents: model.rows.filter(
-      (row) => !removed.has(row.id) && row.deps.some((dep) => removed.has(dep)),
+      (row) => !removed.has(row.id) && row.deps.some((id) => removed.has(id)),
     ),
   };
 }
-export function deleteTaskSource(text: string, id: string, options: DeleteOptions): string {
+export function deleteProjectTask(
+  text: string,
+  id: string,
+  options: DeleteOptions,
+  now = new Date().toISOString(),
+) {
   if (!['keep', 'delete'].includes(options.children)) throw Error(messages.invalidDeleteOption);
-  const impact = deletionImpact(text, id, options.children);
+  const impact = projectDeletionImpact(text, id, options.children),
+    source = readSource(text);
   if (impact.dependents.length && !options.detachPredecessors)
     throw Error(messages.deleteReferencesRequired);
-  const lines = sourceLines(text);
-  const removedLines = new Set<number>();
-  for (const row of findWorkTable(text).table.slice(2)) {
-    if (impact.removed.has(row.cells[0])) {
-      removedLines.add(row.line - 1);
+  const config = projectConfig(source);
+  // Preserve high water marks even when externally authored files outgrow the saved sequences.
+  config.nextTaskNumber = Number(nextProjectId(text).match(/\d+$/)![0]);
+  config.nextMilestoneNumber = Number(nextProjectId(text, true).match(/\d+$/)![0]);
+  source.files['project.json'] = JSON.stringify(config, null, 2) + '\n';
+  for (const row of parseProject(text).rows) {
+    const file = (row.milestone ? 'milestones/' : 'tasks/') + row.id + '.md';
+    if (impact.removed.has(row.id)) {
+      delete source.files[file];
       continue;
     }
-    const values = [...row.cells];
-    if (impact.removed.has(values[1])) values[1] = '-';
-    const deps = values[10] === '-' ? [] : values[10].split(',').map((dep) => dep.trim());
-    const kept = deps.filter((dep) => !impact.removed.has(dep));
-    if (kept.length !== deps.length) values[10] = kept.join(', ') || '-';
-    const ending = lines[row.line - 1].match(/\r?\n$/)?.[0] ?? '';
-    lines[row.line - 1] = patchWorkRow(row.raw, row.cells, values) + ending;
+    if (impact.removed.has(row.parent) || row.deps.some((dep) => impact.removed.has(dep))) {
+      const { metadata, description } = readTaskFile(file, source.files[file]);
+      if (impact.removed.has(row.parent)) metadata.milestone = '-';
+      metadata.dependencies = row.deps.filter((dep) => !impact.removed.has(dep));
+      metadata.updatedAt = row.updatedAt! > now ? row.updatedAt : now;
+      source.files[file] = writeTaskFile(metadata, description);
+    }
   }
-  const updated = preserveIdSequences(
-    lines.filter((_, index) => !removedLines.has(index)).join(''),
-    nextTaskId(text)
-      .match(/\d+$/)![0]
-      .replace(/^0+(?=\d)/, ''),
-    nextMilestoneId(text)
-      .match(/\d+$/)![0]
-      .replace(/^0+(?=\d)/, ''),
-  );
-  parseWbs(updated);
-  return updated;
+  const result = serializeSource(source);
+  parseProject(result);
+  return result;
 }

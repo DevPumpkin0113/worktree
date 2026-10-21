@@ -2,8 +2,9 @@
 use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
-mod document_write;
 mod i18n;
+mod project_files;
+mod project_write;
 mod projects;
 mod session;
 mod settings;
@@ -25,7 +26,9 @@ fn enqueue(state: &OpenQueue, paths: impl Iterator<Item = PathBuf>) {
                 continue;
             }
             if let Some(ext) = path.extension().and_then(|x| x.to_str()) {
-                if ["wbs", "md", "markdown"].contains(&ext.to_lowercase().as_str()) {
+                if ext.eq_ignore_ascii_case("json")
+                    && path.file_name().is_some_and(|name| name == "worktree.json")
+                {
                     queue.push(path.to_string_lossy().to_string());
                 }
             }
@@ -37,24 +40,6 @@ fn enqueue(state: &OpenQueue, paths: impl Iterator<Item = PathBuf>) {
 fn take_open_requests(state: tauri::State<OpenQueue>) -> Result<Vec<String>, String> {
     let mut queue = state.0.lock().map_err(|e| e.to_string())?;
     Ok(std::mem::take(&mut *queue))
-}
-
-#[tauri::command]
-fn read_document(path: String) -> Result<String, String> {
-    let file = PathBuf::from(path);
-    let ext = file
-        .extension()
-        .and_then(|x| x.to_str())
-        .unwrap_or("")
-        .to_lowercase();
-    if !["wbs", "md", "markdown"].contains(&ext.as_str()) {
-        return Err(crate::i18n::select_wbs().into());
-    }
-    let meta = std::fs::metadata(&file).map_err(|e| e.to_string())?;
-    if !meta.is_file() || meta.len() > 5 * 1024 * 1024 {
-        return Err(crate::i18n::document_too_large().into());
-    }
-    std::fs::read_to_string(file).map_err(|e| e.to_string())
 }
 
 fn main() {
@@ -100,8 +85,9 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             take_open_requests,
-            read_document,
-            document_write::save_document,
+            projects::read_project,
+            projects::save_project,
+            projects::initialize_project,
             projects::pick_project,
             projects::scan_project,
             get_build_info,

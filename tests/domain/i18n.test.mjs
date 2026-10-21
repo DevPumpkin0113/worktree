@@ -21,7 +21,7 @@ test('영어 리소스는 한국어 키와 포맷 인자를 보존하고 기본 
   }
  }
  assert.equal(en.sampleAuthor,ko.sampleAuthor);
- assert.ok(en.sectionFixHint.includes('## 작업 목록'));
+ assert.ok(en.projectFieldHint.includes('field'));
 });
 
 test('Rust 영어 리소스도 한국어 상수·포맷 함수 목록과 일치한다',()=>{

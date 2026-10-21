@@ -1,13 +1,15 @@
-import { deleteTaskSource, type DeleteOptions } from '../domain/task-deletion';
-import { updateTaskSource, type TaskDraft } from '../domain/task-editing';
-import { pathKey, folderName, withinProject } from '../domain/project-paths';
+import { deleteProjectTask } from '../domain/task-deletion';
+import type { DeleteOptions } from '../domain/task-deletion';
+import { updateProjectTask, type ProjectTaskDraft } from '../domain/task-editing';
+import { serializeSource, readSource } from '../domain/project-source';
+import { parseProject } from '../domain/project-document';
+import { pathKey, folderName } from '../domain/project-paths';
 import { projectSession } from './project-session';
 import type { Session } from '../platform/session-storage';
 import { messages, setLanguage, isLanguage } from '../i18n/messages';
 import { ko } from '../i18n/ko';
 import { readSeparator, saveSeparator } from '../domain/id-display';
 import { readDetailMode, saveDetailMode } from '../domain/detail-settings';
-import { parseWbs } from '../domain/model';
 import { describeDocumentErrors } from '../domain/document-errors';
 import { createSettingsStorage } from '../platform/settings-storage';
 import {
@@ -128,7 +130,8 @@ export class WorkspaceStore {
   }
   private document(path: string, text: string, previous?: OpenDocument): OpenDocument {
     try {
-      const model = parseWbs(text);
+      text = serializeSource(readSource(text));
+      const model = parseProject(text);
       return {
         path,
         text,
@@ -167,14 +170,6 @@ export class WorkspaceStore {
         const scanned = await this.platform.invoke<ScannedProject>('scan_project', {
           path: savedProject.path,
         });
-        for (const tab of saved.tabs) {
-          if (
-            /\.(md|markdown)$/i.test(tab.path) &&
-            withinProject(tab.path, scanned.path) &&
-            !scanned.files.some((file) => pathKey(file) === pathKey(tab.path))
-          )
-            scanned.files.push(tab.path);
-        }
         if (projects.some((project) => pathKey(project.path) === pathKey(scanned.path))) continue;
         const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
         for (const tab of saved.tabs.filter((tab) =>
@@ -183,7 +178,7 @@ export class WorkspaceStore {
           if (documents.some((doc) => pathKey(doc.path) === pathKey(tab.path))) continue;
           try {
             const path = scanned.files.find((file) => pathKey(file) === pathKey(tab.path))!;
-            const text = await this.platform.invoke<string>('read_document', { path });
+            const text = await this.platform.invoke<string>('read_project', { path });
             documents.push(this.document(path, text, { ...tab } as OpenDocument));
           } catch (error) {
             failures.push(...describeDocumentErrors(error, '', tab.path, ko.fileReadError));
@@ -198,7 +193,7 @@ export class WorkspaceStore {
             try {
               document = this.document(
                 selected,
-                await this.platform.invoke<string>('read_document', { path: selected }),
+                await this.platform.invoke<string>('read_project', { path: selected }),
               );
               documents.push(document);
             } catch (error) {
@@ -245,10 +240,6 @@ export class WorkspaceStore {
       const previous = this.state.projects.find(
         (project) => pathKey(project.path) === pathKey(scanned.path),
       );
-      for (const file of previous?.files ?? []) {
-        if (/\.(md|markdown)$/i.test(file) && !scanned.files.includes(file))
-          scanned.files.push(file);
-      }
       if (!previous && this.state.projects.length >= MAX_SESSION_TABS)
         throw Error(messages.projectTabLimit);
       const selected =
@@ -263,7 +254,7 @@ export class WorkspaceStore {
         try {
           document = this.document(
             selected,
-            await this.platform.invoke<string>('read_document', { path: selected }),
+            await this.platform.invoke<string>('read_project', { path: selected }),
             this.state.documents.find((doc) => doc.path === selected),
           );
         } catch (error) {
@@ -305,32 +296,22 @@ export class WorkspaceStore {
       this.report(error);
     }
   }
-  async selectDocument(path: string) {
+  async initializeProject(
+    name: string,
+    dataDirectory: string,
+    taskPrefix: string,
+    useEffort: boolean,
+  ) {
     const project = this.activeProject;
-    if (!project?.files.includes(path)) return;
-    const revision = ++this.openRevision;
-    try {
-      const next = this.document(
-        path,
-        await this.platform.invoke<string>('read_document', { path }),
-        this.state.documents.find((doc) => doc.path === path),
-      );
-      if (revision !== this.openRevision || this.state.activeProjectPath !== project.path) return;
-      this.patch({
-        documents: [...this.state.documents.filter((doc) => doc.path !== path), next],
-        projects: this.state.projects.map((item) =>
-          item.path === project.path ? { ...item, activePath: path } : item,
-        ),
-        activePath: path,
-        selectedId: null,
-        owner: 'all',
-        operationProblems: [],
-        problemsOpen: false,
-      });
-      this.saveSession();
-    } catch (error) {
-      if (revision === this.openRevision) this.report(error, path, ko.fileReadError);
-    }
+    if (!project) return;
+    await this.platform.invoke('initialize_project', {
+      path: project.path,
+      name,
+      dataDirectory,
+      taskPrefix,
+      useEffort,
+    });
+    if (this.state.activeProjectPath === project.path) await this.open(project.path);
   }
   selectProject(path: string) {
     return this.open(path);
@@ -424,13 +405,13 @@ export class WorkspaceStore {
       ? this.state.selectedId
       : null;
   }
-  async saveTask(path: string, expected: string, draft: TaskDraft, id?: string) {
-    const update = updateTaskSource(expected, draft, id);
+  async saveTask(path: string, expected: string, draft: ProjectTaskDraft, id?: string) {
+    const update = updateProjectTask(expected, draft, id);
     await this.saveTaskSource(path, expected, update.text, update.id);
     return update.id;
   }
   async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
-    const text = deleteTaskSource(expected, id, options);
+    const text = deleteProjectTask(expected, id, options);
     await this.saveTaskSource(path, expected, text, null, messages.deleteConflict);
   }
   private async saveTaskSource(
@@ -440,7 +421,7 @@ export class WorkspaceStore {
     selectedId: string | null,
     conflictMessage = messages.taskSaveConflict,
   ) {
-    const result = await this.platform.invoke<'saved' | 'conflict'>('save_document', {
+    const result = await this.platform.invoke<'saved' | 'conflict'>('save_project', {
       path,
       expected,
       text,
@@ -488,8 +469,11 @@ export class WorkspaceStore {
       const path = this.state.activePath;
       if (!path) return;
       try {
-        const text = await this.platform.invoke<string>('read_document', { path });
-        if (this.state.activePath !== path) return;
+        const startedText = this.active?.text;
+        const text = serializeSource(
+          readSource(await this.platform.invoke<string>('read_project', { path })),
+        );
+        if (this.state.activePath !== path || this.active?.text !== startedText) return;
         const previous = this.active;
         if (previous && text !== previous.text) {
           const next = this.document(path, text, previous);

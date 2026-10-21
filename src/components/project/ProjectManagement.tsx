@@ -2,11 +2,9 @@ import { ProjectOverview } from './ProjectOverview';
 import type { WorkModel, OpenProject } from '../../app/types';
 export function ProjectManagement({
   model,
-  path,
   project,
 }: {
   model: WorkModel | null;
-  path: string | null;
   project: OpenProject;
 }) {
   return (
@@ -15,7 +13,7 @@ export function ProjectManagement({
       className="project-management"
       aria-labelledby="workspacePageTitle"
     >
-      <ProjectOverview model={model} path={path} project={project} />
+      <ProjectOverview model={model} project={project} />
     </section>
   );
 }

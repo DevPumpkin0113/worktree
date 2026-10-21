@@ -1,6 +1,8 @@
 # 개발 및 배포 가이드
 
-사용자 설치·실행·사용법은 [README](../README.md), 에이전트 작업 규칙은 [AGENTS](../AGENTS.md)를 참고한다. 개발 계획은 [Worktree.wbs](../planning/Worktree.wbs), 후속 후보는 [ROADMAP](../planning/ROADMAP.md)에서 관리한다.
+사용자 설치·실행·사용법은 [README](../README.md), 에이전트 작업 규칙은 [AGENTS](../AGENTS.md)를 참고한다. 개발 작업은 [프로젝트 문서 집합](worktree/project.json), 후속 후보는 [ROADMAP](../planning/ROADMAP.md)에서 관리한다.
+
+0.24.0부터 프로젝트 문서 집합을 사용한다. 아래 버전별 과거 기록의 WBS·탐색기·표 셀 저장 설명은 당시 구현 기록이며 현행 규격은 [PROJECT_FORMAT](PROJECT_FORMAT.md)과 ADR 0015다.
 
 ## 개발 환경과 실행
 
@@ -20,7 +22,7 @@ src/App.tsx               화면 조합
 src/app/                  타입·문서 및 세션 상태 저장소
 src/components/           워크스페이스·목록·상세·댓글·설정·오류 UI
 src/hooks/                앱 초기화·polling·업데이트 상태
-src/domain/               기존 WBS 파싱·ID·집계
+src/domain/               프로젝트 문서 파싱·작업 저장·ID·집계
 src/views/                SVG 생성·표시 문자열 도우미
 src/platform/             Tauri·설정·세션·클립보드
 src/interactions/         드래그·선택·스크롤 로직
@@ -28,7 +30,7 @@ src/styles/               공통 및 화면별 CSS
 tests/                    도메인·React DOM 통합 테스트
 ```
 
-보기 아이콘은 SVG를 사용하고 생성 PNG는 참고 자료로 유지한다. WBS 배포 양식은 templates에 두며 규격 변경 시 공용 resources/templates/wbs의 원본과 함께 갱신한다.
+보기 아이콘은 SVG를 사용하고 생성 PNG는 참고 자료로 유지한다. 프로젝트 문서 규격은 PROJECT_FORMAT.md를 따른다. 배포 템플릿은 제거했으며 앱의 초기화 기능으로 생성한다.
 
 ## 로컬 검증
 
@@ -403,3 +405,14 @@ TaskDeleteDialog와 task-deletion.ts에서 삭제 범위 및 선행 참조 해�
 - 일 단위는 가시 영역 7일·오늘 중앙, 주 단위는 월요일 시작 5주·현재 주 중앙이며 ISO 연간 주차를 사용한다. 일정 범위에 오늘 중심 구간을 포함하고 화면에 보이는 축·막대만 React SVG로 그린다. 긴 일정은 최대 18,000px 스크롤 트랙을 전체 날짜 범위로 매핑한다.
 - document-view-state는 간트 단위별 픽셀·날짜 앵커를 현재 창에서 보존한다. 재실행 복원 항목은 기존 보기·단위뿐이며 스크롤을 세션에 추가하지 않는다.
 - Node 테스트 112개 통과: 7일/5주·오늘/현재 주 중앙·ISO 연도 경계·장기 범위·리사이즈·단위/보기 전환·필터·갱신·작업 선택·기존 네트워크 회귀 포함. 실제 WebView2의 배치·드래그·스크롤바 10px 여백은 사용자 화면 확인이 필요하다.
+
+## 0.24.0 프로젝트 문서 집합
+
+- project-source.ts: 스냅샷·설정·규격 오류·경로와 공통 타입. task-file.ts: Markdown 속성/본문 codec. project-document.ts: 전체 집합과 참조·순환·일정 검증 및 화면 모델 조합.
+- task-editing.ts와 task-deletion.ts는 순수 스냅샷 변환이다. 향후 CLI의 파일 접근과 분리해 재사용할 수 있다. CLI 자체는 미구현이다.
+- projects.rs: 프로젝트 검색·초기화·Tauri 명령. project_files.rs: 안전한 경로와 제한된 파일 읽기. project_write.rs: 직렬화·스냅샷 비교·파일 교체·복구 기록.
+- WorkspaceStore는 프로젝트당 root/worktree.json 하나를 보기 상태의 키로 사용한다. 내부 OpenDocument는 조합한 프로젝트 스냅샷이며 실제 단일 본문 파일이 아니다. 최근 프로젝트·일/주 보기·보기 모드는 기존 세션 v2에 유지한다. 과거 WBS 탭은 새 규격으로 읽거나 변환하지 않으며 파일은 건드리지 않는다.
+- ProjectInitializer는 빈 프로젝트의 생성 폼이다. 좌측 파일 트리·높이 조절 코드를 제거했고 ProjectEntry는 프로젝트명과 관리 버튼만 표시한다. 작업 메타데이터 폼·참조 폼·표시 컴포넌트는 별도 책임으로 둔다.
+- Windows 설치 빌드·실제 WebView2 확인은 이번 자동 검사와 구분하며 커밋·푸시·배포는 별도 지시를 따른다.
+
+0.24.0 검증: Node 도메인·React DOM 테스트 79개, Rust 테스트 33개 통과(기존 네트워크/서명 설치 검사 2개 ignored). 타입·포맷·버전 검사·Vite 빌드 통과. 초기화/저장 실패·원본 충돌·미완료 저장 복구·중단 후 외부 변경 보존·읽기 전용·경로 이탈·junction·고정 파일명·번호 재사용 방지·프로젝트 전환·선택 설명/참조·시각·간트 보기 복원을 확인했다. 실제 WebView2 화면·설치 빌드·사용자 인수는 수행하지 않았다. 소스 변경은 미커밋으로 유지한다.

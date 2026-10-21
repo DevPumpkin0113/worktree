@@ -8,3 +8,8 @@ src-tauri/gen/
 !.env.example
 
 .local/
+
+# Incomplete project transactions and temporary writes are local recovery data.
+**/.worktree-transaction.json
+**/.worktree-save-*
+**/.worktree-init-*/

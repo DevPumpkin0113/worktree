@@ -29,7 +29,7 @@ export const renderTaskDetail = (model: WorkModel, id: string, label: (id: strin
     <TaskDetail
       model={{ ...model, useEffort: model.useEffort !== false }}
       id={id}
-      path="test.wbs"
+      path="C:/test/worktree.json"
       mode="sidebar"
       settingsOpen={false}
       collapsed={false}

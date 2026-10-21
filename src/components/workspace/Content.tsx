@@ -1,3 +1,4 @@
+import { ProjectInitializer } from '../project/ProjectInitializer';
 import { messages } from '../../i18n/messages';
 import { ProjectManagement } from '../project/ProjectManagement';
 import { FilterDropdown } from '../shared/FilterDropdown';
@@ -172,17 +173,15 @@ export function Content({
         ) : null}
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
-        {state.page === 'project' && store.activeProject ? (
-          <ProjectManagement
-            model={model ?? null}
-            path={active?.path ?? null}
-            project={store.activeProject}
-          />
+        {store.activeProject && store.activeProject.files.length === 0 ? (
+          <ProjectInitializer key={store.activeProject.path} store={store} />
+        ) : state.page === 'project' && store.activeProject ? (
+          <ProjectManagement model={model ?? null} project={store.activeProject} />
         ) : state.page === 'analytics' ? (
           <Analytics model={model ?? null} />
         ) : !active ? (
           <div className="empty">
-            {store.activeProject ? messages.projectEmptyHint : messages.projectOpenPrompt}
+            {store.activeProject ? messages.documentUnavailable : messages.projectOpenPrompt}
           </div>
         ) : !model ? (
           <div className="document-unavailable">
@@ -196,7 +195,9 @@ export function Content({
             active.view === 'tree' &&
             model.rows.some((row) => row.milestone)
           ) ? (
-          <div className="empty">{messages.noMatchingTasks}</div>
+          <div className="empty">
+            {model.rows.length ? messages.noMatchingTasks : messages.emptyProjectTasks}
+          </div>
         ) : state.page === 'tasks' ? (
           <AllTasks
             rows={filtered}

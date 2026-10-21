@@ -8,8 +8,6 @@ pub fn cleanup_failed(error: impl std::fmt::Display) -> String {
     format!("이전 업데이트 임시 파일 정리 실패: {error}")
 }
 
-pub const DOCUMENT_TOO_LARGE: &str = "5MB 이하 문서 파일만 열 수 있습니다.";
-
 pub fn install_confirm(version: impl std::fmt::Display) -> String {
     format!("Worktree {version}을 다운로드하고 설치할까요?\n설치가 시작되면 앱이 종료됩니다. 설치 후 Worktree를 다시 실행해 주세요.")
 }
@@ -47,8 +45,6 @@ pub const RELEASE_MISMATCH: &str = "릴리즈와 설치 파일 정보가 일치�
 pub const RELEASE_READ_FAILED: &str = "릴리즈 정보를 읽지 못했습니다.";
 
 pub const RELEASE_VERSION_MISSING: &str = "릴리즈 버전이 없습니다.";
-
-pub const SELECT_WBS: &str = "WBS 문서 파일을 선택해 주세요.";
 
 pub const SESSION_FOLDER_MISSING: &str = "세션 폴더를 찾지 못했습니다.";
 
@@ -102,9 +98,7 @@ pub const UPDATE_TITLE: &str = "Worktree 업데이트";
 pub const VERIFICATION_FAILED: &str =
     "다운로드 또는 서명 검증에 실패했습니다. 설치하지 않았습니다. 다시 시도하세요.";
 
-pub const PROJECT_FOLDER_REQUIRED: &str = "프로젝트 폴더를 선택하세요.";
-pub const PROJECT_SCAN_LIMIT: &str =
-    "프로젝트 검색 범위를 초과했습니다. 더 작은 폴더를 선택하세요.";
 pub const OPEN_PROJECT: &str = "프로젝트 폴더 열기";
 
-pub const DOCUMENT_READONLY: &str = "읽기 전용 문서에는 저장할 수 없습니다.";
+pub const INVALID_PROJECT: &str = "프로젝트 설정·경로 또는 문서 규격을 확인해 주세요.";
+pub const PROJECT_RECOVERY_CONFLICT: &str = "중단된 저장 이후 외부 변경이 발견되어 복구를 중단했습니다. 데이터를 보존하고 충돌을 확인하세요.";

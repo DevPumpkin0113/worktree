@@ -1,8 +1,8 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
-import { parseWbs } from '../../domain/model';
+import { parseProject } from '../../domain/project-document';
 import { MilestoneEditorFields } from './MilestoneEditorFields';
-import { nextTaskId, nextMilestoneId, taskDraft, type TaskDraft } from '../../domain/task-editing';
+import { nextProjectId, projectTaskDraft, type ProjectTaskDraft } from '../../domain/task-editing';
 import { TaskEditorFields } from './TaskEditorFields';
 import { Icon } from '../shared/Icon';
 export interface TaskEditorSession {
@@ -17,24 +17,26 @@ export function TaskEditor({
   onClose,
 }: {
   session: TaskEditorSession;
-  onSave: (draft: TaskDraft) => Promise<void>;
+  onSave: (draft: ProjectTaskDraft) => Promise<void>;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [draft, setDraft] = useState(() => {
-    const draft = taskDraft(session.text, session.id);
+    const draft = projectTaskDraft(session.text, session.id);
     return !session.id && session.kind === 'milestone'
-      ? { ...draft, type: 'milestone' as const, criteria: '-', status: 'auto', effort: '-' }
+      ? { ...draft, type: 'milestone' as const, description: '', status: 'auto', effort: '-' }
       : draft;
   });
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const [error, setError] = useState('');
-  const model = useMemo(() => parseWbs(session.text), [session.text]);
+  const model = useMemo(() => parseProject(session.text), [session.text]);
   const id = useMemo(
     () =>
       session.id ??
-      (session.kind === 'milestone' ? nextMilestoneId(session.text) : nextTaskId(session.text)),
+      (session.kind === 'milestone'
+        ? nextProjectId(session.text, true)
+        : nextProjectId(session.text)),
     [session.id, session.text, session.kind],
   );
   useLayoutEffect(() => {
@@ -115,7 +117,6 @@ export function TaskEditor({
             draft={draft}
             model={model}
             id={id}
-            creating={!session.id}
             disabled={saving}
             onChange={setDraft}
           />

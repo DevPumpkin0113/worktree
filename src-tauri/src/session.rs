@@ -80,7 +80,9 @@ fn valid_path(value: &str) -> bool {
         && path
             .extension()
             .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| ["wbs", "md", "markdown"].contains(&ext.to_lowercase().as_str()))
+            .is_some_and(|ext| {
+                ["wbs", "md", "markdown", "json"].contains(&ext.to_lowercase().as_str())
+            })
 }
 
 impl Session {

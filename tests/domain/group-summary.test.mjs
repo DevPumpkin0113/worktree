@@ -4,7 +4,7 @@ import {summarizeGroups} from '../../src/domain/group-summary.ts';
 import {groupSchedule,groupEffort,groupProgress} from '../../src/views/group-summary.ts';
 import {renderTaskDetail} from '../helpers/render-helpers.tsx';
 import {renderTree} from '../helpers/render-helpers.tsx';
-const row=(id,parent,type,effort='-',start='-',end='-',status='todo')=>({id,parent,type,effort,start,end,status,name:id,owner:'-',criteria:'확인',deps:[]});
+const row=(id,parent,type,effort='-',start='-',end='-',status='todo')=>({id,parent,type,effort,start,end,status,name:id,owner:'-',description:'확인',deps:[]});
 
 test('마일스톤의 하위 작업만 집계하고 필터와 무관하게 합계를 유지한다',()=>{
  const rows=[{...row('MS001','-','group'),milestone:true},row('W003','MS001','task','2','2026-10-20','2026-10-21','done'),row('W004','MS001','task','6','2026-10-22','2026-10-24','doing')];

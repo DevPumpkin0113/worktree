@@ -14,7 +14,17 @@ export function matchesWork(
   }: { query?: string; status?: string; owner?: string },
   label: (id: string) => string = (id) => id,
 ) {
-  const text = [row.id, label(row.id), row.name, row.owner].join(' ').toLowerCase();
+  const text = [
+    row.id,
+    label(row.id),
+    row.name,
+    row.owner,
+    row.description,
+    row.taskType,
+    ...(row.labels ?? []),
+  ]
+    .join(' ')
+    .toLowerCase();
   return (
     text.includes(query.trim().toLowerCase()) &&
     (status === 'all' || row.status === status) &&

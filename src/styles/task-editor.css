@@ -32,7 +32,8 @@
   min-width: 0;
   font-size: 12px;
 }
-.task-editor-field input {
+.task-editor-field input,
+.task-editor-field textarea {
   width: 100%;
   min-width: 0;
   font-size: 13px;
@@ -44,7 +45,7 @@
   width: 100%;
 }
 .task-field-name,
-.task-field-criteria,
+.task-field-description,
 .task-field-deps {
   grid-column: 1 / -1;
 }
@@ -145,4 +146,37 @@
 .delete-options li,
 .delete-target {
   overflow-wrap: anywhere;
+}
+
+.task-editor-field textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+.task-field-labels,
+.task-field-references {
+  grid-column: 1 / -1;
+}
+.task-field-references {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.task-reference-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.task-reference-row input {
+  min-width: 0;
+  width: 100%;
+}
+.task-reference-value {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+.detail-description {
+  white-space: pre-wrap;
 }

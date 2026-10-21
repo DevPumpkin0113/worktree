@@ -3,17 +3,15 @@ import { messages } from '../../i18n/messages';
 import { STATUS_NAMES, type OpenProject, type WorkModel } from '../../app/types';
 export function ProjectOverview({
   model,
-  path,
   project,
 }: {
   model: WorkModel | null;
-  path: string | null;
   project: OpenProject;
 }) {
   const facts = [
-    [messages.projectName, folderName(project.path)],
+    [messages.projectName, model?.title ?? folderName(project.path)],
     [messages.projectFolder, project.path],
-    [messages.sourceDocument, path ?? '—'],
+    [messages.dataDirectory, model?.dataDirectory ?? '—'],
     [messages.idPrefix, model?.idPrefix ?? '—'],
     [messages.useEffort, model ? (model.useEffort ? messages.enabled : messages.disabled) : '—'],
   ];
@@ -36,7 +34,7 @@ export function ProjectOverview({
         <dl>
           <div>
             <dt>{messages.workTypes}</dt>
-            <dd>{[messages.task, messages.milestone].join(' · ')}</dd>
+            <dd>{model?.taskTypes?.join(' · ') ?? '—'}</dd>
           </div>
           <div>
             <dt>{messages.workStatuses}</dt>

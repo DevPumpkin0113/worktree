@@ -19,13 +19,6 @@ pub fn check_update_first() -> &'static str {
         ko::CHECK_UPDATE_FIRST
     }
 }
-pub fn document_too_large() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::DOCUMENT_TOO_LARGE
-    } else {
-        ko::DOCUMENT_TOO_LARGE
-    }
-}
 pub fn installer_failed() -> &'static str {
     if ENGLISH.load(Ordering::Relaxed) {
         en::INSTALLER_FAILED
@@ -101,13 +94,6 @@ pub fn release_version_missing() -> &'static str {
         en::RELEASE_VERSION_MISSING
     } else {
         ko::RELEASE_VERSION_MISSING
-    }
-}
-pub fn select_wbs() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::SELECT_WBS
-    } else {
-        ko::SELECT_WBS
     }
 }
 pub fn session_folder_missing() -> &'static str {
@@ -284,8 +270,8 @@ mod tests {
         assert_ne!(en::BROWSER_FAILED, ko::BROWSER_FAILED);
         assert!(!en::CHECK_UPDATE_FIRST.is_empty());
         assert_ne!(en::CHECK_UPDATE_FIRST, ko::CHECK_UPDATE_FIRST);
-        assert!(!en::DOCUMENT_TOO_LARGE.is_empty());
-        assert_ne!(en::DOCUMENT_TOO_LARGE, ko::DOCUMENT_TOO_LARGE);
+        assert!(!en::INVALID_PROJECT.is_empty());
+        assert_ne!(en::INVALID_PROJECT, ko::INVALID_PROJECT);
         assert!(!en::INSTALLER_FAILED.is_empty());
         assert_ne!(en::INSTALLER_FAILED, ko::INSTALLER_FAILED);
         assert!(!en::INVALID_APP_VERSION.is_empty());
@@ -308,8 +294,8 @@ mod tests {
         assert_ne!(en::RELEASE_READ_FAILED, ko::RELEASE_READ_FAILED);
         assert!(!en::RELEASE_VERSION_MISSING.is_empty());
         assert_ne!(en::RELEASE_VERSION_MISSING, ko::RELEASE_VERSION_MISSING);
-        assert!(!en::SELECT_WBS.is_empty());
-        assert_ne!(en::SELECT_WBS, ko::SELECT_WBS);
+        assert!(!en::PROJECT_RECOVERY_CONFLICT.is_empty());
+        assert_ne!(en::PROJECT_RECOVERY_CONFLICT, ko::PROJECT_RECOVERY_CONFLICT);
         assert!(!en::SESSION_FOLDER_MISSING.is_empty());
         assert_ne!(en::SESSION_FOLDER_MISSING, ko::SESSION_FOLDER_MISSING);
         assert!(!en::SESSION_SAVE_TOO_LARGE.is_empty());
@@ -367,20 +353,6 @@ mod tests {
     }
 }
 
-pub fn project_folder_required() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::PROJECT_FOLDER_REQUIRED
-    } else {
-        ko::PROJECT_FOLDER_REQUIRED
-    }
-}
-pub fn project_scan_limit() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::PROJECT_SCAN_LIMIT
-    } else {
-        ko::PROJECT_SCAN_LIMIT
-    }
-}
 pub fn open_project() -> &'static str {
     if ENGLISH.load(Ordering::Relaxed) {
         en::OPEN_PROJECT
@@ -389,10 +361,17 @@ pub fn open_project() -> &'static str {
     }
 }
 
-pub fn document_readonly() -> &'static str {
+pub fn invalid_project() -> &'static str {
     if ENGLISH.load(Ordering::Relaxed) {
-        en::DOCUMENT_READONLY
+        en::INVALID_PROJECT
     } else {
-        ko::DOCUMENT_READONLY
+        ko::INVALID_PROJECT
+    }
+}
+pub fn project_recovery_conflict() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::PROJECT_RECOVERY_CONFLICT
+    } else {
+        ko::PROJECT_RECOVERY_CONFLICT
     }
 }

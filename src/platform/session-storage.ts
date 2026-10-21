@@ -29,7 +29,7 @@ const validFolder = (path: unknown): path is string =>
   /^(?:[A-Za-z]:[\\/]|\\\\|\/)/.test(path) &&
   !path.split(/[\\/]/).includes('..');
 const validPath = (path: unknown): path is string =>
-  validFolder(path) && /\.(?:wbs|md|markdown)$/i.test(path);
+  validFolder(path) && /\.(?:wbs|md|markdown|json)$/i.test(path);
 const unique = (paths: string[]) => new Set(paths.map(pathKey)).size === paths.length;
 
 export function validateSession(input: unknown): Session {

@@ -1,13 +1,13 @@
 import { messages } from '../../i18n/messages';
-import type { TaskDraft } from '../../domain/task-editing';
+import type { ProjectTaskDraft } from '../../domain/task-editing';
 export function MilestoneEditorFields({
   draft,
   disabled,
   onChange,
 }: {
-  draft: TaskDraft;
+  draft: ProjectTaskDraft;
   disabled: boolean;
-  onChange: (draft: TaskDraft) => void;
+  onChange: (draft: ProjectTaskDraft) => void;
 }) {
   const scheduled = [draft.start, draft.end].some((value) => value !== '' && value !== '-');
   return (

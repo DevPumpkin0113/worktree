@@ -1,4 +1,5 @@
 import { messages } from '../../i18n/messages';
+import { TaskMetadata } from './TaskMetadata';
 import { summarizeGroups } from '../../domain/group-summary';
 import { groupEffort, groupProgress, groupSchedule } from '../../views/group-summary';
 import { STATUS_NAMES, type WorkModel, type WorkRow } from '../../app/types';
@@ -81,7 +82,7 @@ export function TaskInfo({
             </button>
           ))
         ) : (
-          <span>{messages.rootTask}</span>
+          <span>{row.milestone ? model.title : messages.unassignedMilestone}</span>
         )}
       </nav>
       <div className="detail-facts">
@@ -99,19 +100,20 @@ export function TaskInfo({
           ))}
       </div>
       {!row.milestone ? (
-        <section className="detail-section criteria-section">
+        <section className="detail-section description-section">
           <div className="detail-section-heading">
-            <h3>{messages.criteria}</h3>
+            <h3>{messages.description}</h3>
             {row.status === 'done' ? (
               <span className="detail-complete">{messages.recordedDone}</span>
             ) : null}
           </div>
-          <p className="detail-criteria">{row.criteria || messages.noCriteria}</p>
+          <p className="detail-description">{row.description || messages.noDescription}</p>
           {row.status === 'blocked' ? (
             <p className="detail-blocked">{messages.blockedHint}</p>
           ) : null}
         </section>
       ) : null}
+      <TaskMetadata row={row} />
       {children.length ? (
         <section className="detail-section">
           <h3>

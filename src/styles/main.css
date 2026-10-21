@@ -36,7 +36,8 @@ header p {
 }
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   border: 1px solid var(--color-border-control);
   border-radius: 8px;

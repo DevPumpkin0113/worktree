@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
-import { deletionImpact, type DeleteOptions } from '../../domain/task-deletion';
+import type { DeleteOptions } from '../../domain/task-deletion';
+import { projectDeletionImpact as deletionImpact } from '../../domain/task-deletion';
 export interface TaskDeleteSession {
   path: string;
   text: string;

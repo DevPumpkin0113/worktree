@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "Worktree",
+  "taskPrefix": "W",
+  "useEffort": false,
+  "taskTypes": [
+    "feature",
+    "bug",
+    "improvement",
+    "task"
+  ],
+  "labels": [],
+  "nextTaskNumber": 91,
+  "nextMilestoneNumber": 10
+}

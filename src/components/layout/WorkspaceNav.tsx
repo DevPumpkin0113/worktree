@@ -24,10 +24,6 @@ const PAGE_ICONS: Record<Page, string> = {
   analytics: 'insights',
 };
 export function WorkspaceNav({
-  projectPath,
-  files,
-  activePath,
-  onFile,
   projectTitle,
   onManage,
   page,
@@ -36,10 +32,6 @@ export function WorkspaceNav({
   onCollapse,
   inert,
 }: {
-  projectPath: string | null;
-  files: string[];
-  activePath: string | null;
-  onFile: (path: string) => void;
   projectTitle: string | null;
   onManage: () => void;
   page: Page;
@@ -56,17 +48,7 @@ export function WorkspaceNav({
       aria-label={messages.workspace}
       inert={inert}
     >
-      <ProjectEntry
-        projectPath={projectPath}
-        files={files}
-        activePath={activePath}
-        onFile={onFile}
-        title={projectTitle}
-        onManage={onManage}
-        resizable={!collapsed && !inert}
-        disabled={!projectTitle}
-        active={page === 'project'}
-      />
+      <ProjectEntry title={projectTitle} onManage={onManage} active={page === 'project'} />
       <p className="workspace-nav-label">{messages.workspace}</p>
       <nav aria-label={messages.workspaceMenu}>
         {(['board', 'tasks', 'analytics'] as const).map((key) => (

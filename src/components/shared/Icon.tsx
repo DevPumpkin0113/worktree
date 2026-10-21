@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 const icons: Record<string, ReactNode> = {
+  folder: <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
   'wbs-file': (
     <>
       <path d="M14 3H5v18h14V8zM14 3v5h5M8 12h8M8 16h8" />

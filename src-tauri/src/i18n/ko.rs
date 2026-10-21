@@ -102,4 +102,7 @@ pub const UPDATE_TITLE: &str = "Worktree 업데이트";
 pub const VERIFICATION_FAILED: &str =
     "다운로드 또는 서명 검증에 실패했습니다. 설치하지 않았습니다. 다시 시도하세요.";
 
-pub const WBS_FILTER: &str = "WBS 문서";
+pub const PROJECT_FOLDER_REQUIRED: &str = "프로젝트 폴더를 선택하세요.";
+pub const PROJECT_SCAN_LIMIT: &str =
+    "프로젝트 검색 범위를 초과했습니다. 더 작은 폴더를 선택하세요.";
+pub const OPEN_PROJECT: &str = "프로젝트 폴더 열기";

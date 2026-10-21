@@ -39,9 +39,9 @@ export function Titlebar({
           id="reload"
           aria-label={messages.reloadSource}
           title={messages.reloadSource}
-          disabled={!store.active}
+          disabled={!store.activeProject}
           onClick={() => {
-            if (store.active) void store.open(store.active.path);
+            void store.refreshProject();
           }}
         >
           <Icon name="reload" />

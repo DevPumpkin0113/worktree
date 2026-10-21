@@ -67,4 +67,8 @@ pub const UPDATE_STATE_SAVE_FAILED: &str = "Could not save the update state.";
 pub const UPDATE_TITLE: &str = "Worktree update";
 pub const VERIFICATION_FAILED: &str =
     "Download or signature verification failed. Nothing was installed. Try again.";
-pub const WBS_FILTER: &str = "WBS document";
+
+pub const PROJECT_FOLDER_REQUIRED: &str = "Select a project folder.";
+pub const PROJECT_SCAN_LIMIT: &str =
+    "The project scan limit was exceeded. Select a smaller folder.";
+pub const OPEN_PROJECT: &str = "Open project folder";

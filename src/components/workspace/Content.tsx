@@ -145,12 +145,18 @@ export function Content({
         />
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
-        {state.page === 'project' && model ? (
-          <ProjectManagement model={model} path={active?.path ?? null} />
+        {state.page === 'project' && store.activeProject ? (
+          <ProjectManagement
+            model={model ?? null}
+            path={active?.path ?? null}
+            project={store.activeProject}
+          />
         ) : state.page === 'analytics' ? (
           <Analytics model={model ?? null} />
         ) : !active ? (
-          <div className="empty">{messages.openFileHint}</div>
+          <div className="empty">
+            {store.activeProject ? messages.projectEmptyHint : messages.projectOpenPrompt}
+          </div>
         ) : !model ? (
           <div className="document-unavailable">
             <strong>{messages.documentUnavailable}</strong>

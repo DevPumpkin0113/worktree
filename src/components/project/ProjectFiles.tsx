@@ -1,23 +1,33 @@
 import { messages } from '../../i18n/messages';
-import { Icon } from '../shared/Icon';
-export function ProjectFiles({ path, onSelect }: { path: string | null; onSelect: () => void }) {
-  const name = path?.split(/[\\/]/).at(-1);
+import { useMemo } from 'react';
+import { projectFileTree } from './project-file-tree';
+import { ProjectFileBranch } from './ProjectFileBranch';
+export function ProjectFiles({
+  projectPath,
+  files,
+  activePath,
+  onSelect,
+}: {
+  projectPath: string | null;
+  files: string[];
+  activePath: string | null;
+  onSelect: (path: string) => void;
+}) {
+  const tree = useMemo(
+    () => (projectPath ? projectFileTree(projectPath, files) : []),
+    [projectPath, files],
+  );
   return (
     <ul id="projectFiles" className="project-files" aria-label={messages.projectWbsFiles}>
-      {path && name && /\.wbs$/i.test(name) ? (
-        <li>
-          <button
-            type="button"
-            className="project-file selected"
-            title={path}
-            aria-label={name}
-            aria-current="true"
-            onClick={onSelect}
-          >
-            <Icon name="wbs-file" />
-            <span>{name}</span>
-          </button>
-        </li>
+      {tree.length ? (
+        tree.map((node) => (
+          <ProjectFileBranch
+            key={node.path}
+            node={node}
+            activePath={activePath}
+            onSelect={onSelect}
+          />
+        ))
       ) : (
         <li className="project-files-empty">{messages.noWbsFiles}</li>
       )}

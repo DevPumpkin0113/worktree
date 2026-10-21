@@ -3,6 +3,7 @@ use std::{path::PathBuf, sync::Mutex};
 use tauri::Manager;
 mod app_updates;
 mod i18n;
+mod projects;
 mod session;
 mod settings;
 mod update_cleanup;
@@ -18,6 +19,10 @@ struct OpenQueue(Mutex<Vec<String>>);
 fn enqueue(state: &OpenQueue, paths: impl Iterator<Item = PathBuf>) {
     if let Ok(mut queue) = state.0.lock() {
         for path in paths {
+            if path.is_dir() {
+                queue.push(path.to_string_lossy().to_string());
+                continue;
+            }
             if let Some(ext) = path.extension().and_then(|x| x.to_str()) {
                 if ["wbs", "md", "markdown"].contains(&ext.to_lowercase().as_str()) {
                     queue.push(path.to_string_lossy().to_string());
@@ -49,18 +54,6 @@ fn read_document(path: String) -> Result<String, String> {
         return Err(crate::i18n::document_too_large().into());
     }
     std::fs::read_to_string(file).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn pick_document() -> Result<Option<String>, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        rfd::FileDialog::new()
-            .add_filter(crate::i18n::wbs_filter(), &["wbs"])
-            .pick_file()
-            .map(|p| p.to_string_lossy().to_string())
-    })
-    .await
-    .map_err(|e| e.to_string())
 }
 
 fn main() {
@@ -107,7 +100,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             take_open_requests,
             read_document,
-            pick_document,
+            projects::pick_project,
+            projects::scan_project,
             get_build_info,
             check_app_update,
             install_app_update,

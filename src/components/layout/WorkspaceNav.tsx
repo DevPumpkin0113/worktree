@@ -25,6 +25,9 @@ const PAGE_ICONS: Record<Page, string> = {
 };
 export function WorkspaceNav({
   projectPath,
+  files,
+  activePath,
+  onFile,
   projectTitle,
   onManage,
   page,
@@ -34,6 +37,9 @@ export function WorkspaceNav({
   inert,
 }: {
   projectPath: string | null;
+  files: string[];
+  activePath: string | null;
+  onFile: (path: string) => void;
   projectTitle: string | null;
   onManage: () => void;
   page: Page;
@@ -51,10 +57,13 @@ export function WorkspaceNav({
       inert={inert}
     >
       <ProjectEntry
-        filePath={projectPath}
-        onFile={() => onPage('board')}
+        projectPath={projectPath}
+        files={files}
+        activePath={activePath}
+        onFile={onFile}
         title={projectTitle}
         onManage={onManage}
+        resizable={!collapsed && !inert}
         disabled={!projectTitle}
         active={page === 'project'}
       />

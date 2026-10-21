@@ -40,7 +40,19 @@ export interface Settings {
   error: string;
   saving: boolean;
 }
+export interface OpenProject {
+  path: string;
+  files: string[];
+  activePath: string | null;
+}
+export interface ScannedProject {
+  path: string;
+  files: string[];
+  selectedPath: string | null;
+}
 export interface WorkspaceSnapshot {
+  projects: OpenProject[];
+  activeProjectPath: string | null;
   documents: OpenDocument[];
   activePath: string | null;
   recent: string[];

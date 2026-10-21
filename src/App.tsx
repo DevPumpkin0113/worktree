@@ -6,7 +6,8 @@ import { useWorkspace } from './hooks/use-workspace';
 import { Titlebar } from './components/layout/Titlebar';
 import { WorkspaceNav } from './components/layout/WorkspaceNav';
 import { Content } from './components/workspace/Content';
-import { DocumentDock } from './components/documents/DocumentDock';
+import { ProjectDock } from './components/project/ProjectDock';
+import { folderName } from './domain/project-paths';
 import { TaskDetail } from './components/task-detail/TaskDetail';
 import { Settings } from './components/settings/Settings';
 import { Problems } from './components/problems/Problems';
@@ -32,7 +33,7 @@ export function App({ store }: { store: WorkspaceStore }) {
   const notice = summary
     ? statusNotice(summary, model!.useEffort) +
       (collisions ? messages.idCollisionPrefix + collisions + messages.idCollisionSuffix : '')
-    : messages.openDocumentPrompt;
+    : messages.projectOpenPrompt;
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('workspace-nav-collapsed', collapsed);
     return () => document.documentElement.classList.remove('workspace-nav-collapsed');
@@ -61,8 +62,11 @@ export function App({ store }: { store: WorkspaceStore }) {
     <>
       <Titlebar store={store} settingsOpen={state.settingsOpen} />
       <WorkspaceNav
-        projectPath={state.activePath}
-        projectTitle={model?.title ?? null}
+        projectPath={state.activeProjectPath}
+        files={store.activeProject?.files ?? []}
+        activePath={state.activePath}
+        onFile={(path) => void store.selectDocument(path)}
+        projectTitle={state.activeProjectPath ? folderName(state.activeProjectPath) : null}
         onManage={() => {
           store.setPage('project');
         }}
@@ -82,7 +86,7 @@ export function App({ store }: { store: WorkspaceStore }) {
           document.getElementById('error')?.focus();
         }}
       />
-      <DocumentDock store={store} state={state} />
+      <ProjectDock store={store} state={state} />
       <footer
         id="appStatusbar"
         className="app-statusbar"
@@ -119,7 +123,7 @@ export function App({ store }: { store: WorkspaceStore }) {
           {notice}
         </span>
         <span id="source" className="source-status" title={state.activePath ?? ''}>
-          {state.activePath ?? messages.noOpenDocument}
+          {state.activePath ?? state.activeProjectPath ?? messages.noOpenProject}
         </span>
         <span className="statusbar-mode">{messages.readOnly}</span>
       </footer>

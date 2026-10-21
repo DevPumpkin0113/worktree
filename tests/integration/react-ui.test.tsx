@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { pathKey, parentFolder, withinProject } from '../../src/domain/project-paths';
 import { App } from '../../src/App';
 import { WorkspaceStore } from '../../src/app/workspace-store';
 import type { Platform } from '../../src/app/types';
@@ -13,7 +14,7 @@ const source =
   header +
   '| W001 | - | group | 화면 작업 | 확인 | - | auto | - | - | - | - |\n| W002 | W001 | task | 댓글 구현 | 입력 확인 | codex | doing | 2026-10-20 | 2026-10-21 | - | - |\n| W003 | W001 | task | UI 확인 | 인수 확인 | 박대호 | done | 2026-10-22 | 2026-10-23 | 2 | W002 |\n';
 const first = 'C:\\QA\\first.wbs',
-  second = 'C:\\QA\\second.wbs';
+  second = 'C:\\QB\\second.wbs';
 async function fixture(
   options: {
     language?: 'ko' | 'en';
@@ -67,8 +68,21 @@ async function fixture(
         const path = String(args?.path);
         if (!files.has(path)) throw Error('파일 없음');
         result = files.get(path);
-      } else if (command === 'take_open_requests') result = [];
-      else if (command === 'pick_document') result = first;
+      } else if (command === 'scan_project') {
+        const path = String(args?.path).replaceAll('/', '\\');
+        const selectedPath = /\.(wbs|md|markdown)$/i.test(path) ? path : null;
+        if (selectedPath && !files.has(selectedPath)) throw Error('파일 없음');
+        const folder = selectedPath ? parentFolder(selectedPath).replaceAll('/', '\\') : path;
+        result = {
+          path: folder,
+          files: [...files.keys()].filter(
+            (file) =>
+              withinProject(file, folder) && (/\.wbs$/i.test(file) || file === selectedPath),
+          ),
+          selectedPath,
+        };
+      } else if (command === 'pick_project') result = 'C:\\QA';
+      else if (command === 'take_open_requests') result = [];
       else if (command === 'get_build_info')
         result = {
           version: '0.15.0',
@@ -323,7 +337,7 @@ test('업데이트 자동 확인 끄기·수동 확인·실패 후 재시도와 
   }
 });
 
-test('탭 키보드 재정렬과 최근 파일 열기는 세션 순서를 보존한다', async () => {
+test('프로젝트 탭 키보드 재정렬과 최근 프로젝트 열기는 세션 순서를 보존한다', async () => {
   const f = await fixture();
   try {
     await act(async () => {
@@ -338,7 +352,7 @@ test('탭 키보드 재정렬과 최근 파일 열기는 세션 순서를 보존
       );
       await new Promise((resolve) => setTimeout(resolve, 5));
     });
-    assert.equal(f.store.getSnapshot().documents[0].path, second);
+    assert.equal(pathKey(f.store.getSnapshot().projects[0].path), pathKey(parentFolder(second)));
     assert.equal(f.store.getSnapshot().activePath, first);
     await f.click('[data-close-tab="1"]');
     assert.equal(f.store.getSnapshot().activePath, second);
@@ -513,7 +527,7 @@ test('앱 설정과 프로젝트 관리는 진입점·내용을 분리하고 프
   }
 });
 
-test('프로젝트 파일 트리 시안은 현재 WBS 표시·접기·작업 보드 이동을 지원하고 문서 탭을 유지한다', async () => {
+test('프로젝트 파일 목록은 접기와 선택을 지원하며 콘텐츠 화면과 프로젝트 탭을 유지한다', async () => {
   const f = await fixture();
   try {
     assert.equal(f.element('#projectFiles .project-file').textContent, 'first.wbs');
@@ -524,7 +538,7 @@ test('프로젝트 파일 트리 시안은 현재 WBS 표시·접기·작업 보
     await f.click('#projectTreeToggle');
     await f.click('#projectManageOpen');
     await f.click('#projectFiles .project-file');
-    assert.equal(f.store.getSnapshot().page, 'board');
+    assert.equal(f.store.getSnapshot().page, 'project');
     assert.equal(f.store.getSnapshot().activePath, first);
     assert.equal(f.host.querySelectorAll('[data-tab-index]').length, 2);
   } finally {
@@ -591,6 +605,254 @@ test('문서 오류는 선택 언어로 표시하고 언어 전환 후에도 원
     await f.click('#settingsClose');
     assert.match(f.element('#problemsBody').textContent!, /상태 오류/);
     assert.match(f.element('#error').textContent!, /상태 오류/);
+  } finally {
+    await f.close();
+  }
+});
+
+test('폴더 하나는 프로젝트 탭 하나이며 하위 WBS 선택·보기·프로젝트 복귀와 세션 복원을 지원한다', async () => {
+  const f = await fixture();
+  const nested = 'C:\\QA\\planning\\next.wbs';
+  try {
+    f.files.set(nested, source.replace('댓글 구현', '후속 작업'));
+    await f.click('#dockOpen');
+    assert.equal(f.element('#projectDock .dock-label').textContent, '프로젝트');
+    assert.equal(f.store.getSnapshot().projects.length, 2);
+    assert.equal(f.host.querySelectorAll('#projectFiles button').length, 2);
+    assert.equal(f.element('#projectTreeToggle .project-entry-title').textContent, 'QA');
+    assert.equal(f.element('#projectFiles .project-folder-label span').textContent, 'planning');
+    assert.equal(
+      f.element('#projectFiles button[aria-label="planning/next.wbs"]').textContent,
+      'next.wbs',
+    );
+    await f.click('#projectFiles .project-folder-label');
+    assert.equal(
+      f.element<HTMLDetailsElement>('#projectFiles .project-folder details').open,
+      false,
+    );
+    assert.equal(f.store.getSnapshot().activePath, first);
+    await f.click('#projectFiles .project-folder-label');
+    assert.equal(f.element<HTMLDetailsElement>('#projectFiles .project-folder details').open, true);
+    await f.click('#projectFiles button[aria-label="planning/next.wbs"]');
+    assert.equal(f.store.getSnapshot().activePath, nested);
+    assert.match(f.element('#content').textContent!, /후속 작업/);
+    assert.equal(f.store.getSnapshot().projects.length, 2);
+    await f.click('[data-view="gantt"]');
+    await f.click('[data-tab="1"]');
+    assert.equal(f.store.getSnapshot().activePath, second);
+    await f.click('[data-tab="0"]');
+    assert.equal(f.store.getSnapshot().activePath, nested);
+    assert.equal(f.store.active?.view, 'gantt');
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const saved = f.calls.filter((call) => call.command === 'save_session').at(-1)?.args?.session;
+    assert.ok(saved);
+    const restored = new WorkspaceStore({
+      ...f.store.platform,
+      async invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+        return command === 'load_session'
+          ? (structuredClone(saved) as T)
+          : f.store.platform.invoke<T>(command, args);
+      },
+    });
+    await restored.initialize();
+    assert.equal(restored.getSnapshot().projects.length, 2);
+    assert.equal(restored.getSnapshot().activePath, nested);
+    assert.equal(restored.active?.view, 'gantt');
+    assert.equal(restored.getSnapshot().operationProblems.length, 0);
+  } finally {
+    await f.close();
+  }
+});
+
+test('빈 프로젝트의 추가·삭제된 WBS는 새로고침으로 반영하고 닫으면 해당 프로젝트만 제거한다', async () => {
+  const f = await fixture();
+  try {
+    await act(async () => f.store.open('C:\\empty'));
+    assert.equal(f.store.getSnapshot().activePath, null);
+    assert.match(f.element('#content').textContent!, /WBS 파일이 없습니다/);
+    assert.equal(f.element<HTMLButtonElement>('#reload').disabled, false);
+    await f.click('#projectManageOpen');
+    assert.match(f.element('#projectManagement').textContent!, /empty/);
+    await f.click('[data-workspace-page="board"]');
+    const file = 'C:\\empty\\plan.wbs';
+    f.files.set(file, source);
+    await f.click('#reload');
+    assert.equal(f.store.getSnapshot().activePath, file);
+    f.files.delete(file);
+    await f.click('#reload');
+    assert.equal(f.store.getSnapshot().activePath, null);
+    assert.equal(f.host.querySelectorAll('#projectFiles button').length, 0);
+    await f.click('[data-close-tab="2"]');
+    assert.equal(f.store.getSnapshot().projects.length, 2);
+    assert.equal(f.store.getSnapshot().activePath, second);
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 검색 실패와 지연된 파일 선택은 기존 프로젝트를 덮어쓰지 않는다', async () => {
+  const f = await fixture();
+  const invoke = f.store.platform.invoke.bind(f.store.platform);
+  try {
+    f.store.platform.invoke = async <T,>(
+      command: string,
+      args?: Record<string, unknown>,
+    ): Promise<T> => {
+      if (command === 'scan_project' && args?.path === 'C:\\missing') throw Error('폴더 없음');
+      return invoke<T>(command, args);
+    };
+    await act(async () => f.store.open('C:\\missing'));
+    assert.equal(f.store.getSnapshot().activePath, first);
+    assert.match(f.element('#error').textContent!, /프로젝트 읽기 오류/);
+    let finish: ((text: string) => void) | undefined;
+    f.store.platform.invoke = async <T,>(
+      command: string,
+      args?: Record<string, unknown>,
+    ): Promise<T> => {
+      if (command === 'read_document' && args?.path === first)
+        return new Promise<string>((resolve) => {
+          finish = resolve;
+        }) as Promise<T>;
+      return invoke<T>(command, args);
+    };
+    await act(async () => {
+      const pending = f.store.selectDocument(first);
+      assert.ok(finish);
+      f.store.closeProject(f.store.activeProject!.path);
+      finish(source);
+      await pending;
+    });
+    assert.equal(f.store.getSnapshot().activePath, second);
+    assert.equal(f.store.getSnapshot().projects.length, 1);
+  } finally {
+    f.store.platform.invoke = invoke;
+    await f.close();
+  }
+});
+
+test('직접 연 기존 Markdown도 프로젝트 새로고침과 v2 세션 복원에서 유지한다', async () => {
+  const f = await fixture();
+  const legacy = 'C:\\QA\\legacy.md';
+  try {
+    f.files.set(legacy, source);
+    await act(async () => f.store.open(legacy));
+    await f.click('#reload');
+    assert.equal(f.store.getSnapshot().activePath, legacy);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const saved = f.calls.filter((call) => call.command === 'save_session').at(-1)?.args?.session;
+    const restored = new WorkspaceStore({
+      ...f.store.platform,
+      async invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+        return command === 'load_session'
+          ? (structuredClone(saved) as T)
+          : f.store.platform.invoke<T>(command, args);
+      },
+    });
+    await restored.initialize();
+    assert.equal(restored.getSnapshot().activePath, legacy);
+    assert.ok(restored.active?.model);
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 탐색기 높이는 드래그·취소·키보드와 창 크기 제한을 지원한다', async () => {
+  const f = await fixture();
+  try {
+    const handle = f.element<HTMLElement>('#projectTreeResize');
+    const area = f.element<HTMLElement>('.project-files-scroll');
+    const height = () => Number.parseFloat(area.style.height);
+    const pointer = async (type: string, y: number) =>
+      act(async () => {
+        const event = new MouseEvent(type, {
+          button: 0,
+          clientY: y,
+          bubbles: true,
+          cancelable: true,
+        });
+        Object.defineProperty(event, 'pointerId', { value: 7 });
+        handle.dispatchEvent(event);
+      });
+    const key = async (key: string) =>
+      act(async () => {
+        handle.dispatchEvent(
+          new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+        );
+      });
+    assert.equal(height(), 220);
+    await pointer('pointerdown', 100);
+    await pointer('pointermove', 200);
+    await pointer('pointerup', 200);
+    assert.equal(height(), 320);
+    await pointer('pointerdown', 100);
+    await pointer('pointermove', 10000);
+    assert.equal(height(), 480);
+    await key('Escape');
+    assert.equal(height(), 320);
+    assert.equal(document.documentElement.classList.contains('resizing-project-tree'), false);
+    await key('Home');
+    assert.equal(height(), 80);
+    await key('ArrowDown');
+    assert.equal(height(), 96);
+    await key('End');
+    assert.equal(height(), 480);
+    await f.click('#projectTreeToggle');
+    assert.equal(handle.hidden, true);
+    await f.click('#projectTreeToggle');
+    assert.equal(height(), 480);
+    const nav = f.element('#workspaceNav');
+    Object.defineProperty(nav, 'clientHeight', { configurable: true, value: 180 });
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+    });
+    assert.ok(height() < 480);
+    assert.equal(height(), Number(handle.getAttribute('aria-valuemax')));
+    Object.defineProperty(nav, 'clientHeight', { configurable: true, value: 1000 });
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+    });
+    assert.equal(height(), 480);
+    await f.click('#workspaceCollapse');
+    assert.equal(handle.hidden, true);
+    await f.click('#workspaceCollapse');
+    assert.equal(handle.hidden, false);
+    assert.equal(height(), 480);
+  } finally {
+    await f.close();
+  }
+});
+
+test('문서를 전환해도 관리·작업 목록·인사이트 화면을 유지하고 선택 문서의 정보를 표시한다', async () => {
+  const f = await fixture();
+  const next = 'C:\\QA\\next.wbs';
+  try {
+    f.files.set(
+      next,
+      source
+        .replace('id_prefix: OBS', 'id_prefix: NEXT')
+        .replace('use_effort: false', 'use_effort: true')
+        .replace('댓글 구현', 'B 문서 작업'),
+    );
+    await act(async () => f.store.open('C:\\QA'));
+    await f.click('#projectManageOpen');
+    await f.click('#projectFiles button[aria-label="next.wbs"]');
+    assert.equal(f.store.getSnapshot().page, 'project');
+    assert.match(f.element('#projectManagement').textContent!, /NEXT/);
+    assert.ok(f.element('#projectManagement').textContent!.includes(next));
+    assert.doesNotMatch(f.element('#projectManagement').textContent!, /OBS/);
+    await f.click('#projectFiles button[aria-label="first.wbs"]');
+    assert.equal(f.store.getSnapshot().page, 'project');
+    assert.match(f.element('#projectManagement').textContent!, /OBS/);
+    assert.ok(f.element('#projectManagement').textContent!.includes(first));
+    for (const page of ['tasks', 'analytics'] as const) {
+      await f.click(`[data-workspace-page="${page}"]`);
+      await f.click('#projectFiles button[aria-label="next.wbs"]');
+      assert.equal(f.store.getSnapshot().page, page);
+      assert.ok(f.host.querySelector(page === 'tasks' ? '.all-tasks' : '.analytics-intro'));
+      if (page === 'tasks') assert.match(f.element('.all-tasks').textContent!, /B 문서 작업/);
+      await f.click('#projectFiles button[aria-label="first.wbs"]');
+      assert.equal(f.store.getSnapshot().page, page);
+    }
   } finally {
     await f.close();
   }

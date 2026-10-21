@@ -201,13 +201,6 @@ pub fn verification_failed() -> &'static str {
         ko::VERIFICATION_FAILED
     }
 }
-pub fn wbs_filter() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::WBS_FILTER
-    } else {
-        ko::WBS_FILTER
-    }
-}
 pub fn cleanup_failed(error: impl std::fmt::Display) -> String {
     if ENGLISH.load(Ordering::Relaxed) {
         en::cleanup_failed(error)
@@ -343,8 +336,6 @@ mod tests {
         assert_ne!(en::UPDATE_TITLE, ko::UPDATE_TITLE);
         assert!(!en::VERIFICATION_FAILED.is_empty());
         assert_ne!(en::VERIFICATION_FAILED, ko::VERIFICATION_FAILED);
-        assert!(!en::WBS_FILTER.is_empty());
-        assert_ne!(en::WBS_FILTER, ko::WBS_FILTER);
         for text in [
             en::cleanup_failed("ERROR_TOKEN"),
             en::session_read_failed("ERROR_TOKEN"),
@@ -373,5 +364,27 @@ mod tests {
             assert!(report.contains(token));
         }
         assert!(report.contains("## Steps to reproduce"));
+    }
+}
+
+pub fn project_folder_required() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::PROJECT_FOLDER_REQUIRED
+    } else {
+        ko::PROJECT_FOLDER_REQUIRED
+    }
+}
+pub fn project_scan_limit() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::PROJECT_SCAN_LIMIT
+    } else {
+        ko::PROJECT_SCAN_LIMIT
+    }
+}
+pub fn open_project() -> &'static str {
+    if ENGLISH.load(Ordering::Relaxed) {
+        en::OPEN_PROJECT
+    } else {
+        ko::OPEN_PROJECT
     }
 }

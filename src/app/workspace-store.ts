@@ -1,3 +1,6 @@
+import { pathKey, folderName, withinProject } from '../domain/project-paths';
+import { projectSession } from './project-session';
+import type { Session } from '../platform/session-storage';
 import { messages, setLanguage, isLanguage } from '../i18n/messages';
 import { ko } from '../i18n/ko';
 import { readSeparator, saveSeparator } from '../domain/id-display';
@@ -14,6 +17,8 @@ import {
 import { reorderDocumentTabs } from '../interactions/document-tabs';
 import type {
   OpenDocument,
+  OpenProject,
+  ScannedProject,
   Page,
   Platform,
   Problem,
@@ -25,6 +30,8 @@ import type {
 
 export class WorkspaceStore {
   private state: WorkspaceSnapshot = {
+    projects: [],
+    activeProjectPath: null,
     documents: [],
     activePath: null,
     recent: [],
@@ -49,6 +56,7 @@ export class WorkspaceStore {
   private listeners = new Set<() => void>();
   private initialized: Promise<void> | null = null;
   private polling = false;
+  private openRevision = 0;
   private session;
   readonly storage: SettingsStorage;
   constructor(
@@ -74,6 +82,11 @@ export class WorkspaceStore {
   }
   get active() {
     return this.state.documents.find((doc) => doc.path === this.state.activePath) ?? null;
+  }
+  get activeProject() {
+    return (
+      this.state.projects.find((project) => project.path === this.state.activeProjectPath) ?? null
+    );
   }
   get problems() {
     return [...(this.active?.problems ?? []), ...this.state.operationProblems];
@@ -138,12 +151,7 @@ export class WorkspaceStore {
     }
   }
   private async restoreSession() {
-    let saved: {
-      schemaVersion: number;
-      recentFiles: string[];
-      tabs: { path: string; view: View; ganttUnit: 'day' | 'week' }[];
-      activePath: string | null;
-    } = emptySession();
+    let saved: Session = emptySession();
     const failures: Problem[] = [];
     try {
       saved = await this.session.load();
@@ -151,23 +159,67 @@ export class WorkspaceStore {
       failures.push(...(describeDocumentErrors(error, '', '', ko.sessionReadError) as Problem[]));
     }
     const documents: OpenDocument[] = [];
-    for (const tab of saved.tabs as { path: string; view: View; ganttUnit: 'day' | 'week' }[]) {
+    const projects: OpenProject[] = [];
+    for (const savedProject of saved.projects) {
       try {
-        const text = await this.platform.invoke<string>('read_document', { path: tab.path });
-        documents.push(this.document(tab.path, text, { ...tab } as OpenDocument));
+        const scanned = await this.platform.invoke<ScannedProject>('scan_project', {
+          path: savedProject.path,
+        });
+        for (const tab of saved.tabs) {
+          if (
+            /\.(md|markdown)$/i.test(tab.path) &&
+            withinProject(tab.path, scanned.path) &&
+            !scanned.files.some((file) => pathKey(file) === pathKey(tab.path))
+          )
+            scanned.files.push(tab.path);
+        }
+        if (projects.some((project) => pathKey(project.path) === pathKey(scanned.path))) continue;
+        const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
+        for (const tab of saved.tabs.filter((tab) =>
+          scanned.files.some((file) => pathKey(file) === pathKey(tab.path)),
+        )) {
+          if (documents.some((doc) => pathKey(doc.path) === pathKey(tab.path))) continue;
+          try {
+            const path = scanned.files.find((file) => pathKey(file) === pathKey(tab.path))!;
+            const text = await this.platform.invoke<string>('read_document', { path });
+            documents.push(this.document(path, text, { ...tab } as OpenDocument));
+          } catch (error) {
+            failures.push(...describeDocumentErrors(error, '', tab.path, ko.fileReadError));
+          }
+        }
+        const selected =
+          scanned.files.find((file) => pathKey(file) === pathKey(savedProject.activePath ?? '')) ??
+          scanned.files[0];
+        if (selected) {
+          let document = documents.find((doc) => doc.path === selected);
+          if (!document) {
+            try {
+              document = this.document(
+                selected,
+                await this.platform.invoke<string>('read_document', { path: selected }),
+              );
+              documents.push(document);
+            } catch (error) {
+              failures.push(...describeDocumentErrors(error, '', selected, ko.fileReadError));
+            }
+          }
+          project.activePath = document?.path ?? null;
+        }
+        projects.push(project);
       } catch (error) {
-        failures.push(
-          ...(describeDocumentErrors(error, '', tab.path, ko.fileReadError) as Problem[]),
-        );
+        failures.push(...describeDocumentErrors(error, '', savedProject.path, ko.projectReadError));
       }
     }
-    const activePath = documents.some((doc) => doc.path === saved.activePath)
-      ? saved.activePath
-      : (documents.at(-1)?.path ?? null);
+    const project =
+      projects.find(
+        (project) => pathKey(project.path) === pathKey(saved.activeProjectPath ?? ''),
+      ) ?? projects.at(-1);
     this.patch({
+      projects,
       documents,
-      activePath,
-      recent: saved.recentFiles,
+      activeProjectPath: project?.path ?? null,
+      activePath: project?.activePath ?? null,
+      recent: saved.recentProjects,
       ready: true,
       operationProblems: failures,
     });
@@ -175,78 +227,126 @@ export class WorkspaceStore {
     await this.poll();
   }
   private title() {
-    this.platform.setTitle(
-      this.active?.model?.title ?? (this.state.activePath?.split(/[\\/]/).pop() || 'Worktree'),
-    );
+    this.platform.setTitle(this.activeProject ? folderName(this.activeProject.path) : 'Worktree');
   }
   private saveSession() {
     if (!this.state.ready) return;
-    const documents = this.state.documents.slice(-MAX_SESSION_TABS);
-    const selected = this.active;
-    if (selected && !documents.includes(selected)) documents.splice(0, 1, selected);
     void this.session
-      .save({
-        schemaVersion: 1,
-        recentFiles: this.state.recent.slice(0, MAX_RECENT_FILES),
-        tabs: documents.map(({ path, view, ganttUnit }) => ({ path, view, ganttUnit })),
-        activePath: this.state.activePath,
-      })
+      .save(projectSession(this.state))
       .catch((error: unknown) => this.report(error, '', ko.sessionSaveError));
   }
   async open(path: string) {
+    const revision = ++this.openRevision;
     try {
-      const text = await this.platform.invoke<string>('read_document', { path });
-      const previous = this.state.documents.find((doc) => doc.path === path);
-      const next = this.document(path, text, previous);
-      const documents = previous
-        ? this.state.documents.map((doc) => (doc.path === path ? next : doc))
-        : [...this.state.documents, next];
+      const scanned = await this.platform.invoke<ScannedProject>('scan_project', { path });
+      if (revision !== this.openRevision) return;
+      const previous = this.state.projects.find(
+        (project) => pathKey(project.path) === pathKey(scanned.path),
+      );
+      for (const file of previous?.files ?? []) {
+        if (/\.(md|markdown)$/i.test(file) && !scanned.files.includes(file))
+          scanned.files.push(file);
+      }
+      if (!previous && this.state.projects.length >= MAX_SESSION_TABS)
+        throw Error(messages.projectTabLimit);
+      const selected =
+        scanned.selectedPath ??
+        scanned.files.find((file) => pathKey(file) === pathKey(previous?.activePath ?? '')) ??
+        scanned.files[0] ??
+        null;
+      const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
+      let document: OpenDocument | undefined;
+      let errors: Problem[] = [];
+      if (selected) {
+        try {
+          document = this.document(
+            selected,
+            await this.platform.invoke<string>('read_document', { path: selected }),
+            this.state.documents.find((doc) => doc.path === selected),
+          );
+        } catch (error) {
+          errors = describeDocumentErrors(error, '', selected, ko.fileReadError);
+        }
+      }
+      if (revision !== this.openRevision) return;
+      project.activePath = document?.path ?? null;
+      const same = project.activePath === this.state.activePath;
       this.patch({
-        documents,
-        activePath: path,
-        selectedId: path === this.state.activePath ? this.validSelection(next.model) : null,
-        owner: path === this.state.activePath ? this.state.owner : 'all',
-        recent: [path, ...this.state.recent.filter((item) => item !== path)].slice(
-          0,
-          MAX_RECENT_FILES,
-        ),
-        operationProblems: [],
+        projects: previous
+          ? this.state.projects.map((item) => (item === previous ? project : item))
+          : [...this.state.projects, project],
+        documents: document
+          ? [...this.state.documents.filter((doc) => doc.path !== document.path), document]
+          : this.state.documents,
+        activeProjectPath: project.path,
+        activePath: project.activePath,
+        selectedId: same ? this.validSelection(document?.model ?? null) : null,
+        owner: same ? this.state.owner : 'all',
+        recent: [
+          project.path,
+          ...this.state.recent.filter((item) => pathKey(item) !== pathKey(project.path)),
+        ].slice(0, MAX_RECENT_FILES),
+        operationProblems: errors,
         problemsOpen: false,
       });
       this.title();
       this.saveSession();
     } catch (error) {
-      this.report(error, path, ko.fileReadError);
+      if (revision === this.openRevision) this.report(error, path, ko.projectReadError);
     }
   }
   async pick() {
     try {
-      const path = await this.platform.invoke<string | null>('pick_document');
+      const path = await this.platform.invoke<string | null>('pick_project');
       if (path) await this.open(path);
     } catch (error) {
       this.report(error);
     }
   }
-  selectDocument(path: string) {
-    if (!this.state.documents.some((doc) => doc.path === path)) return;
-    this.patch({
-      activePath: path,
-      selectedId: null,
-      owner: 'all',
-      operationProblems: [],
-      problemsOpen: false,
-    });
-    this.title();
-    this.saveSession();
+  async selectDocument(path: string) {
+    const project = this.activeProject;
+    if (!project?.files.includes(path)) return;
+    const revision = ++this.openRevision;
+    try {
+      const next = this.document(
+        path,
+        await this.platform.invoke<string>('read_document', { path }),
+        this.state.documents.find((doc) => doc.path === path),
+      );
+      if (revision !== this.openRevision || this.state.activeProjectPath !== project.path) return;
+      this.patch({
+        documents: [...this.state.documents.filter((doc) => doc.path !== path), next],
+        projects: this.state.projects.map((item) =>
+          item.path === project.path ? { ...item, activePath: path } : item,
+        ),
+        activePath: path,
+        selectedId: null,
+        owner: 'all',
+        operationProblems: [],
+        problemsOpen: false,
+      });
+      this.saveSession();
+    } catch (error) {
+      if (revision === this.openRevision) this.report(error, path, ko.fileReadError);
+    }
   }
-  closeDocument(path: string) {
-    const documents = this.state.documents.filter((doc) => doc.path !== path);
-    const changed = path === this.state.activePath;
+  selectProject(path: string) {
+    return this.open(path);
+  }
+  closeProject(path: string) {
+    ++this.openRevision;
+    const projects = this.state.projects.filter((project) => project.path !== path);
+    const changed = path === this.state.activeProjectPath;
+    const selected = changed ? projects.at(-1) : this.activeProject;
     this.patch({
-      documents,
+      projects,
+      documents: this.state.documents.filter((doc) =>
+        projects.some((project) => project.files.includes(doc.path)),
+      ),
       ...(changed
         ? {
-            activePath: documents.at(-1)?.path ?? null,
+            activeProjectPath: selected?.path ?? null,
+            activePath: selected?.activePath ?? null,
             selectedId: null,
             owner: 'all',
             operationProblems: [],
@@ -259,17 +359,18 @@ export class WorkspaceStore {
   }
   reorder(source: string, target: string, after: boolean) {
     const paths = reorderDocumentTabs(
-      this.state.documents.map((doc) => doc.path),
+      this.state.projects.map((project) => project.path),
       source,
       target,
       after,
     );
     this.patch({
-      documents: paths.map((path: string) =>
-        this.state.documents.find((doc) => doc.path === path)!,
-      ),
+      projects: paths.map((path) => this.state.projects.find((project) => project.path === path)!),
     });
     this.saveSession();
+  }
+  async refreshProject() {
+    if (this.activeProject) await this.open(this.activeProject.path);
   }
   setView(view: View) {
     this.patch({

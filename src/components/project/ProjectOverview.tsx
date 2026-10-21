@@ -1,11 +1,21 @@
+import { folderName } from '../../domain/project-paths';
 import { messages } from '../../i18n/messages';
-import { STATUS_NAMES, TYPE_NAMES, type WorkModel } from '../../app/types';
-export function ProjectOverview({ model, path }: { model: WorkModel; path: string | null }) {
+import { STATUS_NAMES, TYPE_NAMES, type OpenProject, type WorkModel } from '../../app/types';
+export function ProjectOverview({
+  model,
+  path,
+  project,
+}: {
+  model: WorkModel | null;
+  path: string | null;
+  project: OpenProject;
+}) {
   const facts = [
-    [messages.projectName, model.title],
+    [messages.projectName, folderName(project.path)],
+    [messages.projectFolder, project.path],
     [messages.sourceDocument, path ?? '—'],
-    [messages.idPrefix, model.idPrefix],
-    [messages.useEffort, model.useEffort ? messages.enabled : messages.disabled],
+    [messages.idPrefix, model?.idPrefix ?? '—'],
+    [messages.useEffort, model ? (model.useEffort ? messages.enabled : messages.disabled) : '—'],
   ];
   return (
     <div className="project-overview">

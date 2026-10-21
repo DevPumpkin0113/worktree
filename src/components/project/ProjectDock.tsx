@@ -1,15 +1,10 @@
+import { folderName } from '../../domain/project-paths';
 import { messages } from '../../i18n/messages';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { bindDocumentTabs } from '../../interactions/document-tabs';
 import type { WorkspaceStore } from '../../app/workspace-store';
 import type { WorkspaceSnapshot } from '../../app/types';
-export function DocumentDock({
-  store,
-  state,
-}: {
-  store: WorkspaceStore;
-  state: WorkspaceSnapshot;
-}) {
+export function ProjectDock({ store, state }: { store: WorkspaceStore; state: WorkspaceSnapshot }) {
   const tabs = useRef<HTMLDivElement>(null),
     dock = useRef<HTMLElement>(null);
   const [recentOpen, setRecentOpen] = useState(false);
@@ -19,14 +14,14 @@ export function DocumentDock({
   useLayoutEffect(() => {
     const root = tabs.current!;
     drag.current = bindDocumentTabs(root, {
-      getPaths: () => store.getSnapshot().documents.map((doc) => doc.path),
+      getPaths: () => store.getSnapshot().projects.map((doc) => doc.path),
       isEnabled: () => latest.current.ready && !latest.current.settingsOpen,
       move(source: string, target: string, after: boolean) {
         const scroll = root.scrollLeft;
         store.reorder(source, target, after);
         requestAnimationFrame(() => {
           root.scrollLeft = scroll;
-          const index = store.getSnapshot().documents.findIndex((doc) => doc.path === source);
+          const index = store.getSnapshot().projects.findIndex((doc) => doc.path === source);
           root
             .querySelector<HTMLButtonElement>(`[data-tab="${index}"]`)
             ?.focus({ preventScroll: true });
@@ -67,12 +62,12 @@ export function DocumentDock({
   return (
     <nav
       ref={dock}
-      id="documentDock"
+      id="projectDock"
       className="document-dock"
-      aria-label={messages.openDocuments}
+      aria-label={messages.openProjects}
       inert={state.settingsOpen}
     >
-      <span className="dock-label">{messages.documents}</span>
+      <span className="dock-label">{messages.projects}</span>
       <div
         ref={tabs}
         id="tabs"
@@ -83,27 +78,29 @@ export function DocumentDock({
           }
         }}
       >
-        {state.documents.length ? (
-          state.documents.map((doc, index) => {
-            const title = doc.model?.title ?? doc.path.split(/[\\/]/).pop();
+        {state.projects.length ? (
+          state.projects.map((doc, index) => {
+            const title = folderName(doc.path);
             return (
               <div
                 data-tab-index={index}
                 key={doc.path}
-                className={'document-tab' + (doc.path === state.activePath ? ' selected' : '')}
+                className={
+                  'document-tab' + (doc.path === state.activeProjectPath ? ' selected' : '')
+                }
                 title={doc.path}
               >
                 <button
                   data-tab={index}
                   title={doc.path + messages.reorderTabHint}
                   aria-keyshortcuts="Alt+Shift+ArrowLeft Alt+Shift+ArrowRight"
-                  aria-pressed={doc.path === state.activePath}
+                  aria-pressed={doc.path === state.activeProjectPath}
                   onClick={(event) => {
                     if (drag.current?.consumeClick()) {
                       event.stopPropagation();
                       return;
                     }
-                    store.selectDocument(doc.path);
+                    void store.selectProject(doc.path);
                   }}
                 >
                   {title}
@@ -111,10 +108,10 @@ export function DocumentDock({
                 <button
                   className="tab-close"
                   data-close-tab={index}
-                  aria-label={title + messages.closeDocumentSuffix}
+                  aria-label={title + messages.closeProjectSuffix}
                   onClick={(event) => {
                     event.stopPropagation();
-                    store.closeDocument(doc.path);
+                    store.closeProject(doc.path);
                   }}
                 >
                   ×
@@ -123,13 +120,13 @@ export function DocumentDock({
             );
           })
         ) : (
-          <span className="dock-empty">{messages.noOpenDocument}</span>
+          <span className="dock-empty">{messages.noOpenProject}</span>
         )}
       </div>
       <div
         id="recentFiles"
         className="recent-files"
-        aria-label={messages.recentFiles}
+        aria-label={messages.recentProjects}
         hidden={!recentOpen}
       >
         {state.recent.length ? (
@@ -148,17 +145,17 @@ export function DocumentDock({
             </button>
           ))
         ) : (
-          <p>{messages.noRecentFiles}</p>
+          <p>{messages.noRecentProjects}</p>
         )}
       </div>
       <button
         id="recentOpen"
         type="button"
         className="dock-open recent-open"
-        aria-label={messages.recentFiles}
+        aria-label={messages.recentProjects}
         aria-expanded={recentOpen}
         aria-controls="recentFiles"
-        title={messages.recentFiles}
+        title={messages.recentProjects}
         disabled={!state.ready}
         onClick={() => setRecentOpen((value) => !value)}
       >
@@ -167,8 +164,8 @@ export function DocumentDock({
       <button
         id="dockOpen"
         className="dock-open"
-        aria-label={messages.openDocument}
-        title={messages.openDocument}
+        aria-label={messages.openProject}
+        title={messages.openProject}
         disabled={!state.ready}
         onClick={() => void store.pick()}
       >

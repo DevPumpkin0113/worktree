@@ -1,0 +1,5 @@
+# Keep Prettier inputs consistent on Windows and CI.
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.json text eol=lf

@@ -380,3 +380,5 @@ Rust save_document는 5MiB 제한·읽기 전용 검사·원본 내용 비교 �
 - 프로젝트 내부 가이드·배포 양식·예제는 WBS v2를 사용한다. 구형 예제는 tests/fixtures/legacy-error.wbs로 분리해 호환 검증을 유지한다. 외부 공용 양식은 이번 작업에서 변경하지 않았다.
 - Node 도메인·DOM 통합 테스트 96개, 타입·포맷·버전 검사와 Vite 빌드가 통과했다. 실제 WebView2 화면·설치 후 파일 연결·새 기능 인수는 별도이며 자동 테스트 통과로 완료 처리하지 않는다.
 - Windows 설치 프로그램은 승인된 main 릴리즈 CI에서 생성하고 서명·변조 거부 검사를 수행한다.
+
+- 0.20.1 첫 CI는 Windows checkout의 CRLF 변환으로 포맷 검사에서 중단됐다. .gitattributes에서 TS·TSX·CSS·JSON을 LF로 고정해 로컬과 CI의 입력을 일치시켰다.

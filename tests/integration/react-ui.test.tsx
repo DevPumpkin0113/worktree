@@ -144,7 +144,9 @@ test('React 워크스페이스는 세션·페이지·필터·ID 설정과 상세
   const f = await fixture();
   try {
     assert.match(f.element('#content').textContent!, /OBS002/);
-    assert.equal(f.element('#metrics').textContent!.includes('공수'), false);
+    assert.equal(f.host.querySelector('#metrics'), null);
+    assert.match(f.element('.compact-progress').textContent!, /50%/);
+    assert.match(f.element('.compact-progress').textContent!, /1\/2 완료/);
     await f.click('[data-workspace-page="tasks"]');
     assert.equal(f.host.querySelectorAll('.all-task-link').length, 2);
     await f.value('#search', '댓글');
@@ -169,6 +171,9 @@ test('React 워크스페이스는 세션·페이지·필터·ID 설정과 상세
     await f.click('#close');
     await f.click('[data-workspace-page="analytics"]');
     assert.equal(f.host.querySelectorAll('.analytics-card').length, 3);
+    assert.equal(f.element('#content #metrics').textContent!.includes('공수'), false);
+    assert.equal(f.host.querySelector('.compact-progress'), null);
+    assert.equal(f.host.querySelector('.workspace-page-chip'), null);
     await f.click('#workspaceCollapse');
     assert.ok(document.documentElement.classList.contains('workspace-nav-collapsed'));
     await f.click('[data-workspace-page="board"]');
@@ -468,6 +473,58 @@ test('커스텀 필터는 키보드 선택·취소·바깥 클릭과 선택 표�
     await key('Home');
     await key('Enter');
     assert.equal(f.store.getSnapshot().status, 'all');
+  } finally {
+    await f.close();
+  }
+});
+
+test('앱 설정과 프로젝트 관리는 진입점·내용을 분리하고 프로젝트 조회는 파일을 저장하지 않는다', async () => {
+  const f = await fixture();
+  try {
+    assert.equal(f.element('#settingsOpen').getAttribute('aria-label'), '앱 설정');
+    const saves = f.calls.filter((call) => call.command === 'save_settings').length;
+    await f.click('#projectManageOpen');
+    assert.ok(f.element('#content #projectManagement'));
+    assert.equal(f.host.querySelector('dialog#projectManagement'), null);
+    assert.equal(f.element('#workspacePageTitle').textContent, '프로젝트 관리');
+    assert.match(f.element('.project-overview').textContent!, /OBS/);
+    assert.match(f.element('.project-overview').textContent!, /사용 안 함/);
+    assert.equal(
+      f.host.querySelectorAll('#projectManagement input,#projectManagement select').length,
+      0,
+    );
+    await f.click('[data-workspace-page="board"]');
+    assert.equal(f.host.querySelector('#projectManagement'), null);
+    await f.click('#settingsOpen');
+    assert.equal(f.element('#settingsTitle').textContent, '앱 설정');
+    assert.equal(f.host.querySelector('#projectManagement'), null);
+    await f.click('#settingsClose');
+    await f.click('#projectManageOpen');
+    await f.click('#settingsOpen');
+    await f.click('#settingsClose');
+    assert.ok(f.element('#content #projectManagement'));
+    await f.click('[data-workspace-page="tasks"]');
+    assert.equal(f.host.querySelector('#projectManagement'), null);
+    assert.equal(f.calls.filter((call) => call.command === 'save_settings').length, saves);
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 파일 트리 시안은 현재 WBS 표시·접기·작업 보드 이동을 지원하고 문서 탭을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    assert.equal(f.element('#projectFiles .project-file').textContent, 'first.wbs');
+    assert.equal(f.element('#projectTreeToggle').getAttribute('aria-expanded'), 'true');
+    await f.click('#projectTreeToggle');
+    assert.equal(f.element('#projectTreeToggle').getAttribute('aria-expanded'), 'false');
+    assert.ok(f.element('#projectFiles').parentElement?.hidden);
+    await f.click('#projectTreeToggle');
+    await f.click('#projectManageOpen');
+    await f.click('#projectFiles .project-file');
+    assert.equal(f.store.getSnapshot().page, 'board');
+    assert.equal(f.store.getSnapshot().activePath, first);
+    assert.equal(f.host.querySelectorAll('[data-tab-index]').length, 2);
   } finally {
     await f.close();
   }

@@ -164,6 +164,8 @@ summary {
   overflow: auto;
 }
 .lane {
+  --lane-heading-background: var(--color-tag-background);
+  --lane-heading-color: var(--color-text-secondary);
   background: var(--color-lane-background);
   border-radius: 9px;
   padding: 12px;
@@ -176,8 +178,36 @@ summary {
   margin: 10px 0;
   padding: 14px;
 }
-.lane h3 {
-  font-size: 14px;
+.lane-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  border-left: 3px solid var(--lane-heading-color);
+  font-size: 13px;
+  background: var(--lane-heading-background);
+  color: var(--lane-heading-color);
+}
+.lane[data-status='doing'] {
+  --lane-heading-background: var(--color-status-doing-bg);
+  --lane-heading-color: var(--color-status-doing-text);
+}
+.lane[data-status='blocked'] {
+  --lane-heading-background: var(--color-status-blocked-bg);
+  --lane-heading-color: var(--color-status-blocked-text);
+}
+.lane[data-status='done'] {
+  --lane-heading-background: var(--color-status-done-bg);
+  --lane-heading-color: var(--color-status-done-text);
+}
+.lane-count {
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  background: var(--color-surface);
 }
 .empty {
   color: var(--color-text-secondary);
@@ -540,7 +570,7 @@ main {
   height: 24px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.5;
+  stroke-width: 1.25;
   stroke-linecap: round;
   stroke-linejoin: round;
   pointer-events: none;

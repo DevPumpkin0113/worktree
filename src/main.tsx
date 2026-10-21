@@ -13,3 +13,5 @@ const store = new WorkspaceStore(createNativePlatform());
 createRoot(document.getElementById('root')!).render(<App store={store} />);
 
 import './styles/filters.css';
+
+import './styles/project.css';

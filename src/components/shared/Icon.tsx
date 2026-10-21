@@ -1,5 +1,17 @@
 import type { CSSProperties, ReactNode } from 'react';
 const icons: Record<string, ReactNode> = {
+  'wbs-file': (
+    <>
+      <path d="M14 3H5v18h14V8zM14 3v5h5M8 12h8M8 16h8" />
+    </>
+  ),
+  project: (
+    <>
+      <path d="M9 6V4h6v2" />
+      <rect x="3" y="6" width="18" height="15" rx="2" />
+      <path d="M3 12h18M10 12v3h4v-3" />
+    </>
+  ),
   'chevron-right': <path d="m6 4 4 4-4 4" />,
   workspace: (
     <>

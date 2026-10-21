@@ -92,14 +92,7 @@ body:has(#detail.sidebar[open]) main#workspace {
   font-size: 11px;
   color: var(--color-workspace-page-heading-p-color);
 }
-.workspace-page-chip {
-  font-size: 10px;
-  color: var(--color-workspace-page-chip-color);
-  border: 1px solid var(--color-filter-options-border);
-  border-radius: 5px;
-  padding: 4px 7px;
-  white-space: nowrap;
-}
+
 .all-tasks {
   overflow: auto;
 }
@@ -170,15 +163,7 @@ body:has(#detail.sidebar[open]) main#workspace {
   font-size: 12px;
   color: var(--color-workspace-page-heading-p-color);
 }
-.analytics-preview-label {
-  display: inline-block;
-  font-size: 10px;
-  background: var(--color-recent-files-button-hover-background);
-  color: var(--color-analytics-preview-label-color);
-  border-radius: 5px;
-  padding: 5px 8px;
-  margin-top: 8px;
-}
+
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -229,9 +214,6 @@ body:has(#detail.sidebar[open]) main#workspace {
   }
   .workspace-nav {
     padding: 20px 8px;
-  }
-  .workspace-page-chip {
-    display: none;
   }
   .workspace-page-heading {
     margin-bottom: 14px;
@@ -336,4 +318,57 @@ body:has(#detail.sidebar[open]) main#workspace {
   height: 20px;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.compact-progress {
+  flex: 0 1 190px;
+  min-width: 145px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.compact-progress > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.compact-progress strong {
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-left: 4px;
+}
+.compact-progress-count {
+  white-space: nowrap;
+}
+.compact-progress progress {
+  display: block;
+  width: 100%;
+  height: 5px;
+  margin-top: 7px;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  appearance: none;
+  background: var(--color-metric-progress-progress-background);
+  accent-color: var(--color-primary);
+}
+.compact-progress progress::-webkit-progress-bar {
+  background: var(--color-metric-progress-progress-background);
+  border-radius: 4px;
+}
+.compact-progress progress::-webkit-progress-value {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+.compact-progress progress::-moz-progress-bar {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+@media (max-width: 600px) {
+  .workspace-page-heading {
+    flex-wrap: wrap;
+  }
+  .compact-progress {
+    flex-basis: 170px;
+  }
 }

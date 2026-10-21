@@ -31,11 +31,11 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
       }}
     >
       <header className="settings-topbar">
-        <h2 id="settingsTitle">설정</h2>
+        <h2 id="settingsTitle">앱 설정</h2>
         <button
           id="settingsClose"
           className="modal-close"
-          aria-label="설정 닫기"
+          aria-label="앱 설정 닫기"
           title="닫기"
           autoFocus
           onClick={() => store.closeSettings()}
@@ -48,7 +48,7 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
           <nav
             className="settings-menu"
             role="tablist"
-            aria-label="설정 메뉴"
+            aria-label="앱 설정 메뉴"
             aria-orientation="vertical"
           >
             {(['display', 'about'] as const).map((key, index) => (

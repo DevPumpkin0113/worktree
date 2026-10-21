@@ -66,8 +66,8 @@ export function Titlebar({
           aria-expanded={settingsOpen}
           aria-pressed={settingsOpen}
           aria-controls="settings"
-          aria-label="설정"
-          title="설정"
+          aria-label="앱 설정"
+          title="앱 설정"
           onClick={() => store.toggleSettings()}
         >
           <Icon name="settings" />

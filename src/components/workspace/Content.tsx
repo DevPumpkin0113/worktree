@@ -1,8 +1,9 @@
+import { ProjectManagement } from '../project/ProjectManagement';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { workOwners, matchesWork } from '../../domain/work-filter';
 import { createDocumentViewState } from '../../interactions/document-view-state';
-import { Metrics } from './Metrics';
+import { CompactProgress } from './CompactProgress';
 import { TreeView } from './TreeView';
 import { KanbanView } from './KanbanView';
 import { AllTasks } from './AllTasks';
@@ -61,12 +62,15 @@ export function Content({
           <h2 id="workspacePageTitle">{PAGES[state.page][0]}</h2>
           <p id="workspacePageDescription">{PAGES[state.page][1]}</p>
         </div>
-        <span className="workspace-page-chip">워크스페이스</span>
+        {(state.page === 'board' || state.page === 'tasks') && model ? (
+          <CompactProgress rows={model.rows} />
+        ) : null}
       </div>
-      {state.page !== 'analytics' && model ? (
-        <Metrics rows={model.rows} useEffort={model.useEffort} />
-      ) : null}
-      <div id="workspaceTools" className="tools" hidden={state.page === 'analytics'}>
+      <div
+        id="workspaceTools"
+        className="tools"
+        hidden={state.page === 'analytics' || state.page === 'project'}
+      >
         {(Object.keys(VIEWS) as View[]).map((view) => (
           <button
             key={view}
@@ -132,8 +136,10 @@ export function Content({
         />
       </div>
       <div id="content" ref={root} onScrollCapture={capture}>
-        {state.page === 'analytics' ? (
-          <Analytics />
+        {state.page === 'project' && model ? (
+          <ProjectManagement model={model} path={active?.path ?? null} />
+        ) : state.page === 'analytics' ? (
+          <Analytics model={model ?? null} />
         ) : !active ? (
           <div className="empty">우측 하단 + 버튼으로 문서를 열거나 파일을 끌어오세요.</div>
         ) : !model ? (

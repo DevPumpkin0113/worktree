@@ -1,12 +1,18 @@
-export function Analytics() {
+import { Metrics } from './Metrics';
+import type { WorkModel } from '../../app/types';
+export function Analytics({ model }: { model: WorkModel | null }) {
   return (
     <>
       <section className="analytics-intro">
         <span className="workspace-eyebrow">PROJECT INSIGHTS</span>
         <h2>진행 상황을 한눈에</h2>
-        <p>프로젝트의 흐름과 팀의 작업 현황을 확인할 공간입니다.</p>
-        <span className="analytics-preview-label">화면 구성 미리보기 · 분석 데이터 연결 전</span>
+        <p>현재 문서의 작업 완료 현황을 확인하세요.</p>
       </section>
+      {model ? (
+        <Metrics rows={model.rows} useEffort={model.useEffort} />
+      ) : (
+        <p className="empty">WBS 문서를 열면 진행 현황이 표시됩니다.</p>
+      )}
       <div className="analytics-grid">
         {[
           ['진행 추이', '시간에 따른 작업 완료 흐름'],

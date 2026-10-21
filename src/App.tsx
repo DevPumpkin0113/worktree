@@ -57,6 +57,11 @@ export function App({ store }: { store: WorkspaceStore }) {
     <>
       <Titlebar store={store} settingsOpen={state.settingsOpen} />
       <WorkspaceNav
+        projectPath={state.activePath}
+        projectTitle={model?.title ?? null}
+        onManage={() => {
+          store.setPage('project');
+        }}
         page={state.page}
         collapsed={collapsed}
         onPage={(page) => store.setPage(page)}

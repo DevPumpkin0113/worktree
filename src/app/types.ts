@@ -1,7 +1,7 @@
 import type { Status, WorkModel, Problem } from '../domain/types';
 export type { Status, WorkRow, WorkModel, Problem } from '../domain/types';
 export type View = 'tree' | 'board' | 'flow' | 'gantt';
-export type Page = 'board' | 'tasks' | 'analytics';
+export type Page = 'board' | 'tasks' | 'analytics' | 'project';
 export type DetailMode = 'sidebar' | 'modal';
 export interface OpenDocument {
   path: string;

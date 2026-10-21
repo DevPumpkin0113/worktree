@@ -176,7 +176,12 @@ export function Content({
         {store.activeProject && store.activeProject.files.length === 0 ? (
           <ProjectInitializer key={store.activeProject.path} store={store} />
         ) : state.page === 'project' && store.activeProject ? (
-          <ProjectManagement model={model ?? null} project={store.activeProject} />
+          <ProjectManagement
+            key={store.activeProject.path}
+            store={store}
+            model={model ?? null}
+            project={store.activeProject}
+          />
         ) : state.page === 'analytics' ? (
           <Analytics model={model ?? null} />
         ) : !active ? (

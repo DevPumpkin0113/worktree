@@ -1,6 +1,6 @@
 [package]
 name = "worktree"
-version = "0.24.0"
+version = "0.25.0"
 description = "Local-first project and task manager"
 edition = "2021"
 

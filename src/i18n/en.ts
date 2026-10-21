@@ -1,6 +1,23 @@
 import type { ko } from './ko';
 
 export const en = {
+  commonRulesHint: 'Shared task rules for this project.',
+
+  editProject: 'Edit project',
+  projectTypesHint:
+    'Separate values with commas. Reassign tasks before removing a type that is in use.',
+  projectLabelsHint:
+    'Separate shared labels with commas. Removing one here keeps labels already recorded on tasks.',
+  resetProjectSettings: 'Discard changes',
+  projectSettingsSaved: 'Project settings saved.',
+  projectSaveFailed: 'Could not save project settings: ',
+  projectSettingsConflict:
+    'The project changed externally and was not saved. Keep a copy of your input or discard changes to load the latest settings, then retry.',
+  projectNameRequired: 'Enter a project name of 1–200 characters on one line.',
+  projectTypesRequired: 'Enter at least one task type.',
+  projectDuplicateValues: 'Task types and labels must not contain duplicates.',
+  projectTypeInUse: (type: string) => `Cannot remove a task type that is in use: ${type}`,
+
   projectDependencyError: 'A predecessor must reference another existing regular task.',
   projectCycleError: 'The dependency graph contains a cycle.',
   projectDependencyDateError: 'The start date must be after the predecessor’s end date.',
@@ -169,8 +186,6 @@ export const en = {
   comments: 'Comments',
   commentShortcut: 'Ctrl+Enter to post · temporary storage',
   commit: 'Commit',
-  commonRulesHint:
-    'Task types and shared settings are stored in project.json inside the data directory.',
   completedSuffix: ' completed',
   completedTotal: 'Completed / total',
   completionRate: 'Progress',
@@ -307,7 +322,6 @@ export const en = {
   projectManagement: 'Project management',
   projectManagementDescription: 'View project information and task rules.',
   projectName: 'Project name',
-  projectReadOnlyHint: 'Project settings and data location. Edit tasks from their details.',
   readOnly: 'Read-only',
   reason: 'Cause',
   reasonPrefix: 'Cause: ',

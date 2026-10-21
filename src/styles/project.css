@@ -60,7 +60,10 @@
 }
 .project-management {
   width: 100%;
-  max-width: 900px;
+  max-width: none;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   color: var(--color-text);
 }
 .project-overview {
@@ -70,14 +73,6 @@
   background: var(--color-nav-selected);
   color: var(--color-primary);
   border-color: var(--color-primary);
-}
-.project-management-notice {
-  margin: 0 0 24px;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--color-surface-muted);
-  color: var(--color-text-secondary);
-  font-size: 12px;
 }
 .project-management-section + .project-management-section {
   margin-top: 24px;
@@ -134,4 +129,69 @@
   flex: none;
   margin-right: 6px;
   accent-color: var(--color-primary);
+}
+
+.project-settings-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.project-overview dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.project-settings-fields input {
+  min-width: 0;
+  width: 100%;
+  font-size: 12px;
+}
+.project-settings-fields input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+.project-settings-fields input:disabled {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.project-settings-fields small {
+  display: block;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-top: 6px;
+}
+.project-settings-fields .project-management-section dl > div {
+  align-items: center;
+}
+.project-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.project-settings-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.project-settings-feedback {
+  color: var(--color-primary);
+  font-size: 13px;
+}
+
+.project-management-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+.project-initialize-preview,
+.project-initialize-preview:hover {
+  background: var(--color-error-focus);
+  border-color: var(--color-error-focus);
+  color: var(--color-text-inverse);
 }

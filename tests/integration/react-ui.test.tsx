@@ -174,6 +174,7 @@ test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 
     assert.equal(f.store.active?.model?.title, '둘째 프로젝트');
     await f.click('#projectManageOpen');
     assert.ok(f.host.textContent?.includes('docs/worktree'));
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
     assert.equal(f.host.querySelector('#projectManagement dialog'), null);
     await f.click('#workspaceCollapse');
     assert.ok(document.documentElement.classList.contains('workspace-nav-collapsed'));
@@ -512,6 +513,131 @@ test('프로젝트 문서 집합에서도 간트 7일·5주와 단위별 스크�
     assert.ok(
       Math.abs(Number(f.element<HTMLElement>('.gantt-scroll').dataset.windowStart) - saved) < 1,
     );
+  } finally {
+    await f.close();
+  }
+});
+
+test('프로젝트 관리는 조회·수정의 항목 순서를 유지하고 고정 값만 비활성화한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    assert.ok(f.host.textContent?.includes('기본 정보'));
+    const overviewFields = [...f.host.querySelectorAll('#projectManagement dt')].map(
+      (node) => node.textContent,
+    );
+    await f.click('#projectInitializePreview');
+    assert.ok(
+      !f.calls.some(
+        (call) => call.command === 'initialize_project' || call.command === 'save_project',
+      ),
+    );
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    await f.click('#projectEditOpen');
+    assert.deepEqual(
+      [...f.host.querySelectorAll('#projectManagement dt')].map((node) => node.textContent),
+      overviewFields,
+    );
+    assert.equal(f.host.querySelector('.project-fixed-settings'), null);
+    assert.equal(f.element<HTMLButtonElement>('#projectSettings-save').disabled, true);
+    for (let i = 0; i < 4; i++) {
+      assert.ok(f.element<HTMLInputElement>('#projectFixed-' + i).disabled);
+      assert.ok(f.element('#projectFixed-' + i).matches(':disabled'));
+    }
+    await f.value('#projectSettings-name', '프로젝트 변경');
+    await f.value('#projectSettings-taskTypes', 'feature, bug, improvement, task, 운영');
+    await f.value('#projectSettings-labels', 'ui, backend');
+    await f.click('#projectSettings-useEffort');
+    await act(async () => {
+      const form = f.element('#projectSettingsForm');
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    assert.equal(f.calls.filter((call) => call.command === 'save_project').length, 1);
+    assert.equal(f.store.active?.model?.title, '프로젝트 변경');
+    assert.equal(f.store.active?.model?.useEffort, true);
+    assert.ok(f.store.active?.model?.taskTypes?.includes('운영'));
+    assert.ok(f.host.textContent?.includes('프로젝트 설정을 저장했습니다.'));
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    await f.click('[data-workspace-page="tasks"]');
+    await f.click('#taskAddOpen');
+    await f.click('#taskEditor-taskType');
+    assert.ok(f.host.textContent?.includes('운영'));
+  } finally {
+    await f.close();
+  }
+});
+test('프로젝트 설정의 저장 실패와 사용 중인 유형 제거는 입력과 원본을 보존한다', async () => {
+  const f = await fixture();
+  try {
+    const original = f.files.get(first);
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.value('#projectSettings-name', '저장할 이름');
+    f.setSaveFailure(true);
+    await f.click('#projectSettings-save');
+    assert.match(f.element('#projectSettings-error').textContent ?? '', /disk failure/);
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '저장할 이름');
+    assert.equal(f.files.get(first), original);
+    f.setSaveFailure(false);
+    await f.value('#projectSettings-taskTypes', 'bug');
+    await f.click('#projectSettings-save');
+    assert.match(f.element('#projectSettings-error').textContent ?? '', /feature/);
+    assert.equal(f.files.get(first), original);
+    await f.click('#projectSettings-reset');
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    await f.click('#projectEditOpen');
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '첫 프로젝트');
+    assert.equal(f.host.querySelector('#projectSettings-error'), null);
+  } finally {
+    await f.close();
+  }
+});
+test('설정 편집 중 외부 변경은 초안을 유지하고 충돌 후 변경 취소로 최신 설정을 불러온다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.value('#projectSettings-name', '내 초안');
+    const data = readSource(f.files.get(first)!);
+    const config = JSON.parse(data.files['project.json']);
+    config.name = '외부 이름';
+    data.files['project.json'] = JSON.stringify(config);
+    f.files.set(first, serializeSource(data));
+    await act(() => f.store.poll());
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '내 초안');
+    await f.click('#projectSettings-save');
+    assert.match(f.element('#projectSettings-error').textContent ?? '', /외부/);
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '내 초안');
+    await f.click('#projectSettings-reset');
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    await f.click('#projectEditOpen');
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '외부 이름');
+    assert.equal(f.element<HTMLButtonElement>('#projectSettings-save').disabled, true);
+  } finally {
+    await f.close();
+  }
+});
+test('읽기 오류 중에도 프로젝트 설정 초안을 유지하고 프로젝트 전환 시 서로 섞지 않는다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#projectManageOpen');
+    await f.click('#projectEditOpen');
+    await f.value('#projectSettings-name', '보존할 초안');
+    const data = readSource(f.files.get(first)!);
+    data.files['tasks/W001.md'] = data.files['tasks/W001.md'].replace(
+      'status: "doing"',
+      'status: "invalid"',
+    );
+    f.files.set(first, serializeSource(data));
+    await act(() => f.store.poll());
+    assert.equal(f.store.active?.model, null);
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '보존할 초안');
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.host.querySelector('#projectSettingsForm'), null);
+    await f.click('#projectEditOpen');
+    assert.equal(f.element<HTMLInputElement>('#projectSettings-name').value, '둘째 프로젝트');
   } finally {
     await f.close();
   }

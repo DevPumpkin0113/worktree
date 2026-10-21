@@ -1,3 +1,4 @@
+import { updateProjectSettings, type ProjectSettingsDraft } from '../domain/project-settings';
 import { deleteProjectTask } from '../domain/task-deletion';
 import type { DeleteOptions } from '../domain/task-deletion';
 import { updateProjectTask, type ProjectTaskDraft } from '../domain/task-editing';
@@ -224,7 +225,11 @@ export class WorkspaceStore {
     await this.poll();
   }
   private title() {
-    this.platform.setTitle(this.activeProject ? folderName(this.activeProject.path) : 'Worktree');
+    this.platform.setTitle(
+      this.activeProject
+        ? (this.active?.model?.title ?? folderName(this.activeProject.path))
+        : 'Worktree',
+    );
   }
   private saveSession() {
     if (!this.state.ready) return;
@@ -405,16 +410,22 @@ export class WorkspaceStore {
       ? this.state.selectedId
       : null;
   }
+  async saveProjectSettings(path: string, expected: string, draft: ProjectSettingsDraft) {
+    const text = updateProjectSettings(expected, draft);
+    await this.saveProjectSource(path, expected, text, null, messages.projectSettingsConflict);
+    this.title();
+    return text;
+  }
   async saveTask(path: string, expected: string, draft: ProjectTaskDraft, id?: string) {
     const update = updateProjectTask(expected, draft, id);
-    await this.saveTaskSource(path, expected, update.text, update.id);
+    await this.saveProjectSource(path, expected, update.text, update.id);
     return update.id;
   }
   async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
     const text = deleteProjectTask(expected, id, options);
-    await this.saveTaskSource(path, expected, text, null, messages.deleteConflict);
+    await this.saveProjectSource(path, expected, text, null, messages.deleteConflict);
   }
-  private async saveTaskSource(
+  private async saveProjectSource(
     path: string,
     expected: string,
     text: string,

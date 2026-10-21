@@ -1,4 +1,21 @@
 export const ko = {
+  commonRulesHint: '프로젝트에 적용되는 공통 작업 규칙입니다.',
+
+  editProject: '프로젝트 수정',
+  projectTypesHint:
+    '쉼표로 구분합니다. 사용 중인 유형은 먼저 작업에서 변경해야 제거할 수 있습니다.',
+  projectLabelsHint:
+    '공통 라벨을 쉼표로 구분합니다. 목록에서 제거해도 작업의 기존 라벨은 유지됩니다.',
+  resetProjectSettings: '변경 취소',
+  projectSettingsSaved: '프로젝트 설정을 저장했습니다.',
+  projectSaveFailed: '프로젝트 설정을 저장하지 못했습니다: ',
+  projectSettingsConflict:
+    '외부에서 프로젝트가 변경되어 저장하지 않았습니다. 입력을 보관하거나 변경 취소로 최신 설정을 불러온 뒤 다시 시도해 주세요.',
+  projectNameRequired: '프로젝트명을 1~200자의 한 줄로 입력해 주세요.',
+  projectTypesRequired: '작업 유형을 하나 이상 입력해 주세요.',
+  projectDuplicateValues: '작업 유형과 라벨은 중복 없이 입력해 주세요.',
+  projectTypeInUse: (type: string) => `사용 중인 작업 유형은 제거할 수 없습니다: ${type}`,
+
   projectDependencyError: '선행 작업은 존재하는 다른 일반 작업의 ID여야 합니다.',
   projectCycleError: '선행 작업 관계가 순환합니다.',
   projectDependencyDateError: '시작일은 선행 작업 종료일 다음 날 이후여야 합니다.',
@@ -166,7 +183,6 @@ export const ko = {
   comments: '댓글',
   commentShortcut: 'Ctrl+Enter로 등록 · 임시 보관',
   commit: '커밋',
-  commonRulesHint: '프로젝트의 작업 유형과 공통 설정은 데이터 폴더의 project.json에 저장합니다.',
   completedSuffix: ' 완료',
   completedTotal: '완료 / 전체',
   completionRate: '진행률',
@@ -300,7 +316,6 @@ export const ko = {
   projectManagement: '프로젝트 관리',
   projectManagementDescription: '프로젝트 정보와 작업 규칙을 확인하세요.',
   projectName: '프로젝트 이름',
-  projectReadOnlyHint: '프로젝트 설정과 데이터 저장 위치입니다. 작업은 상세에서 수정합니다.',
   readOnly: '읽기 전용',
   reason: '원인',
   reasonPrefix: '원인: ',

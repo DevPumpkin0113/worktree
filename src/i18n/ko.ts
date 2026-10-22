@@ -77,6 +77,7 @@ export const ko = {
   deleteDependentHint:
     '아래 작업은 삭제되지 않습니다. 선행 작업 목록에서 삭제 대상만 제외되며, 다른 연결은 유지됩니다.',
   deleteTaskKept: '유지됨',
+  deleteTaskRemoved: '삭제됨',
   deleteRemovedLinks: '제외되는 선행 작업',
   deleteReferencesRequired: '연결된 작업의 선행 참조를 해제할지 선택해 주세요.',
   invalidDeleteOption: '올바르지 않은 삭제 옵션입니다.',

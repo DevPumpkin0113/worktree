@@ -78,6 +78,7 @@ export const en = {
   deleteDependentHint:
     'These tasks will not be deleted. Only deleted items are removed from their predecessor lists; other links remain.',
   deleteTaskKept: 'Kept',
+  deleteTaskRemoved: 'Deleted',
   deleteRemovedLinks: 'Predecessors to remove',
   deleteReferencesRequired: 'Choose whether to remove the affected predecessor links.',
   invalidDeleteOption: 'Invalid deletion option.',

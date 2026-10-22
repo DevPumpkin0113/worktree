@@ -20,9 +20,11 @@
 .task-tabs .task-home-tab:hover,
 .task-tab:hover {
   background: var(--color-nav-selected);
+  color: var(--color-primary);
 }
 .task-tab > button:hover {
   background: transparent;
+  color: var(--color-primary);
 }
 .task-tabs .task-home-tab {
   flex: 0 0 40px;

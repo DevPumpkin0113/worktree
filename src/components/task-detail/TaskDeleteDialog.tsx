@@ -1,5 +1,6 @@
 import { useModalDismiss } from '../../hooks/use-modal-dismiss';
 import { DeleteDependencyImpact } from './DeleteDependencyImpact';
+import { DeleteChildTasks } from './DeleteChildTasks';
 import { parseProject } from '../../domain/project-document';
 import { createIdLabels } from '../../domain/id-display';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -61,7 +62,7 @@ export function TaskDeleteDialog({
     <dialog
       ref={dialog}
       id="taskDeleteDialog"
-      className="task-editor"
+      className={'task-editor' + (impact.childRows.length ? ' milestone-delete-dialog' : '')}
       aria-labelledby="taskDeleteTitle"
       {...dismiss}
     >
@@ -77,62 +78,44 @@ export function TaskDeleteDialog({
             {impact.target.milestone ? messages.deleteMilestone : messages.deleteTask}
           </h2>
         </div>
-        <p className="delete-target">
-          {impact.target.milestone
-            ? impact.target.name
-            : label(impact.target.id) + ' · ' + impact.target.name}
-        </p>
-        <p className="task-editor-hint">{messages.deleteSourceHint}</p>
-        <p className="task-editor-source" title={session.path}>
-          {session.path.split(/[\\/]/).at(-1)}
-        </p>
-        {impact.commentCount ? (
-          <p className="task-editor-hint">
-            {messages.commentsDeletedWithTask(impact.commentCount)}
-          </p>
-        ) : null}
-        {impact.childRows.length ? (
-          <fieldset className="delete-options" disabled={saving}>
-            <legend>{messages.deleteChildrenTitle(impact.childRows.length)}</legend>
-            <ul>
-              {impact.childRows.map((row) => (
-                <li key={row.id}>{label(row.id) + ' · ' + row.name}</li>
-              ))}
-            </ul>
-            {(['keep', 'delete'] as const).map((value) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="deleteChildren"
-                  value={value}
-                  checked={children === value}
-                  onChange={() => {
-                    setChildren(value);
-                    setDetach(false);
-                  }}
-                />
-                {value === 'keep' ? messages.deleteKeepChildren : messages.deleteWithChildren}
-              </label>
-            ))}
-          </fieldset>
-        ) : null}
-        {impact.dependents.length ? (
-          <DeleteDependencyImpact
-            dependents={impact.dependents}
-            removedRows={[impact.target, ...impact.childRows].filter((row) =>
-              impact.removed.has(row.id),
-            )}
-            label={label}
-            checked={detach}
-            disabled={saving}
-            onChange={setDetach}
-          />
-        ) : null}
-        {error ? (
-          <p id="taskDeleteError" className="task-editor-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <div className="task-delete-body">
+          <p className="delete-target">{label(impact.target.id) + ' · ' + impact.target.name}</p>
+          <p className="task-editor-hint">{messages.deleteSourceHint}</p>
+          {impact.commentCount ? (
+            <p className="task-editor-hint">
+              {messages.commentsDeletedWithTask(impact.commentCount)}
+            </p>
+          ) : null}
+          {impact.childRows.length ? (
+            <DeleteChildTasks
+              rows={impact.childRows}
+              value={children}
+              disabled={saving}
+              label={label}
+              onChange={(value) => {
+                setChildren(value);
+                setDetach(false);
+              }}
+            />
+          ) : null}
+          {impact.dependents.length ? (
+            <DeleteDependencyImpact
+              dependents={impact.dependents}
+              removedRows={[impact.target, ...impact.childRows].filter((row) =>
+                impact.removed.has(row.id),
+              )}
+              label={label}
+              checked={detach}
+              disabled={saving}
+              onChange={setDetach}
+            />
+          ) : null}
+          {error ? (
+            <p id="taskDeleteError" className="task-editor-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
         <div className="task-editor-actions">
           <button type="button" id="taskDeleteCancel" disabled={saving} onClick={onClose}>
             {messages.cancelEdit}

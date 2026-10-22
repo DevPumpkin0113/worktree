@@ -901,7 +901,7 @@ test('프로젝트 날짜·시간 형식 저장 후 상세 시각에 적용하�
     assert.equal(f.store.active?.model?.dateFormat, 'yyyy.MM.dd');
     assert.equal(f.store.active?.model?.timeFormat, '12h');
     await act(() => f.store.selectWork('W001'));
-    const shown = f.element('#detail [title="2026-10-21T00:00:00.000Z"]').textContent ?? '';
+    const shown = f.element('#detail time[datetime="2026-10-21T00:00:00.000Z"]').textContent ?? '';
     assert.match(shown, /\d{4}\.\d{2}\.\d{2}/);
     assert.match(shown, /오전|오후|AM|PM/);
     for (const [file, text] of Object.entries(original.files))

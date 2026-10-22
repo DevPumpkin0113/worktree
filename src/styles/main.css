@@ -48,7 +48,7 @@ textarea {
 button {
   cursor: pointer;
 }
-button:hover:not(:disabled),
+:where(button):hover:not(:disabled),
 button.active {
   background: var(--color-primary);
   color: var(--color-text-inverse);
@@ -995,6 +995,7 @@ body:has(#documentProblems:not([hidden])) {
 }
 .recent-files button:hover {
   background: var(--color-recent-files-button-hover-background);
+  color: var(--color-primary);
 }
 .recent-files button span {
   display: block;

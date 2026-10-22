@@ -12,20 +12,64 @@
   top: 0;
   z-index: 2;
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-group-border);
   padding: 24px 28px 20px;
 }
-#detail .detail-heading {
-  flex: 1;
+.detail-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
   min-width: 0;
 }
+.detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.detail-header-actions .task-edit-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  flex-shrink: 0;
+}
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 12px;
+  min-width: 0;
+}
+.detail-timestamps {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.detail-timestamps > div {
+  display: flex;
+  gap: 8px;
+}
+.detail-timestamps dt {
+  flex-shrink: 0;
+}
+.detail-timestamps dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 #detailTitle {
+  flex: 1 1 180px;
+  min-width: 0;
   font-size: 21px;
   line-height: 1.45;
-  margin: 12px 0 0;
+  margin: 0;
   overflow-wrap: anywhere;
   letter-spacing: -0.4px;
 }
@@ -33,6 +77,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
+  min-height: 30px;
 }
 .detail-type {
   font-size: 11px;
@@ -80,6 +125,7 @@
   padding: 0 2px;
 }
 .detail-breadcrumb button:hover {
+  background: transparent;
   color: var(--color-primary);
   text-decoration: underline;
 }
@@ -164,7 +210,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 10px 0;
+  padding: 10px 12px;
   border: 0;
   border-bottom: 1px solid var(--color-tag-background);
   border-radius: 0;
@@ -175,8 +221,8 @@
 .detail-link:last-child {
   border-bottom: 0;
 }
-.detail-link:hover {
-  background: var(--color-recent-files-button-hover-background);
+.detail-link:hover:not(:disabled) {
+  background: var(--color-option-hover);
   color: var(--color-primary);
 }
 .detail-link-id {
@@ -318,6 +364,10 @@ body:has(#detail.sidebar[open]) main {
   font-size: 13px;
   border-bottom: 2px solid transparent;
 }
+.detail-preview-tabs button:hover:not(:disabled) {
+  background: var(--color-option-hover);
+  color: var(--color-primary);
+}
 .detail-preview-tabs button[aria-selected='true'] {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
@@ -450,6 +500,11 @@ body:has(#detail.sidebar[open]) main {
   padding: 7px 12px;
   flex-shrink: 0;
 }
+.comment-composer-actions button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-text-inverse);
+}
 .comment-feedback {
   font-size: 11px;
   color: var(--color-primary);
@@ -567,9 +622,6 @@ body:has(#settings[open]) #detailResize {
 .comment-feedback.comment-error {
   color: var(--color-error-focus);
 }
-.comment-actions .comment-delete-confirm {
-  color: var(--color-error-focus);
-}
 .comment-form button:disabled,
 .comment-actions button:disabled,
 .comment-content .comment-edit:disabled {
@@ -645,11 +697,21 @@ body:has(#settings[open]) #detailResize {
 
 .comment-content .comment-edit:hover:not(:disabled),
 .comment-actions .comment-reply:hover:not(:disabled),
-.comment-actions .comment-delete:hover:not(:disabled) {
+.comment-delete-prompt button:hover:not(:disabled) {
   background: transparent;
   color: var(--color-primary);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.comment-actions .comment-delete:hover:not(:disabled),
+.comment-delete-prompt .comment-delete-confirm:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-danger-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.comment-delete-prompt .comment-delete-confirm {
+  color: var(--color-danger);
 }
 
 .comment-actions .comment-reply[aria-pressed='true'] {

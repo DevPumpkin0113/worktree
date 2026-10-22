@@ -5,6 +5,7 @@ import { Comments } from './Comments';
 import { DetailTabs } from './DetailTabs';
 import { useCommentThreads } from './use-comment-threads';
 import { TaskInfo } from './TaskInfo';
+import { TaskTimestamps } from './TaskTimestamps';
 import { Icon } from '../shared/Icon';
 import { STATUS_NAMES, type DetailMode, type WorkModel } from '../../app/types';
 export function TaskDetail({
@@ -99,7 +100,7 @@ export function TaskDetail({
         }}
       >
         <header ref={header} className="detail-header">
-          <div className="detail-heading">
+          <div className="detail-header-row">
             <div id="detailMeta">
               <button
                 id="detailHide"
@@ -118,28 +119,32 @@ export function TaskDetail({
                 </>
               ) : null}
             </div>
-            <h2 id="detailTitle">{row?.name ?? ''}</h2>
+            <div className="detail-header-actions">
+              {row ? (
+                <button
+                  id="taskEditOpen"
+                  type="button"
+                  className="task-edit-open"
+                  onClick={() => onEdit(row.id)}
+                >
+                  {messages.edit}
+                </button>
+              ) : null}
+              <button
+                id="close"
+                className="modal-close"
+                aria-label={messages.closeTaskDetail}
+                title={messages.close}
+                onClick={onClose}
+              >
+                <Icon name="close" />
+              </button>
+            </div>
           </div>
-
-          {row ? (
-            <button
-              id="taskEditOpen"
-              type="button"
-              className="task-edit-open"
-              onClick={() => onEdit(row.id)}
-            >
-              {messages.edit}
-            </button>
-          ) : null}
-          <button
-            id="close"
-            className="modal-close"
-            aria-label={messages.closeTaskDetail}
-            title={messages.close}
-            onClick={onClose}
-          >
-            <Icon name="close" />
-          </button>
+          <div className="detail-title-row">
+            <h2 id="detailTitle">{row?.name ?? ''}</h2>
+            {row ? <TaskTimestamps row={row} /> : null}
+          </div>
         </header>
         <div id="detailBody">
           {row && model ? (

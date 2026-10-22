@@ -14,7 +14,7 @@
     "format": "prettier --write \"apps/desktop/src/**/*.{ts,tsx,css}\" \"packages/core/src/**/*.ts\" \"tests/**/*.{ts,tsx}\" apps/desktop/vite.config.ts apps/desktop/tsconfig.json packages/core/tsconfig.json tsconfig.json \"apps/cli/src/**/*.ts\" apps/cli/tsconfig.json \"apps/cli/scripts/**/*.ts\"",
     "format:check": "prettier --check \"apps/desktop/src/**/*.{ts,tsx,css}\" \"packages/core/src/**/*.ts\" \"tests/**/*.{ts,tsx}\" apps/desktop/vite.config.ts apps/desktop/tsconfig.json packages/core/tsconfig.json tsconfig.json \"apps/cli/src/**/*.ts\" apps/cli/tsconfig.json \"apps/cli/scripts/**/*.ts\"",
     "cli": "node --import tsx apps/cli/src/main.ts",
-    "build:cli": "npm run build --workspace @worktree/cli",
+    "build:cli": "npm run build --workspace apps/cli",
     "pretest": "npm run build:cli"
   },
   "devDependencies": {

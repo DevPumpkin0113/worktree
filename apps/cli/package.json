@@ -1,6 +1,6 @@
 {
-  "name": "@worktree/cli",
-  "version": "0.4.0",
+  "name": "@devpumpkin0113/worktree-cli",
+  "version": "0.4.1",
   "private": false,
   "type": "module",
   "scripts": {
@@ -20,7 +20,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "README.ko.md"
   ],
   "os": [
     "win32"
@@ -30,5 +31,14 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "description": "Local-first project and task management CLI for Windows",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevPumpkin0113/worktree.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/DevPumpkin0113/worktree/issues"
   }
 }

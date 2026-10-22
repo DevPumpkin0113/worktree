@@ -345,7 +345,7 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 
 - [x] 사용자 계정 scope로 이름·메타데이터 확정.
 - [x] cli-publish.yml 수동 검증/게시, 버전·branch·아카이브 구성·무결성·설치 검증·중복 게시 차단.
-- [ ] 최초 npm 게시·Trusted Publisher 연결·main 반영·원격 Actions 실행.
+- [x] CLI 0.4.1 최초 npm 게시·Trusted Publisher 연결·main 반영·원격 Actions 검증 모드 통과. 실제 OIDC 게시 실행은 다음 버전 배포 시 확인.
 - 검증: Node 246개·타입·포맷·버전 검사, workflow YAML 파싱, 로컬 npm pack/설치 후 CLI init·validate 통과. 실제 npm 게시 미수행.
 
 ## 영문 기본 README와 참고 프로젝트
@@ -361,3 +361,10 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 - 최종 사용자 요청에 따라 README 참고 목록은 Backlog.md·Linear만 유지. Boardown·Task Master·Beads는 제거.
 
 - CLI README를 명령별 간결한 사용법으로 재구성. 초기화는 옵션 없는 `worktree init` 기준으로 통일하고 작업 속성은 표, 필터는 개별 명령, JSON 목록은 여러 행으로 표시. 영문·한국어 및 루트 시작 예시에 반영. JSON 예제 파싱·실제 task add 도움말 대조 완료.
+
+## 2026-10-23 배포 확인
+
+- CLI 0.4.1: npm 최초 게시, GitHub 저장소/workflow 지정 Trusted Publisher 연결 완료.
+- 공개 registry의 SHA512가 검증한 아카이브와 일치하며 공개 패키지 별도 설치·초기화·validate 통과.
+- CLI npm Publish 검증 실행 39862780666 성공. 게시 작업은 검증 모드에 따라 미실행.
+- 로컬 검증: Node 246개, 공용 Rust 14개, desktop Rust 37개(조건부 2개 제외), 타입·포맷·버전·Vite 빌드 통과. 샌드박스 임시 교체/junction 제한은 일반 권한 재검증으로 확인.

@@ -106,6 +106,7 @@
   color: var(--color-detail-status-blocked-color);
 }
 #detailBody {
+  container: detail-body / inline-size;
   padding: 0 28px 22px;
 }
 .detail-breadcrumb {
@@ -194,6 +195,13 @@
   font-size: 12px;
   color: var(--color-detail-status-blocked-color);
   margin: 12px 0 0;
+}
+.detail-section-disabled {
+  background: var(--color-tag-background);
+}
+.detail-section-disabled h3,
+.detail-section-disabled .detail-description {
+  color: var(--color-text-muted);
 }
 .detail-relations {
   display: grid;
@@ -849,4 +857,68 @@ body:has(#settings[open]) #detailResize {
 .detail-info-actions .task-delete-open {
   flex-shrink: 0;
   margin-left: auto;
+}
+.detail-info-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 24px;
+}
+.detail-main,
+.detail-sub {
+  min-width: 0;
+}
+.detail-sub {
+  padding-left: 20px;
+  border-left: 1px solid var(--color-group-border);
+}
+.detail-label-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.detail-milestone-link {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.detail-milestone-link:hover:not(:disabled) {
+  background: transparent;
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.detail-info-milestone {
+  grid-template-columns: minmax(0, 1fr);
+}
+#detail .detail-sub .detail-facts {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+#detail .detail-sub .detail-facts > .detail-fact {
+  border: 0;
+}
+#detail .detail-sub .detail-facts > .detail-fact + .detail-fact {
+  border-top: 1px solid var(--color-tag-background);
+}
+.detail-info-layout:not(.detail-info-milestone) .detail-main > .detail-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@container detail-body (max-width: 720px) {
+  .detail-info-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .detail-sub {
+    border-left: 0;
+    border-top: 1px solid var(--color-group-border);
+    padding: 16px 0 0;
+  }
 }

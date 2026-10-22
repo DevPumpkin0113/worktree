@@ -13,7 +13,13 @@ export function KanbanView(props: ListProps) {
               <span className="lane-count">{rows.length}</span>
             </h3>
             {rows.map((row) => (
-              <TaskCard key={row.id} row={row} {...props} selected={props.selectedId === row.id} />
+              <TaskCard
+                kanban
+                key={row.id}
+                row={row}
+                {...props}
+                selected={props.selectedId === row.id}
+              />
             ))}
           </section>
         );

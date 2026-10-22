@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { messages } from '../../i18n/messages';
 import { Icon } from './Icon';
 import type { FilterOption } from './FilterDropdown';
+import { useFloatingList } from '../../hooks/use-floating-list';
+import { Badge } from './Badge';
 export function SearchMultiSelect({
   id,
   label,
@@ -9,6 +11,9 @@ export function SearchMultiSelect({
   options,
   value,
   disabled = false,
+  invalid = false,
+  describedBy,
+  creatable = false,
   onChange,
 }: {
   id: string;
@@ -17,18 +22,37 @@ export function SearchMultiSelect({
   options: FilterOption[];
   value: string[];
   disabled?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
+  creatable?: boolean;
   onChange: (value: string[]) => void;
 }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [createError, setCreateError] = useState('');
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const filtered = options.filter((option) =>
+  const list = useRef<HTMLDivElement>(null);
+  const matching = options.filter((option) =>
     option.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
   );
+  const queryValue = query.trim();
+  const canCreate =
+    creatable &&
+    queryValue &&
+    !options.some((option) => option.value === queryValue) &&
+    !value.includes(queryValue);
+  const filtered = [
+    ...matching,
+    ...(canCreate ? [{ value: queryValue, label: messages.addNewLabel(queryValue) }] : []),
+  ];
   const index = Math.min(active, Math.max(0, filtered.length - 1));
   const expanded = open && !disabled;
+  useEffect(() => {
+    input.current?.setCustomValidity(createError);
+  }, [createError]);
+  const position = useFloatingList(expanded, input, list, filtered.length);
   useEffect(() => {
     if (!expanded) return;
     const outside = (event: PointerEvent) => {
@@ -38,13 +62,27 @@ export function SearchMultiSelect({
     return () => document.removeEventListener('pointerdown', outside);
   }, [expanded]);
   useEffect(() => {
-    if (expanded)
-      document.getElementById(`${id}-option-${index}`)?.scrollIntoView?.({ block: 'nearest' });
+    if (!expanded) return;
+    const option = document.getElementById(`${id}-option-${index}`),
+      popup = list.current;
+    if (!option || !popup) return;
+    if (option.offsetTop < popup.scrollTop) popup.scrollTop = option.offsetTop;
+    else if (option.offsetTop + option.offsetHeight > popup.scrollTop + popup.clientHeight)
+      popup.scrollTop = option.offsetTop + option.offsetHeight - popup.clientHeight;
   }, [expanded, index, id, query]);
   function toggle(selected: string) {
+    if (creatable && /[,\r\n\0]/.test(selected)) {
+      setCreateError(messages.labelValueInvalid);
+      return;
+    }
     onChange(
       value.includes(selected) ? value.filter((item) => item !== selected) : [...value, selected],
     );
+    if (creatable) {
+      setQuery('');
+      setActive(0);
+      setCreateError('');
+    }
     input.current?.focus();
   }
   function keydown(event: KeyboardEvent<HTMLInputElement>) {
@@ -76,13 +114,18 @@ export function SearchMultiSelect({
     }
     if (event.key === 'Enter' && expanded) {
       event.preventDefault();
-      if (filtered[index]) toggle(filtered[index].value);
+      if (filtered[index]) {
+        if (creatable && value.includes(filtered[index].value)) {
+          setQuery('');
+          setCreateError('');
+        } else toggle(filtered[index].value);
+      }
     }
   }
   return (
     <div
       ref={root}
-      className="search-multi-select"
+      className={'search-multi-select' + (creatable ? ' search-multi-creatable' : '')}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
       }}
@@ -93,16 +136,31 @@ export function SearchMultiSelect({
             const name = options.find((option) => option.value === selected)?.label ?? selected;
             return (
               <li key={selected}>
-                <span>{name}</span>
-                <button
-                  type="button"
-                  disabled={disabled}
-                  aria-label={messages.removeSelection(name)}
-                  title={messages.removeSelection(name)}
-                  onClick={() => toggle(selected)}
-                >
-                  <Icon name="close" />
-                </button>
+                {creatable ? (
+                  <Badge label={name}>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      aria-label={messages.removeSelection(name)}
+                      onClick={() => toggle(selected)}
+                    >
+                      <Icon name="close" />
+                    </button>
+                  </Badge>
+                ) : (
+                  <>
+                    <span>{name}</span>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      aria-label={messages.removeSelection(name)}
+                      title={messages.removeSelection(name)}
+                      onClick={() => toggle(selected)}
+                    >
+                      <Icon name="close" />
+                    </button>
+                  </>
+                )}
               </li>
             );
           })}
@@ -114,6 +172,8 @@ export function SearchMultiSelect({
         id={id}
         role="combobox"
         aria-label={label}
+        aria-invalid={invalid || !!createError}
+        aria-describedby={createError ? `${id}-create-error` : describedBy}
         aria-autocomplete="list"
         aria-expanded={expanded}
         aria-controls={`${id}-options`}
@@ -127,13 +187,17 @@ export function SearchMultiSelect({
           setQuery(event.target.value);
           setActive(0);
           setOpen(true);
+          setCreateError('');
         }}
         onKeyDown={keydown}
       />
       {expanded ? (
         <div
           id={`${id}-options`}
-          className="search-multi-options"
+          ref={list}
+          popover="manual"
+          style={position}
+          className="filter-options search-multi-options"
           role="listbox"
           aria-label={label}
           aria-multiselectable="true"
@@ -151,7 +215,13 @@ export function SearchMultiSelect({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => toggle(option.value)}
               >
-                <span>{option.label}</span>
+                <span>
+                  {creatable && !(canCreate && option.value === queryValue) ? (
+                    <Badge label={option.label} />
+                  ) : (
+                    option.label
+                  )}
+                </span>
                 {value.includes(option.value) ? (
                   <span className="filter-check" aria-hidden="true">
                     ✓
@@ -165,6 +235,11 @@ export function SearchMultiSelect({
             </p>
           )}
         </div>
+      ) : null}
+      {createError ? (
+        <p id={`${id}-create-error`} className="task-field-error" role="alert">
+          {createError}
+        </p>
       ) : null}
     </div>
   );

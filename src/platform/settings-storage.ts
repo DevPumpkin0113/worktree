@@ -22,7 +22,7 @@ const defaults = (): SavedSettings => ({
   displayName: '',
   language: 'ko',
   idSeparator: 'none',
-  detailMode: 'sidebar',
+  detailMode: 'tabs',
   autoCheckUpdates: true,
 });
 function valueFor(field: Field, value: string) {
@@ -79,7 +79,7 @@ export function createSettingsStorage({
           schemaVersion: 2,
           detailMode: valueFor(
             'detailMode',
-            result.settings.detailMode ?? 'sidebar',
+            result.settings.detailMode ?? 'tabs',
           ) as SavedSettings['detailMode'],
         };
         return;

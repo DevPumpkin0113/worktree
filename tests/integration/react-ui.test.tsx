@@ -244,7 +244,10 @@ test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위�
     assert.ok(f.host.querySelector('#taskAddOpen'));
     assert.equal(f.host.querySelector('#initializationSubmit'), null);
     await f.click('#taskAddOpen');
-    assert.equal(f.element<HTMLInputElement>('#taskEditor input[readonly]').value, 'DEV001');
+    assert.equal(f.host.querySelector('#taskEditor input[readonly]'), null);
+    await f.value('#taskEditor-name', '첫 작업');
+    await f.submit();
+    assert.ok(f.store.active?.model?.rows.some((row) => row.id === 'DEV001'));
   } finally {
     await f.close();
   }
@@ -291,7 +294,16 @@ test('작업은 제목만 필수이고 설명·메타데이터·참조를 개별
     assert.equal(f.element<HTMLTextAreaElement>('#taskEditor-description').required, false);
     await f.value('#taskEditor-name', '신규 작업');
     await f.value('#taskEditor-description', '두 줄 설명\n<script>안전한 문자열</script>');
-    await f.value('#taskEditor-labels', 'ui, new');
+    for (const label of ['ui', 'new']) {
+      await f.value('#taskEditor-labels', label);
+      await act(() =>
+        f
+          .element('#taskEditor-labels')
+          .dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+          ),
+      );
+    }
     await f.value('#taskEditor-blockedReason', '외부 확인 대기');
     await f.click('#taskEditor-priority');
     await f.click('#taskEditor-priority-options [role="option"][data-value="high"]');
@@ -353,6 +365,139 @@ test('제목 변경은 ID·파일명을 유지하고 상세에 설명과 시각�
     await f.close();
   }
 });
+test('막힘 사유는 막힘 상태에서만 입력 가능하고 상태를 바꿔도 내용을 보존한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    assert.ok(f.element<HTMLTextAreaElement>('#taskEditor-blockedReason').disabled);
+    await f.click('#taskEditor-status');
+    await f.click('#taskEditor-status-options [data-value="blocked"]');
+    assert.equal(f.element<HTMLTextAreaElement>('#taskEditor-blockedReason').disabled, false);
+    await f.value('#taskEditor-blockedReason', '외부 응답 대기');
+    await f.click('#taskEditor-status');
+    await f.click('#taskEditor-status-options [data-value="doing"]');
+    assert.ok(f.element<HTMLTextAreaElement>('#taskEditor-blockedReason').disabled);
+    assert.equal(
+      f.element<HTMLTextAreaElement>('#taskEditor-blockedReason').value,
+      '외부 응답 대기',
+    );
+    await f.submit();
+    assert.equal(
+      parseProject(f.files.get(first)!).rows.find((row) => row.id === 'W001')?.blockedReason,
+      '외부 응답 대기',
+    );
+    assert.match(f.element('.detail-section-disabled').textContent ?? '', /외부 응답 대기/);
+  } finally {
+    await f.close();
+  }
+});
+test('저장 시 제목·일정·참조 오류를 해당 입력 아래 표시하고 첫 오류로 이동한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    assert.ok(f.element<HTMLFormElement>('#taskEditorForm').noValidate);
+    await f.value('#taskEditor-name', '   ');
+    await f.click('#taskReference-add');
+    await f.submit();
+    assert.ok(f.element('#detailTitle').contains(f.element('#taskEditor-name-error')));
+    assert.ok(
+      f.element('.task-reference-value-field').contains(f.element('#taskEditor-reference-0-error')),
+    );
+    assert.equal(document.activeElement, f.element('#taskEditor-name'));
+    assert.equal(f.element('#taskEditor-reference-0').getAttribute('aria-invalid'), 'true');
+    assert.equal(f.calls.filter((call) => call.command === 'save_project').length, 0);
+    await f.value('#taskEditor-name', '검증 확인');
+    await f.click('#taskReference-type-0');
+    await f.click('#taskReference-type-0-options [data-value="file"]');
+    await f.value('#taskEditor-reference-0', '../outside.txt');
+    await f.submit();
+    assert.match(f.element('#taskEditor-reference-0-error').textContent ?? '', /상대/);
+    assert.equal(document.activeElement, f.element('#taskEditor-reference-0'));
+    await f.value('#taskEditor-reference-0', 'docs/design.md');
+    await f.value('#taskEditor-start', '2026-11-10');
+    await f.value('#taskEditor-end', '2026-11-01');
+    await f.submit();
+    assert.ok(
+      f.element('#taskEditor-start').parentElement!.contains(f.element('#taskEditor-start-error')),
+    );
+    assert.ok(
+      f.element('#taskEditor-end').parentElement!.contains(f.element('#taskEditor-end-error')),
+    );
+    assert.equal(document.activeElement, f.element('#taskEditor-start'));
+    await f.value('#taskEditor-end', '2026-11-11');
+    await f.submit();
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+    assert.equal(
+      parseProject(f.files.get(first)!).rows.find((row) => row.id === 'W001')?.name,
+      '검증 확인',
+    );
+  } finally {
+    await f.close();
+  }
+});
+test('상세 수정 초안은 작업·프로젝트 전환과 추가 탭을 오가도 분리해 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '첫 작업 초안');
+    await act(() => f.store.selectWork('W002'));
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '둘째 작업 초안');
+    await act(() => f.store.selectWork('W001'));
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '첫 작업 초안');
+    await f.click('#taskAddOpen');
+    assert.equal(f.host.querySelectorAll('#taskEditor').length, 1);
+    assert.equal(f.element('#taskEditor').tagName, 'SECTION');
+    await f.click('#taskEditorCancel');
+    await act(() => f.store.selectWork('W001'));
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '첫 작업 초안');
+    await act(() => f.store.selectProject('C:/QB'));
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '다른 프로젝트 초안');
+    await act(() => f.store.selectProject('C:/QA'));
+    await act(() => f.store.selectWork('W002'));
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '둘째 작업 초안');
+    await f.click('#taskEditorCancel');
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+    await act(() => f.store.selectWork('W001'));
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '첫 작업 초안');
+    await f.submit();
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+    assert.equal(f.element('#detailTitle').textContent, '첫 작업 초안');
+  } finally {
+    await f.close();
+  }
+});
+test('마일스톤 상세에서 제목·기간을 수정하고 취소와 저장 후 조회로 돌아온다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    assert.equal(f.element('#taskEditor').tagName, 'SECTION');
+    assert.equal(f.host.querySelector('#taskEditor-description'), null);
+    await f.value('#taskEditor-name', '취소할 제목');
+    await f.click('#taskEditorCancel');
+    assert.equal(f.element('#detailTitle').textContent, '화면 작업');
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '출시 준비');
+    await f.value('#taskEditor-start', '2026-11-01');
+    await f.value('#taskEditor-end', '2026-11-07');
+    await f.submit();
+    const milestone = parseProject(f.files.get(first)!).rows.find((row) => row.id === 'MS001')!;
+    assert.equal(milestone.name, '출시 준비');
+    assert.equal(milestone.start, '2026-11-01');
+    assert.equal(milestone.end, '2026-11-07');
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+    assert.equal(f.element('#detailTitle').textContent, '출시 준비');
+  } finally {
+    await f.close();
+  }
+});
 test('마일스톤 생성은 제목·선택 기간을 사용하며 별도 파일로 저장한다', async () => {
   const f = await fixture();
   try {
@@ -362,6 +507,115 @@ test('마일스톤 생성은 제목·선택 기간을 사용하며 별도 파일
     await f.submit();
     assert.ok(readSource(f.files.get(first)!).files['milestones/MS002.md']);
     assert.equal(f.store.active?.model?.rows.find((r) => r.id === 'MS002')?.name, '다음 출시');
+  } finally {
+    await f.close();
+  }
+});
+test('작업·마일스톤 작성 탭은 초안을 분리하고 저장 시 같은 위치를 실제 ID로 바꾼다', async () => {
+  const f = await fixture();
+  try {
+    assert.equal(f.store.getSnapshot().settings.detailMode, 'sidebar');
+    await f.click('#taskAddOpen');
+    const firstDraft = f.store.getSnapshot().selectedId!;
+    assert.equal(f.store.detailMode, 'tabs');
+    assert.equal(f.store.getSnapshot().settings.detailMode, 'sidebar');
+    assert.equal(f.element('#taskEditor').tagName, 'SECTION');
+    assert.ok(f.element('#taskCreationDetail').contains(f.element('#taskEditor')));
+    await f.value('#taskEditor-name', '첫 작성 초안');
+    await f.click('#taskAddOpen');
+    const secondDraft = f.store.getSnapshot().selectedId!;
+    assert.notEqual(firstDraft, secondDraft);
+    assert.equal(f.element('[id="task-tab-' + secondDraft + '"]').textContent, '새 작업 (2)');
+    await f.value('#taskEditor-name', '두 번째 저장');
+    await f.submit();
+    assert.equal(f.store.getSnapshot().selectedId, 'W003');
+    assert.deepEqual(f.store.active!.taskTabs, [firstDraft, 'W003']);
+    await act(() => f.store.selectWork(firstDraft));
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '첫 작성 초안');
+    await f.submit();
+    assert.equal(f.store.getSnapshot().selectedId, 'W004');
+    assert.deepEqual(f.store.active!.taskTabs, ['W004', 'W003']);
+    await f.click('#milestoneAddOpen');
+    const milestoneDraft = f.store.getSnapshot().selectedId!;
+    assert.equal(f.element('[id="task-tab-' + milestoneDraft + '"]').textContent, '새 마일스톤');
+    assert.equal(f.host.querySelector('#taskEditor-description'), null);
+    await f.value('#taskEditor-name', '새 목표');
+    await f.submit();
+    assert.equal(f.store.getSnapshot().selectedId, 'MS002');
+    assert.deepEqual(f.store.active!.taskTabs, ['W004', 'W003', 'MS002']);
+    assert.equal(f.element('#detailTitle').textContent, '새 목표');
+    assert.equal(f.store.active?.creationTabs?.length, 0);
+  } finally {
+    await f.close();
+  }
+});
+test('작성 탭은 프로젝트·홈 전환과 외부 갱신에 초안을 유지하고 세션에는 넣지 않는다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#taskAddOpen');
+    const draftId = f.store.getSnapshot().selectedId!;
+    await f.value('#taskEditor-name', '세션에 남기지 않는 초안');
+    await f.click('#task-home-tab');
+    await act(() => f.store.selectWork(draftId));
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '세션에 남기지 않는 초안');
+    await act(() => f.store.selectProject('C:/QB'));
+    await f.click('#milestoneAddOpen');
+    await f.value('#taskEditor-name', '다른 프로젝트 목표');
+    await act(() => f.store.selectProject('C:/QA'));
+    assert.equal(f.store.getSnapshot().selectedId, draftId);
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '세션에 남기지 않는 초안');
+    f.setSaveFailure(true);
+    await f.submit();
+    assert.match(f.element('#taskEditorError').textContent ?? '', /disk failure/);
+    f.setSaveFailure(false);
+    const source = readSource(f.files.get(first)!);
+    source.files['tasks/W002.md'] = source.files['tasks/W002.md'].replace('UI 확인', '외부 제목');
+    f.files.set(first, serializeSource(source));
+    await f.submit();
+    assert.match(f.element('#taskEditorError').textContent ?? '', /외부/);
+    await act(() => f.store.poll());
+    assert.equal(f.store.getSnapshot().selectedId, draftId);
+    assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '세션에 남기지 않는 초안');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const savedSession = f.calls.filter((call) => call.command === 'save_session').at(-1)!.args!
+      .session;
+    assert.ok(!JSON.stringify(savedSession).includes('new:'));
+    assert.ok(!JSON.stringify(savedSession).includes('세션에 남기지 않는 초안'));
+    await f.submit();
+    assert.equal(f.element('#detailTitle').textContent, '세션에 남기지 않는 초안');
+    assert.match(f.files.get(first)!, /외부 제목/);
+    await f.click('#taskAddOpen');
+    const abandoned = f.store.getSnapshot().selectedId!;
+    await act(() => f.store.closeTaskTab(abandoned));
+    assert.ok(!f.store.active?.taskTabs?.includes(abandoned));
+    assert.ok(!f.store.active?.creationTabs?.some((tab) => tab.id === abandoned));
+  } finally {
+    await f.close();
+  }
+});
+test('수정의 마일스톤 선택은 표시 ID와 제목을 보여주고 원본 ID로 저장한다', async () => {
+  const f = await fixture();
+  try {
+    const source = readSource(f.files.get(first)!);
+    const config = JSON.parse(source.files['project.json']);
+    config.idSeparator = 'hyphen';
+    source.files['project.json'] = JSON.stringify(config);
+    f.files.set(first, serializeSource(source));
+    await act(() => f.store.poll());
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    assert.match(f.element('#taskEditor-parent').textContent ?? '', /MS-001 · 화면 작업/);
+    await f.click('#taskEditor-parent');
+    assert.match(
+      f.element('#taskEditor-parent-options [data-value="MS001"]').textContent ?? '',
+      /MS-001 · 화면 작업/,
+    );
+    await f.click('#taskEditor-parent-options [data-value="MS001"]');
+    await f.submit();
+    assert.equal(
+      parseProject(f.files.get(first)!).rows.find((row) => row.id === 'W001')?.parent,
+      'MS001',
+    );
   } finally {
     await f.close();
   }
@@ -1145,6 +1399,102 @@ test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정
     else Reflect.deleteProperty(prototype, 'showPopover');
     if (originalHide) Object.defineProperty(prototype, 'hidePopover', originalHide);
     else Reflect.deleteProperty(prototype, 'hidePopover');
+  }
+});
+test('선행 검색 목록은 떠서 표시하고 키보드 탐색이 폼 스크롤을 움직이지 않는다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    const input = f.element<HTMLInputElement>('#taskEditor-deps');
+    input.getBoundingClientRect = () => ({
+      left: 100,
+      top: 100,
+      bottom: 140,
+      right: 400,
+      width: 300,
+      height: 40,
+      x: 100,
+      y: 100,
+      toJSON() {
+        return {};
+      },
+    });
+    await f.click('#taskEditor-deps');
+    const popup = f.element<HTMLElement>('#taskEditor-deps-options');
+    assert.equal(popup.getAttribute('popover'), 'manual');
+    assert.equal(popup.style.top, '146px');
+    const body = f.element<HTMLElement>('.task-editor-body');
+    body.scrollTop = 37;
+    const option = f.element<HTMLElement>('#taskEditor-deps-option-0');
+    Object.defineProperties(option, { offsetTop: { value: 300 }, offsetHeight: { value: 20 } });
+    Object.defineProperty(popup, 'clientHeight', { value: 60 });
+    await f.value('#taskEditor-deps', 'UI');
+    assert.equal(body.scrollTop, 37);
+    assert.equal(popup.scrollTop, 260);
+    await act(() =>
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      ),
+    );
+    assert.equal(f.host.querySelector('#taskEditor-deps-options'), null);
+    assert.ok(f.host.querySelector('#taskEditor'));
+  } finally {
+    await f.close();
+  }
+});
+test('유형은 색상 뱃지로 선택하고 라벨은 검색·Enter 생성·제거 후 작업에만 저장한다', async () => {
+  const f = await fixture();
+  try {
+    const source = readSource(f.files.get(first)!);
+    const config = JSON.parse(source.files['project.json']);
+    config.labels = ['frontend', 'backend'];
+    config.taskTypeColors.feature = '#123456';
+    source.files['project.json'] = JSON.stringify(config);
+    f.files.set(first, serializeSource(source));
+    await act(() => f.store.poll());
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    assert.equal(
+      f
+        .element<HTMLElement>('#taskEditor-taskType .value-badge')
+        .style.getPropertyValue('--badge-color'),
+      '#123456',
+    );
+    await f.click('#taskEditor-taskType');
+    assert.ok(f.host.querySelector('#taskEditor-taskType-options [data-value="bug"] .value-badge'));
+    await f.click('#taskEditor-taskType-options [data-value="bug"]');
+    await f.click('#taskEditor-labels');
+    assert.equal(f.element('#taskEditor-labels-options').getAttribute('popover'), 'manual');
+    await f.click('#taskEditor-labels-options [data-value="frontend"]');
+    await f.value('#taskEditor-labels', 'security');
+    const enter = () =>
+      f
+        .element('#taskEditor-labels')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+        );
+    await act(enter);
+    assert.equal(
+      f.host.querySelectorAll('.task-field-labels .search-multi-selected .value-badge').length,
+      2,
+    );
+    await f.value('#taskEditor-labels', 'security');
+    await act(enter);
+    assert.equal(
+      f.host.querySelectorAll('.task-field-labels .search-multi-selected .value-badge').length,
+      2,
+    );
+    await f.click('.task-field-labels .search-multi-selected button');
+    await f.submit();
+    const saved = parseProject(f.files.get(first)!);
+    const row = saved.rows.find((row) => row.id === 'W001')!;
+    assert.equal(row.taskType, 'bug');
+    assert.deepEqual(row.labels, ['security']);
+    assert.deepEqual(saved.commonLabels, ['frontend', 'backend']);
+    assert.match(f.element('.detail-label-badges .value-badge').textContent ?? '', /security/);
+  } finally {
+    await f.close();
   }
 });
 
@@ -2071,7 +2421,7 @@ test('앱 재시작 후 작업 탭 순서·활성 작업을 프로젝트별로 �
   }
 });
 
-test('작업 수정·삭제 모달 뒤에서도 탭·분할 상세 화면을 유지한다', async () => {
+test('작업 수정은 상세 내부에서 열리고 삭제 모달 뒤에서도 탭·분할 상세를 유지한다', async () => {
   const f = await fixture();
   try {
     for (const mode of ['tabs', 'sidebar'] as const) {
@@ -2079,9 +2429,18 @@ test('작업 수정·삭제 모달 뒤에서도 탭·분할 상세 화면을 유
       await act(() => f.store.selectWork('W001'));
       const title = f.element('#detailTitle').textContent;
       await f.click('#taskEditOpen');
+      assert.equal(f.element('#taskEditor').tagName, 'SECTION');
+      assert.ok(f.element('#detail').contains(f.element('#taskEditor')));
+      assert.ok(f.element('#detailTitle').contains(f.element('#taskEditor-name')));
+      assert.equal(
+        f.element<HTMLInputElement>('#taskEditor-name').form,
+        f.element('#taskEditorForm'),
+      );
+      assert.equal(f.host.querySelectorAll('#taskEditor-name').length, 1);
+      assert.equal(f.host.querySelector('#taskEditor .task-editor-field input[readonly]'), null);
       assert.equal(f.element('#detail').hasAttribute('hidden'), false);
       if (mode === 'sidebar') assert.equal(f.element<HTMLDialogElement>('#detail').open, true);
-      assert.equal(f.element('#detailTitle').textContent, title);
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, title);
       await f.click('#taskEditorCancel');
       await f.click('#taskDeleteOpen');
       assert.equal(f.element('#detail').hasAttribute('hidden'), false);
@@ -2094,7 +2453,7 @@ test('작업 수정·삭제 모달 뒤에서도 탭·분할 상세 화면을 유
   }
 });
 
-test('수정·삭제·초기화 모달은 배경 클릭으로 닫고 내부에서 시작한 조작은 닫지 않는다', async () => {
+test('삭제·초기화 모달은 배경 클릭으로 닫고 내부에서 시작한 조작은 닫지 않는다', async () => {
   const f = await fixture();
   const backdrop = async (selector: string, startOutside = true, cancel = false) => {
     const modal = f.element(selector);
@@ -2126,14 +2485,11 @@ test('수정·삭제·초기화 모달은 배경 클릭으로 닫고 내부에�
   };
   try {
     await act(() => f.store.selectWork('W001'));
-    await f.click('#taskEditOpen');
-    await backdrop('#taskEditor', false);
-    assert.ok(f.host.querySelector('#taskEditor'));
-    await backdrop('#taskEditor', true, true);
-    assert.ok(f.host.querySelector('#taskEditor'));
-    await backdrop('#taskEditor');
-    assert.equal(f.host.querySelector('#taskEditor'), null);
     await f.click('#taskDeleteOpen');
+    await backdrop('#taskDeleteDialog', false);
+    assert.ok(f.host.querySelector('#taskDeleteDialog'));
+    await backdrop('#taskDeleteDialog', true, true);
+    assert.ok(f.host.querySelector('#taskDeleteDialog'));
     await backdrop('#taskDeleteDialog');
     assert.equal(f.host.querySelector('#taskDeleteDialog'), null);
     assert.ok(readSource(f.files.get(first)!).files['tasks/W001.md']);
@@ -2147,7 +2503,7 @@ test('수정·삭제·초기화 모달은 배경 클릭으로 닫고 내부에�
   }
 });
 
-test('모달 저장 처리 중에는 배경 클릭으로 닫지 않는다', async () => {
+test('작성 탭 저장 처리 중에는 취소 버튼이 비활성이고 저장 후 상세로 전환한다', async () => {
   const f = await fixture();
   let release: () => void = () => {};
   try {
@@ -2160,29 +2516,10 @@ test('모달 저장 처리 중에는 배경 클릭으로 닫지 않는다', asyn
       return original<T>(command, args);
     };
     await act(() => f.store.selectWork('W001'));
-    await f.click('#taskEditOpen');
+    await f.click('#taskAddOpen');
     await f.value('#taskEditor-name', '저장 중');
     await f.click('#taskEditorSave');
-    const modal = f.element('#taskEditor');
-    modal.getBoundingClientRect = () => ({
-      left: 100,
-      right: 600,
-      top: 100,
-      bottom: 500,
-      width: 500,
-      height: 400,
-      x: 100,
-      y: 100,
-      toJSON() {},
-    });
-    await act(() => {
-      modal.dispatchEvent(
-        new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 150, bubbles: true }),
-      );
-      modal.dispatchEvent(
-        new MouseEvent('click', { button: 0, clientX: 50, clientY: 150, bubbles: true }),
-      );
-    });
+    assert.ok(f.element<HTMLButtonElement>('#taskEditorCancel').disabled);
     assert.ok(f.host.querySelector('#taskEditor'));
     await act(async () => {
       release();
@@ -2191,6 +2528,35 @@ test('모달 저장 처리 중에는 배경 클릭으로 닫지 않는다', asyn
     assert.equal(f.host.querySelector('#taskEditor'), null);
   } finally {
     release();
+    await f.close();
+  }
+});
+
+test('칸반은 상태 뱃지 대신 유형을 ID 행에 두고 보기 간 우선순위 색상을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setView('board'));
+    const card = f.element<HTMLElement>('.lane .task[data-id="W001"]');
+    assert.equal(card.querySelector('.tag'), null);
+    assert.match(card.querySelector('.task-card-heading')?.textContent ?? '', /W001.*feature/);
+    const color = card.style.getPropertyValue('--task-priority-color');
+    assert.ok(color && color !== 'transparent');
+    await act(() => f.store.setView('tree'));
+    assert.ok(f.element('.task[data-id="W001"] .tag'));
+    assert.equal(
+      f
+        .element<HTMLElement>('.task[data-id="W001"]')
+        .style.getPropertyValue('--task-priority-color'),
+      color,
+    );
+    await act(() => f.store.setPage('tasks'));
+    assert.equal(
+      f
+        .element<HTMLElement>('.all-task-link[data-id="W001"]')
+        .style.getPropertyValue('--task-priority-color'),
+      color,
+    );
+  } finally {
     await f.close();
   }
 });

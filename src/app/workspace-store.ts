@@ -56,7 +56,7 @@ export class WorkspaceStore {
     settings: {
       language: 'ko',
       displayName: '',
-      detailMode: 'sidebar',
+      detailMode: 'tabs',
       ready: false,
       error: '',
       saving: false,
@@ -87,10 +87,16 @@ export class WorkspaceStore {
   };
   private patch(change: Partial<WorkspaceSnapshot>) {
     const previousState = this.state;
-    const previousMode = previousState.settings.detailMode;
+    const previousDocument = previousState.documents.find(
+      (doc) => doc.path === previousState.activePath,
+    );
+    const previousMode =
+      previousDocument?.forceTaskTabs || previousDocument?.creationTabs?.length
+        ? 'tabs'
+        : previousState.settings.detailMode;
     this.state = { ...this.state, ...change };
     if (
-      this.state.settings.detailMode === 'tabs' &&
+      this.detailMode === 'tabs' &&
       ('selectedId' in change || (previousMode !== 'tabs' && previousState.settings.ready))
     ) {
       const id = this.state.selectedId;
@@ -126,6 +132,11 @@ export class WorkspaceStore {
   }
   get active() {
     return this.state.documents.find((doc) => doc.path === this.state.activePath) ?? null;
+  }
+  get detailMode() {
+    return this.active?.forceTaskTabs || this.active?.creationTabs?.length
+      ? 'tabs'
+      : this.state.settings.detailMode;
   }
   get activeProject() {
     return (
@@ -179,10 +190,19 @@ export class WorkspaceStore {
         text,
         model,
         problems: [],
-        taskTabs: previous?.taskTabs?.filter((id) => model.rows.some((row) => row.id === id)) ?? [],
-        activeTaskTab: model.rows.some((row) => row.id === previous?.activeTaskTab)
-          ? previous!.activeTaskTab
-          : null,
+        creationTabs: previous?.creationTabs?.map((tab) => ({ ...tab, text })),
+        forceTaskTabs: previous?.forceTaskTabs,
+        taskTabs:
+          previous?.taskTabs?.filter(
+            (id) =>
+              model.rows.some((row) => row.id === id) ||
+              previous.creationTabs?.some((tab) => tab.id === id),
+          ) ?? [],
+        activeTaskTab:
+          model.rows.some((row) => row.id === previous?.activeTaskTab) ||
+          previous?.creationTabs?.some((tab) => tab.id === previous.activeTaskTab)
+            ? previous!.activeTaskTab
+            : null,
         view: previous?.view ?? 'tree',
         ganttUnit: previous?.ganttUnit ?? 'day',
         graphFocus: model.rows.some((row) => row.id === previous?.graphFocus)
@@ -194,6 +214,8 @@ export class WorkspaceStore {
         path,
         text,
         model: null,
+        creationTabs: previous?.creationTabs,
+        forceTaskTabs: previous?.forceTaskTabs,
         taskTabs: previous?.taskTabs ?? [],
         activeTaskTab: previous?.activeTaskTab ?? null,
         problems: describeDocumentErrors(error, text, path) as Problem[],
@@ -347,7 +369,9 @@ export class WorkspaceStore {
         activePath: project.activePath,
         selectedId: same
           ? this.validSelection(document?.model ?? null)
-          : this.state.settings.detailMode === 'tabs'
+          : document?.forceTaskTabs ||
+              document?.creationTabs?.length ||
+              this.state.settings.detailMode === 'tabs'
             ? (document?.activeTaskTab ?? null)
             : null,
         owner: same ? this.state.owner : 'all',
@@ -435,6 +459,7 @@ export class WorkspaceStore {
     const projects = this.state.projects.filter((project) => project.path !== path);
     const changed = path === this.state.activeProjectPath;
     const selected = changed ? projects.at(-1) : this.activeProject;
+    const selectedDocument = this.state.documents.find((doc) => doc.path === selected?.activePath);
     this.patch({
       projects,
       documents: this.state.documents.filter((doc) =>
@@ -446,9 +471,10 @@ export class WorkspaceStore {
             activePath: selected?.activePath ?? null,
             page: selected?.page ?? 'board',
             selectedId:
+              selectedDocument?.forceTaskTabs ||
+              selectedDocument?.creationTabs?.length ||
               this.state.settings.detailMode === 'tabs'
-                ? (this.state.documents.find((doc) => doc.path === selected?.activePath)
-                    ?.activeTaskTab ?? null)
+                ? (selectedDocument?.activeTaskTab ?? null)
                 : null,
             owner: 'all',
             operationProblems: [],
@@ -507,7 +533,7 @@ export class WorkspaceStore {
     });
   }
   setFilters(filters: Partial<Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status'>>) {
-    if ('query' in filters && this.state.settings.detailMode === 'tabs' && this.state.selectedId) {
+    if ('query' in filters && this.detailMode === 'tabs' && this.state.selectedId) {
       const page = this.state.page === 'tasks' ? 'tasks' : 'board';
       this.patch({
         ...filters,
@@ -520,8 +546,34 @@ export class WorkspaceStore {
     } else this.patch(filters);
   }
   selectWork(selectedId: string | null) {
-    if (selectedId && !this.active?.model?.rows.some((row) => row.id === selectedId)) return;
+    if (
+      selectedId &&
+      !this.active?.model?.rows.some((row) => row.id === selectedId) &&
+      !this.active?.creationTabs?.some((tab) => tab.id === selectedId)
+    )
+      return;
     this.patch({ selectedId });
+  }
+  openCreationTab(kind: 'task' | 'milestone') {
+    const doc = this.active;
+    if (!doc?.model) return;
+    const tabs = doc.creationTabs ?? [];
+    const id = 'new:' + crypto.randomUUID();
+    const number =
+      Math.max(0, ...tabs.filter((tab) => tab.kind === kind).map((tab) => tab.number)) + 1;
+    this.patch({
+      documents: this.state.documents.map((item) =>
+        item.path === doc.path
+          ? {
+              ...item,
+              forceTaskTabs: true,
+              creationTabs: [...tabs, { id, kind, number, text: doc.text }],
+            }
+          : item,
+      ),
+      selectedId: id,
+    });
+    return id;
   }
   reorderTaskTabs(source: string, target: string, after: boolean) {
     const doc = this.active;
@@ -536,6 +588,7 @@ export class WorkspaceStore {
   closeTaskTab(id: string) {
     const doc = this.active;
     if (!doc) return;
+    if (doc.creationTabs?.some((tab) => tab.id === id && tab.saving)) return;
     const tabs = doc.taskTabs ?? [],
       index = tabs.indexOf(id);
     if (index < 0) return;
@@ -547,7 +600,14 @@ export class WorkspaceStore {
     this.patch({
       selectedId,
       documents: this.state.documents.map((item) =>
-        item.path === doc.path ? { ...item, taskTabs: next } : item,
+        item.path === doc.path
+          ? {
+              ...item,
+              taskTabs: next,
+              creationTabs: item.creationTabs?.filter((tab) => tab.id !== id),
+              forceTaskTabs: next.length ? item.forceTaskTabs : false,
+            }
+          : item,
       ),
     });
   }
@@ -564,7 +624,8 @@ export class WorkspaceStore {
     this.patch({ problemsOpen: false });
   }
   private validSelection(model: WorkModel | null) {
-    return model?.rows.some((row) => row.id === this.state.selectedId)
+    return model?.rows.some((row) => row.id === this.state.selectedId) ||
+      this.active?.creationTabs?.some((tab) => tab.id === this.state.selectedId)
       ? this.state.selectedId
       : null;
   }
@@ -578,6 +639,42 @@ export class WorkspaceStore {
     const update = updateProjectTask(expected, draft, id);
     await this.saveProjectSource(path, expected, update.text, update.id);
     return update.id;
+  }
+  async saveCreationTab(path: string, tabId: string, expected: string, draft: ProjectTaskDraft) {
+    const tab = this.state.documents
+      .find((doc) => doc.path === path)
+      ?.creationTabs?.find((tab) => tab.id === tabId);
+    if (!tab) throw Error(messages.editTaskMissing);
+    if (tab.kind !== draft.type) throw Error(messages.taskTypeLocked);
+    const update = updateProjectTask(expected, draft);
+    await this.saveProjectSource(
+      path,
+      expected,
+      update.text,
+      update.id,
+      messages.taskSaveConflict,
+      tabId,
+    );
+  }
+  setCreationSaving(path: string, id: string, saving: boolean) {
+    if (
+      !this.state.documents.some(
+        (doc) => doc.path === path && doc.creationTabs?.some((tab) => tab.id === id),
+      )
+    )
+      return;
+    this.patch({
+      documents: this.state.documents.map((doc) =>
+        doc.path === path
+          ? {
+              ...doc,
+              creationTabs: doc.creationTabs?.map((tab) =>
+                tab.id === id ? { ...tab, saving } : tab,
+              ),
+            }
+          : doc,
+      ),
+    });
   }
   async saveComment(
     path: string,
@@ -612,6 +709,7 @@ export class WorkspaceStore {
     text: string,
     selectedId: string | null,
     conflictMessage = messages.taskSaveConflict,
+    creationId?: string,
   ) {
     const result = await this.platform.invoke<'saved' | 'conflict'>('save_project', {
       path,
@@ -623,10 +721,24 @@ export class WorkspaceStore {
     const previous = this.state.documents.find((doc) => doc.path === path);
     if (previous) {
       const next = this.document(path, text, previous);
+      if (creationId && selectedId) {
+        next.creationTabs = next.creationTabs?.filter((tab) => tab.id !== creationId);
+        next.taskTabs = [
+          ...new Set(next.taskTabs?.map((id) => (id === creationId ? selectedId : id))),
+        ];
+        if (next.activeTaskTab === creationId) next.activeTaskTab = selectedId;
+      }
       this.patch({
         documents: this.state.documents.map((doc) => (doc.path === path ? next : doc)),
         ...(this.state.activePath === path
-          ? { selectedId, operationProblems: [], problemsOpen: false }
+          ? {
+              selectedId:
+                creationId && this.state.selectedId !== creationId
+                  ? this.state.selectedId
+                  : selectedId,
+              operationProblems: [],
+              problemsOpen: false,
+            }
           : {}),
       });
     }
@@ -641,7 +753,12 @@ export class WorkspaceStore {
         setLanguage(value);
       } else if (key === 'displayName') await this.storage.setItem('worktree.display-name', value);
       else await saveDetailMode(this.storage, value);
-      this.patch({ settings: { ...this.state.settings, [key]: value, saving: false } });
+      this.patch({
+        settings: { ...this.state.settings, [key]: value, saving: false },
+        ...(key === 'detailMode'
+          ? { documents: this.state.documents.map((doc) => ({ ...doc, forceTaskTabs: false })) }
+          : {}),
+      });
       return true;
     } catch (error) {
       this.patch({

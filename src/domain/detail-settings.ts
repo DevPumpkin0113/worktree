@@ -6,9 +6,9 @@ interface DetailStorage {
 const KEY = 'worktree.detail-mode';
 export function readDetailMode(storage: Pick<DetailStorage, 'getItem'>) {
   try {
-    return ['modal', 'tabs'].includes(storage.getItem(KEY) ?? '') ? 'tabs' : 'sidebar';
+    return storage.getItem(KEY) === 'sidebar' ? 'sidebar' : 'tabs';
   } catch {
-    return 'sidebar';
+    return 'tabs';
   }
 }
 export function saveDetailMode(storage: DetailStorage, value: string) {

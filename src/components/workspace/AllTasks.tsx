@@ -1,9 +1,14 @@
+import { useContext, type CSSProperties } from 'react';
+import { priorityColor } from '../../views/priority-color';
+import { legacyPriorities } from '../../domain/project-priorities';
+import { ProjectPriorityContext } from '../../app/project-priority-context';
 import { TaskTypeBadge } from '../shared/TaskTypeBadge';
 import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { messages } from '../../i18n/messages';
 import { STATUS_NAMES } from '../../app/types';
 import type { ListProps } from './types';
 export function AllTasks(props: ListProps) {
+  const priorities = useContext(ProjectPriorityContext) ?? legacyPriorities();
   const { date } = useProjectDates();
   return (
     <div className="all-tasks">
@@ -25,6 +30,15 @@ export function AllTasks(props: ListProps) {
                   type="button"
                   className={
                     'all-task-link' + (props.selectedId === row.id ? ' detail-selected' : '')
+                  }
+                  style={
+                    {
+                      '--task-priority-color':
+                        priorityColor(
+                          priorities.findIndex((p) => p.id === row.priority),
+                          priorities.length,
+                        ) ?? 'transparent',
+                    } as CSSProperties
                   }
                   data-id={row.id}
                   onClick={() => props.onSelect(row.id)}

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createSettingsStorage} from '../../src/platform/settings-storage.ts';
-const defaults=()=>({schemaVersion:2,language:'ko',displayName:'',idSeparator:'none',detailMode:'sidebar',autoCheckUpdates:true});
+const defaults=()=>({schemaVersion:2,language:'ko',displayName:'',idSeparator:'none',detailMode:'tabs',autoCheckUpdates:true});
 function fixture({settings=null,legacy={},failLoad=false,failSave=false}={}){
  const calls=[];let saved=settings;
  const invoke=async(cmd,args)=>{calls.push(cmd);if(cmd==='load_settings'){if(failLoad)throw Error('denied');return {settings:saved,warning:''};}if(cmd==='initialize_settings'){saved??=args.settings;return {...saved};}if(cmd==='save_settings'){if(failSave)throw Error('disk full');await new Promise(resolve=>setImmediate(resolve));saved={...args.settings};return saved;}};
@@ -43,7 +43,7 @@ test('언어가 없는 v1 설정은 한국어로 읽고 언어 저장 시 v2로 
 });
 
 test('표시 이름은 기존 설정에서 빈 값으로 읽고 저장 후 복원하며 잘못된 이름은 거부한다',async()=>{
- const {storage,getSaved}=fixture({settings:{schemaVersion:2,language:'ko',idSeparator:'none',detailMode:'sidebar',autoCheckUpdates:true}});
+ const {storage,getSaved}=fixture({settings:{schemaVersion:2,language:'ko',idSeparator:'none',detailMode:'tabs',autoCheckUpdates:true}});
  await storage.ready;assert.equal(storage.getItem('worktree.display-name'),'');
  await storage.setItem('worktree.display-name','박대호');assert.equal(getSaved().displayName,'박대호');
  for(const invalid of [' 이름','이름\n다음','x'.repeat(41)])await assert.rejects(storage.setItem('worktree.display-name',invalid));
@@ -59,3 +59,5 @@ test('기존 모달 설정은 원본을 즉시 쓰지 않고 탭 보기로 읽�
  await storage.setItem('worktree.detail-mode','tabs');
  assert.equal(getSaved().detailMode,'tabs');
 });
+
+test('명시적으로 저장한 우측 패널 선택은 유지한다',async()=>{const {storage}=fixture({settings:{...defaults(),detailMode:'sidebar'}});await storage.ready;assert.equal(storage.getItem('worktree.detail-mode'),'sidebar');});

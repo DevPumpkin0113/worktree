@@ -1,6 +1,8 @@
 import { messages } from '../../i18n/messages';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import type { TaskReference } from '../../domain/project-source';
+import { useContext } from 'react';
+import { TaskFieldError, TaskFieldErrorsContext } from './TaskFieldError';
 export function TaskReferenceFields({
   value,
   disabled,
@@ -10,6 +12,7 @@ export function TaskReferenceFields({
   disabled: boolean;
   onChange: (value: TaskReference[]) => void;
 }) {
+  const errors = useContext(TaskFieldErrorsContext);
   return (
     <fieldset className="task-field-references" disabled={disabled}>
       <legend>{messages.references}</legend>
@@ -33,17 +36,28 @@ export function TaskReferenceFields({
               )
             }
           />
-          <input
-            aria-label={messages.references + ' ' + (index + 1)}
-            value={reference.value}
-            required
-            disabled={disabled}
-            onChange={(e) =>
-              onChange(
-                value.map((item, i) => (i === index ? { ...item, value: e.target.value } : item)),
-              )
-            }
-          />
+          <div className="task-reference-value-field">
+            <input
+              id={'taskEditor-reference-' + index}
+              data-editor-field={'reference-' + index}
+              aria-invalid={!!errors['reference-' + index]}
+              aria-describedby={
+                errors['reference-' + index]
+                  ? 'taskEditor-reference-' + index + '-error'
+                  : undefined
+              }
+              aria-label={messages.references + ' ' + (index + 1)}
+              value={reference.value}
+              required
+              disabled={disabled}
+              onChange={(e) =>
+                onChange(
+                  value.map((item, i) => (i === index ? { ...item, value: e.target.value } : item)),
+                )
+              }
+            />
+            <TaskFieldError field={'reference-' + index} />
+          </div>
           <button
             type="button"
             aria-label={messages.removeReference + ' ' + (index + 1)}
@@ -53,6 +67,7 @@ export function TaskReferenceFields({
           </button>
         </div>
       ))}
+      <TaskFieldError field="references" />
       <button
         type="button"
         id="taskReference-add"

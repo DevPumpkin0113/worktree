@@ -1149,7 +1149,54 @@ body:has(#documentProblems:not([hidden])) {
   flex-direction: column;
   height: 100%;
 }
-#content:has(> .chart-adapter:has(.diagram-scroll)) {
+#content:has(> .chart-adapter .diagram-scroll) {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.task,
+.lane .task,
+.all-tasks .all-task-link,
+.gantt-label[data-id],
+.unscheduled .unscheduled-list button {
+  position: relative;
+  padding-left: 22px;
+}
+.task::before,
+.all-task-link::before,
+.gantt-label::before,
+.unscheduled-list button::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--task-priority-color, transparent);
+  pointer-events: none;
+}
+
+.chart-adapter:has(.diagram-scroll) > .chart-scroll-frame {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.chart-adapter > :is(.notice, .dependency-focus, .sub) {
+  flex-shrink: 0;
+}
+
+#content:has(> .gantt-view .gantt-frame) {
   display: flex;
   flex-direction: column;
 }

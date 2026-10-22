@@ -1,3 +1,4 @@
+import { usePriorityStyle } from '../../app/project-priority-context';
 import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { STATUS_NAMES, type WorkRow } from '../../app/types';
 import { messages } from '../../i18n/messages';
@@ -23,6 +24,7 @@ export function GanttTaskRow({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const priorityStyle = usePriorityStyle(row.priority ?? '-');
   const { date } = useProjectDates();
   const bar = ganttBar(row, start, geometry);
   return (
@@ -38,6 +40,7 @@ export function GanttTaskRow({
         <button
           type="button"
           className={'gantt-label' + (selected ? ' detail-selected' : '')}
+          style={priorityStyle}
           data-id={row.id}
           aria-current={selected ? 'true' : undefined}
           title={row.name}

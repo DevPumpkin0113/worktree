@@ -22,7 +22,7 @@ impl Default for Settings {
         Self {
             schema_version: 2,
             id_separator: "none".into(),
-            detail_mode: "sidebar".into(),
+            detail_mode: "tabs".into(),
             auto_check_updates: true,
             language: "ko".into(),
             display_name: String::new(),

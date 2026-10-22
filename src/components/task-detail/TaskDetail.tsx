@@ -1,4 +1,6 @@
 import type { OpenDocument } from '../../app/types';
+import { useState, type ReactNode } from 'react';
+import { TaskEditorTitleContext } from './task-editor-title-context';
 import { messages } from '../../i18n/messages';
 import { useDetailDialog } from './use-detail-dialog';
 import { Comments } from './Comments';
@@ -19,6 +21,8 @@ export function TaskDetail({
   onSelect,
   onClose,
   onEdit,
+  editing,
+  editors,
   onDelete,
   documents,
   source,
@@ -43,9 +47,12 @@ export function TaskDetail({
   onSelect: (id: string) => void;
   onClose: () => void;
   onEdit: (id: string) => void;
+  editing: boolean;
+  editors: ReactNode;
   onDelete: (id: string) => void;
 }) {
   const comments = useCommentThreads(documents);
+  const [titleTarget, setTitleTarget] = useState<HTMLDivElement | null>(null);
   const visible = !!model && !!id && !settingsOpen;
   const row = model?.rows.find((item) => item.id === id);
   const taskComments = model?.comments?.filter((comment) => comment.taskId === id) ?? [];
@@ -77,7 +84,9 @@ export function TaskDetail({
         hidden={mode === 'tabs' && !visible}
         role={mode === 'tabs' ? 'tabpanel' : undefined}
         id="detail"
-        className={mode === 'sidebar' ? 'sidebar' : 'task-detail-tab'}
+        className={
+          (mode === 'sidebar' ? 'sidebar' : 'task-detail-tab') + (editing ? ' detail-editing' : '')
+        }
         aria-labelledby={mode === 'tabs' && id ? 'task-tab-' + id : 'detailTitle'}
         onCancel={(event) => {
           event.preventDefault();
@@ -120,7 +129,7 @@ export function TaskDetail({
               ) : null}
             </div>
             <div className="detail-header-actions">
-              {row ? (
+              {row && !editing ? (
                 <button
                   id="taskEditOpen"
                   type="button"
@@ -142,26 +151,35 @@ export function TaskDetail({
             </div>
           </div>
           <div className="detail-title-row">
-            <h2 id="detailTitle">{row?.name ?? ''}</h2>
+            {editing ? (
+              <div id="detailTitle" className="detail-title-editor" ref={setTitleTarget} />
+            ) : (
+              <h2 id="detailTitle">{row?.name ?? ''}</h2>
+            )}
             {row ? <TaskTimestamps row={row} /> : null}
           </div>
         </header>
         <div id="detailBody">
+          <TaskEditorTitleContext.Provider value={titleTarget}>
+            {editors}
+          </TaskEditorTitleContext.Provider>
           {row && model ? (
             <>
-              <DetailTabs
-                thread={thread}
-                commentCount={taskComments.filter((comment) => !comment.deleted).length}
-                onChange={(tab) => {
-                  thread.tab = tab;
-                  comments.update();
-                }}
-              />
+              {!editing ? (
+                <DetailTabs
+                  thread={thread}
+                  commentCount={taskComments.filter((comment) => !comment.deleted).length}
+                  onChange={(tab) => {
+                    thread.tab = tab;
+                    comments.update();
+                  }}
+                />
+              ) : null}
               <section
                 id="previewInfoPanel"
                 role="tabpanel"
                 aria-labelledby="previewInfoTab"
-                hidden={thread.tab !== 'info'}
+                hidden={editing || thread.tab !== 'info'}
               >
                 <TaskInfo
                   row={row}
@@ -175,7 +193,7 @@ export function TaskDetail({
                 id="previewCommentsPanel"
                 role="tabpanel"
                 aria-labelledby="previewCommentsTab"
-                hidden={thread.tab !== 'comments'}
+                hidden={editing || thread.tab !== 'comments'}
               >
                 <Comments
                   thread={thread}

@@ -3,8 +3,9 @@ import { floatingListPosition } from '../interactions/floating-list';
 
 export function useFloatingList(
   open: boolean,
-  trigger: RefObject<HTMLButtonElement | null>,
+  trigger: RefObject<HTMLElement | null>,
   list: RefObject<HTMLDivElement | null>,
+  itemCount?: number,
 ) {
   const [position, setPosition] = useState<CSSProperties>({ visibility: 'hidden' });
   useLayoutEffect(() => {
@@ -31,6 +32,7 @@ export function useFloatingList(
     document.addEventListener('scroll', scroll, true);
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null;
     observer?.observe(button);
+    if (button.parentElement) observer?.observe(button.parentElement);
     observer?.observe(popup);
     return () => {
       window.removeEventListener('resize', update);
@@ -38,6 +40,6 @@ export function useFloatingList(
       observer?.disconnect();
       if (nativePopover && popup.isConnected) popup.hidePopover();
     };
-  }, [open, trigger, list]);
+  }, [open, trigger, list, itemCount]);
   return position;
 }

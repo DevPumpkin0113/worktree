@@ -35,6 +35,7 @@ export function Content({
   store,
   state,
   detail,
+  creation,
   label,
   onAddTask,
   onAddMilestone,
@@ -44,6 +45,7 @@ export function Content({
   initializationStep: number;
   onInitializationStep: (step: number) => void;
   detail: ReactNode;
+  creation: ReactNode;
   store: WorkspaceStore;
   state: WorkspaceSnapshot;
   label: (id: string) => string;
@@ -53,7 +55,7 @@ export function Content({
   const active = store.active,
     model = active?.model;
   const selectedId =
-    state.settings.detailMode === 'sidebar' && !state.settingsOpen ? state.selectedId : null;
+    store.detailMode === 'sidebar' && !state.settingsOpen ? state.selectedId : null;
   const rows = model?.rows;
   const root = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLDivElement>(null);
@@ -81,9 +83,7 @@ export function Content({
     if (active && root.current) viewState.current.capture(active.path, pageKey, root.current);
   };
   const tabsVisible =
-    state.settings.detailMode === 'tabs' &&
-    (state.page === 'board' || state.page === 'tasks') &&
-    !!model;
+    store.detailMode === 'tabs' && (state.page === 'board' || state.page === 'tasks') && !!model;
   const homeVisible = !tabsVisible || !state.selectedId;
   const selectWork = (id: string | null) => {
     if (homeVisible) capture();
@@ -112,6 +112,7 @@ export function Content({
       {tabsVisible && model ? (
         <TaskTabs
           ids={active?.taskTabs ?? []}
+          creationTabs={active?.creationTabs}
           selectedId={state.selectedId}
           model={model}
           label={label}
@@ -272,6 +273,7 @@ export function Content({
         </div>
       </div>
       {detail}
+      {creation}
     </main>
   );
 }

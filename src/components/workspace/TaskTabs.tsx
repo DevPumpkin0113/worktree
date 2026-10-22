@@ -1,6 +1,6 @@
 import { useTabStrip } from '../../hooks/use-tab-strip';
 import { useRef, useLayoutEffect } from 'react';
-import type { WorkModel } from '../../app/types';
+import type { WorkModel, TaskCreationTab } from '../../app/types';
 import { messages } from '../../i18n/messages';
 import { Icon } from '../shared/Icon';
 export function TaskTabs({
@@ -12,6 +12,7 @@ export function TaskTabs({
   onClose,
   onMove,
   enabled,
+  creationTabs = [],
 }: {
   ids: string[];
   selectedId: string | null;
@@ -21,6 +22,7 @@ export function TaskTabs({
   onClose: (id: string) => void;
   onMove: (source: string, target: string, after: boolean) => void;
   enabled: boolean;
+  creationTabs?: TaskCreationTab[];
 }) {
   const refs = useRef(new Map<string, HTMLButtonElement>());
   const root = useRef<HTMLElement>(null);
@@ -96,7 +98,12 @@ export function TaskTabs({
       </button>
       {ids.map((id, index) => {
         const row = model.rows.find((item) => item.id === id);
-        const title = row ? (row.milestone ? row.name : label(id) + ' · ' + row.name) : label(id);
+        const creation = creationTabs.find((tab) => tab.id === id);
+        const name = creation
+          ? (creation.kind === 'milestone' ? messages.newMilestone : messages.newTask) +
+            (creation.number > 1 ? ' (' + creation.number + ')' : '')
+          : label(id);
+        const title = row ? (row.milestone ? row.name : label(id) + ' · ' + row.name) : name;
         return (
           <div
             className="task-tab"
@@ -120,7 +127,7 @@ export function TaskTabs({
               data-tab={index}
               aria-keyshortcuts="Alt+Shift+ArrowLeft Alt+Shift+ArrowRight"
               aria-selected={selectedId === id}
-              aria-controls="detail"
+              aria-controls={creation ? 'taskCreationDetail' : 'detail'}
               tabIndex={selectedId === id ? 0 : -1}
               title={title}
               ref={(element) => {
@@ -129,11 +136,12 @@ export function TaskTabs({
               }}
               onClick={() => onSelect(id)}
             >
-              {label(id)}
+              {name}
             </button>
             <button
               type="button"
               className="task-tab-close"
+              disabled={creation?.saving}
               data-close-tab={index}
               aria-label={messages.closeTaskTab + ': ' + title}
               onClick={() => closeTab(id)}

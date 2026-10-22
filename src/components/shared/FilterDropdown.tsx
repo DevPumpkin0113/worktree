@@ -6,6 +6,7 @@ export interface FilterOption {
   value: string;
   label: string;
   color?: string;
+  badge?: boolean;
 }
 export function FilterDropdown({
   id,
@@ -14,6 +15,8 @@ export function FilterDropdown({
   options,
   onChange,
   disabled = false,
+  invalid = false,
+  describedBy,
 }: {
   id: string;
   label: string;
@@ -21,6 +24,8 @@ export function FilterDropdown({
   options: FilterOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -108,6 +113,8 @@ export function FilterDropdown({
         className="filter-trigger"
         role="combobox"
         aria-label={label}
+        aria-invalid={invalid}
+        aria-describedby={describedBy}
         aria-haspopup="listbox"
         aria-expanded={expanded}
         aria-controls={`${id}-options`}
@@ -120,7 +127,7 @@ export function FilterDropdown({
         }}
       >
         <span>
-          {options[selected]?.color ? (
+          {options[selected]?.color || options[selected]?.badge ? (
             <Badge label={options[selected].label} color={options[selected].color} />
           ) : (
             options[selected]?.label
@@ -151,7 +158,11 @@ export function FilterDropdown({
               onClick={() => choose(index)}
             >
               <span>
-                {option.color ? <Badge label={option.label} color={option.color} /> : option.label}
+                {option.color || option.badge ? (
+                  <Badge label={option.label} color={option.color} />
+                ) : (
+                  option.label
+                )}
               </span>
               {option.value === value ? (
                 <span className="filter-check" aria-hidden="true">

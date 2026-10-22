@@ -6,6 +6,7 @@ export function useFloatingList(
   trigger: RefObject<HTMLElement | null>,
   list: RefObject<HTMLDivElement | null>,
   itemCount?: number,
+  fitContent = false,
 ) {
   const [position, setPosition] = useState<CSSProperties>({ visibility: 'hidden' });
   useLayoutEffect(() => {
@@ -16,12 +17,17 @@ export function useFloatingList(
     if (nativePopover) popup.showPopover();
     const update = () => {
       const anchor = button.getBoundingClientRect();
+      const viewport = { width: window.innerWidth, height: window.innerHeight };
+      const next = floatingListPosition(
+        anchor,
+        viewport,
+        popup.scrollHeight || 240,
+        fitContent ? popup.getBoundingClientRect().width : undefined,
+      );
       setPosition(
-        floatingListPosition(
-          anchor,
-          { width: window.innerWidth, height: window.innerHeight },
-          popup.scrollHeight || 240,
-        ),
+        fitContent
+          ? { ...next, width: 'max-content', maxWidth: Math.max(0, viewport.width - 16) }
+          : next,
       );
     };
     const scroll = (event: Event) => {
@@ -40,6 +46,6 @@ export function useFloatingList(
       observer?.disconnect();
       if (nativePopover && popup.isConnected) popup.hidePopover();
     };
-  }, [open, trigger, list, itemCount]);
+  }, [open, trigger, list, itemCount, fitContent]);
   return position;
 }

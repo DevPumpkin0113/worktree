@@ -4,7 +4,7 @@ const groupSelector = 'summary[data-work-id], summary[data-view-group="unassigne
 const groupKey = (summary: HTMLElement) =>
   summary.dataset.workId ??
   (summary.dataset.viewGroup === 'unassigned' ? unassignedKey : undefined);
-const scrollers = ['.diagram-scroll', '.gantt-scroll'];
+const scrollers = ['.diagram-scroll', '.gantt-scroll', '.all-tasks'];
 
 export function createDocumentViewState() {
   const documents = new Map<

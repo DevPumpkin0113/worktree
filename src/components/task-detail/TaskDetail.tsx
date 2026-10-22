@@ -141,6 +141,9 @@ export function TaskDetail({
               ) : null}
               <button
                 id="close"
+                style={editing ? { visibility: 'hidden' } : undefined}
+                aria-hidden={editing || undefined}
+                tabIndex={editing ? -1 : undefined}
                 className="modal-close"
                 aria-label={messages.closeTaskDetail}
                 title={messages.close}

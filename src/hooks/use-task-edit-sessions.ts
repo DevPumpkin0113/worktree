@@ -18,6 +18,10 @@ export function useTaskEditSessions(documents: OpenDocument[]) {
           ? current
           : [...current, session],
       ),
+    closeTask: (path: string, id: string) =>
+      setSessions((current) =>
+        current.filter((session) => session.path !== path || session.id !== id),
+      ),
     close: (session: TaskEditorSession) =>
       setSessions((current) => current.filter((item) => item !== session)),
   };

@@ -37,7 +37,7 @@ export function FilterDropdown({
     options.findIndex((option) => option.value === value),
   );
   const expanded = open && !disabled;
-  const position = useFloatingList(expanded, trigger, list);
+  const position = useFloatingList(expanded, trigger, list, options.length, true);
   useEffect(() => {
     if (!expanded) return;
     const outside = (event: PointerEvent) => {
@@ -141,7 +141,7 @@ export function FilterDropdown({
           id={`${id}-options`}
           popover="manual"
           style={position}
-          className="filter-options"
+          className="filter-options filter-options-content"
           role="listbox"
           aria-label={label}
         >

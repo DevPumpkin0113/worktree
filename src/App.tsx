@@ -28,6 +28,19 @@ export function App({ store }: { store: WorkspaceStore }) {
   const page = store.activeProject?.files.length === 0 ? 'initialize' : state.page;
   const creating = !!store.active?.creationTabs?.some((tab) => tab.id === state.selectedId);
   const edits = useTaskEditSessions(state.documents);
+  const closeTaskTab = (id: string) => {
+    const doc = store.active;
+    store.closeTaskTab(id);
+    if (
+      doc &&
+      !store
+        .getSnapshot()
+        .documents.find((item) => item.path === doc.path)
+        ?.taskTabs?.includes(id)
+    ) {
+      edits.closeTask(doc.path, id);
+    }
+  };
   const editing = edits.sessions.some(
     (session) => session.path === state.activePath && session.id === state.selectedId,
   );
@@ -130,7 +143,7 @@ export function App({ store }: { store: WorkspaceStore }) {
       }}
       onClose={() =>
         store.detailMode === 'tabs' && state.selectedId
-          ? store.closeTaskTab(state.selectedId)
+          ? closeTaskTab(state.selectedId)
           : store.selectWork(null)
       }
     />
@@ -171,7 +184,7 @@ export function App({ store }: { store: WorkspaceStore }) {
                 onSave={(path, tab, draft) => store.saveCreationTab(path, tab.id, tab.text, draft)}
                 onBusyChange={(path, id, saving) => store.setCreationSaving(path, id, saving)}
                 onClose={(path, id) => {
-                  if (state.activePath === path) store.closeTaskTab(id);
+                  if (state.activePath === path) closeTaskTab(id);
                 }}
               />
             }
@@ -180,6 +193,7 @@ export function App({ store }: { store: WorkspaceStore }) {
             store={store}
             state={{ ...state, page }}
             label={label}
+            onCloseTaskTab={closeTaskTab}
             onAddTask={() => openEditor()}
             onAddMilestone={() => openEditor('milestone')}
           />

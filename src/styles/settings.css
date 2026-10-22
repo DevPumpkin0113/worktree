@@ -152,13 +152,7 @@
   margin: 0;
   line-height: 1.8;
 }
-#settings .setting-row select {
-  width: 100%;
-  font-size: 13px;
-  padding: 9px 11px;
-  min-width: 0;
-  background: var(--color-settings-settings-topbar-background);
-}
+
 .settings-preview {
   margin: 20px 0 0;
   border-top: 1px solid var(--color-settings-preview-border-top);

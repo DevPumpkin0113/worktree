@@ -194,17 +194,31 @@
 .graph-node:hover rect,
 .graph-node.selected rect {
   fill: var(--color-selection);
-  stroke: var(--color-chart-node-hover-border);
-  stroke-width: 2;
 }
 .graph-node.dim {
   opacity: 0.3;
 }
-.graph-id {
+.graph-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
   font:
     11px Segoe UI,
     sans-serif;
-  fill: var(--color-chart-id-text);
+  color: var(--color-chart-id-text);
+}
+.graph-identity > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-priority {
+  flex-shrink: 0;
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
 }
 .graph-name {
   font:
@@ -265,9 +279,6 @@
 .gantt-viewport-table {
   position: sticky;
   left: 0;
-}
-.gantt-viewport-table thead th {
-  height: 48px;
 }
 .schedule-toolbar .filter-dropdown {
   min-width: 150px;

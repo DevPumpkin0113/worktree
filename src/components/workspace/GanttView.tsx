@@ -1,7 +1,5 @@
-import { useContext, type CSSProperties } from 'react';
-import { ProjectPriorityContext } from '../../app/project-priority-context';
-import { legacyPriorities } from '../../domain/project-priorities';
-import { priorityColor } from '../../views/priority-color';
+import { useContext } from 'react';
+import { ProjectPriorityContext, priorityStyle } from '../../app/project-priority-context';
 import { useMemo, useRef } from 'react';
 import { messages } from '../../i18n/messages';
 import { FilterDropdown } from '../shared/FilterDropdown';
@@ -35,7 +33,7 @@ export function GanttView({
   onScroll: () => void;
   today?: string;
 }) {
-  const priorities = useContext(ProjectPriorityContext) ?? legacyPriorities();
+  const priorities = useContext(ProjectPriorityContext);
   const root = useRef<HTMLDivElement>(null);
   const consumeClick = useChartPan(root);
   const known = useMemo(() => rows.filter((row) => row.start !== '-'), [rows]);
@@ -179,15 +177,7 @@ export function GanttView({
               <button
                 type="button"
                 key={row.id}
-                style={
-                  {
-                    '--task-priority-color':
-                      priorityColor(
-                        priorities.findIndex((p) => p.id === row.priority),
-                        priorities.length,
-                      ) ?? 'transparent',
-                  } as CSSProperties
-                }
+                style={priorityStyle(row.priority ?? '-', priorities)}
                 data-id={row.id}
                 className={selectedId === row.id ? 'detail-selected' : undefined}
                 aria-current={selectedId === row.id ? 'true' : undefined}

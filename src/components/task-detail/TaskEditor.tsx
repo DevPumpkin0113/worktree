@@ -35,6 +35,16 @@ export function TaskEditor({
       ? { ...draft, type: 'milestone' as const, description: '', status: 'auto', effort: '-' }
       : draft;
   });
+  const [sameDay, setSameDay] = useState(
+    () => !!draft.start && draft.start !== '-' && draft.start === draft.end,
+  );
+  const changeSameDay = (checked: boolean) => {
+    setSameDay(checked);
+    if (checked) {
+      const date = draft.start && draft.start !== '-' ? draft.start : draft.end;
+      setDraft({ ...draft, start: date, end: date });
+    }
+  };
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const [error, setError] = useState('');
@@ -176,12 +186,20 @@ export function TaskEditor({
               {messages.requiredFieldsHint}
             </p>
             {draft.type === 'milestone' ? (
-              <MilestoneEditorFields draft={draft} disabled={saving} onChange={setDraft} />
+              <MilestoneEditorFields
+                draft={draft}
+                disabled={saving}
+                onChange={setDraft}
+                sameDay={sameDay}
+                onSameDayChange={changeSameDay}
+              />
             ) : (
               <TaskEditorFields
                 draft={draft}
                 model={model}
                 id={id}
+                sameDay={sameDay}
+                onSameDayChange={changeSameDay}
                 disabled={saving}
                 onChange={setDraft}
               />

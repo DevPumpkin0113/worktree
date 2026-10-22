@@ -1,5 +1,5 @@
 import { legacyPriorities, type ProjectPriority } from '../domain/project-priorities';
-import { priorityColor } from './priority-color';
+import { priorityColorFor } from './priority-color';
 import { messages } from '../i18n/messages';
 import type { WorkRow } from '../domain/types';
 import { escapeHtml as escape } from './html';
@@ -95,12 +95,7 @@ export function renderDependencies(
       const p = layout.positions.get(r.id)!,
         dim = related ? !related.has(r.id) : !matchedIds.has(r.id);
       const name = r.name.length > 19 ? r.name.slice(0, 18) + '…' : r.name;
-      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><path class="graph-priority" d="M${p.x + 8} ${p.y + 29}v20" style="stroke:${
-        priorityColor(
-          priorities.findIndex((priority) => priority.id === r.priority),
-          priorities.length,
-        ) ?? 'transparent'
-      };stroke-width:3;stroke-linecap:round"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><text x="${p.x + 28}" y="${p.y + 23}" class="graph-id">${escape(label(r.id))}</text><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape(name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
+      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><foreignObject x="${p.x + 28}" y="${p.y + 9}" width="178" height="22"><div xmlns="http://www.w3.org/1999/xhtml" class="graph-identity"><span>${escape(label(r.id))}</span><span class="graph-priority" style="background:${priorityColorFor(r.priority ?? '-', priorities) ?? 'transparent'}" aria-hidden="true"></span></div></foreignObject><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape(name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
     })
     .join('');
   const current = focus ? byId.get(focus) : undefined;

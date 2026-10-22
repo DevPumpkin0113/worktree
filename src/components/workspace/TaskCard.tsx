@@ -34,11 +34,17 @@ export function TaskCard({
     >
       {kanban ? (
         <div className="task-card-heading">
-          <span className="id">{label(row.id)}</span>
+          <span className="task-card-identity">
+            <span className="id">{label(row.id)}</span>
+            <span className="task-priority-mark" aria-hidden="true" />
+          </span>
           <TaskTypeBadge type={row.taskType ?? 'task'} />
         </div>
       ) : (
-        <span className="id">{label(row.id)}</span>
+        <span className="task-tree-identity">
+          <span className="id">{label(row.id)}</span>
+          <span className="task-priority-mark" aria-hidden="true" />
+        </span>
       )}
       <div>
         {row.name}

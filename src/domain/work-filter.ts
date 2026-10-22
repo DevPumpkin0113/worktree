@@ -11,7 +11,9 @@ export function matchesWork(
     query = '',
     status = 'all',
     owner = 'all',
-  }: { query?: string; status?: string; owner?: string },
+    taskType = 'all',
+    priority = 'all',
+  }: { query?: string; status?: string; owner?: string; taskType?: string; priority?: string },
   label: (id: string) => string = (id) => id,
 ) {
   const text = [
@@ -28,6 +30,8 @@ export function matchesWork(
   return (
     text.includes(query.trim().toLowerCase()) &&
     (status === 'all' || row.status === status) &&
+    (priority === 'all' || priority === 'priority:' + (row.priority ?? '-')) &&
+    (taskType === 'all' || taskType === 'type:' + (row.taskType ?? 'task')) &&
     (!owner || owner === 'all' || owner === 'owner:' + row.owner)
   );
 }

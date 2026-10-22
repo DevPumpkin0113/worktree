@@ -1,3 +1,4 @@
+import { TaskScheduleFields, type TaskScheduleProps } from './TaskScheduleFields';
 import { TaskMetadataFields } from './TaskMetadataFields';
 import { messages } from '../../i18n/messages';
 import { STATUS_NAMES, type WorkModel } from '../../app/types';
@@ -13,19 +14,18 @@ export function TaskEditorFields({
   id,
   disabled,
   onChange,
-}: {
-  draft: ProjectTaskDraft;
+  sameDay,
+  onSameDayChange,
+}: TaskScheduleProps & {
   model: WorkModel;
   id: string;
-  disabled: boolean;
-  onChange: (draft: ProjectTaskDraft) => void;
 }) {
   const errors = useContext(TaskFieldErrorsContext);
   const labels = useMemo(() => createIdLabels(model, model.idSeparator ?? 'none'), [model]);
   const successors = model.rows.filter((row) => row.deps.includes(id));
   const change = (key: keyof ProjectTaskDraft, value: string) =>
     onChange({ ...draft, [key]: value });
-  const text = (key: 'start' | 'end' | 'effort', label: string, type = 'text', locked = false) => (
+  const text = (key: 'effort', label: string, type = 'text', locked = false) => (
     <label className={'task-editor-field task-field-' + key} key={key}>
       <span>{label}</span>
       <input
@@ -45,8 +45,13 @@ export function TaskEditorFields({
   return (
     <div className="task-editor-fields">
       <div className="task-editor-main">
-        {text('start', messages.startDate, 'date')}
-        {text('end', messages.endDate, 'date')}
+        <TaskScheduleFields
+          draft={draft}
+          disabled={disabled}
+          onChange={onChange}
+          sameDay={sameDay}
+          onSameDayChange={onSameDayChange}
+        />
         <TaskMetadataFields
           draft={draft}
           model={model}

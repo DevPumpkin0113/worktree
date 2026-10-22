@@ -48,15 +48,17 @@ export function GeneralSettings({
             <label htmlFor="detailMode">{messages.detailDisplay}</label>
             <p className="setting-description">{messages.detailDisplayHint}</p>
           </div>
-          <select
+          <FilterDropdown
             id="detailMode"
+            label={messages.detailDisplay}
             value={state.settings.detailMode}
             disabled={!state.settings.ready || state.settings.saving}
-            onChange={(event) => void store.saveSetting('detailMode', event.target.value)}
-          >
-            <option value="tabs">{messages.tabView}</option>
-            <option value="sidebar">{messages.rightSidebar}</option>
-          </select>
+            options={[
+              { value: 'tabs', label: messages.tabView },
+              { value: 'sidebar', label: messages.rightSidebar },
+            ]}
+            onChange={(value) => void store.saveSetting('detailMode', value)}
+          />
         </div>
       </div>
     </>

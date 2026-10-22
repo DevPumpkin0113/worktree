@@ -101,16 +101,26 @@ body:has(#detail.sidebar[open]) main#workspace {
   color: var(--color-workspace-page-heading-p-color);
 }
 
+#content:has(> .all-tasks) {
+  display: flex;
+  flex-direction: column;
+}
 .all-tasks {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 .all-tasks table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
   font-size: 12px;
   text-align: left;
 }
 .all-tasks th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   color: var(--color-detail-fact-span-color);
   background: var(--color-all-tasks-th-background);
   font-size: 10px;
@@ -123,37 +133,25 @@ body:has(#detail.sidebar[open]) main#workspace {
   border-bottom: 1px solid var(--color-tag-background);
   white-space: nowrap;
 }
-.all-tasks td:first-child {
-  width: 65%;
+.all-tasks .all-task-id {
+  white-space: nowrap;
+}
+.all-tasks .all-task-title {
+  width: 55%;
+  min-width: 160px;
   white-space: normal;
 }
-.all-task-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  border: 0;
-  padding: 6px 8px;
-  background: transparent;
-  text-align: left;
-  font-size: 12px;
-  border-radius: 4px;
+.all-task-row {
+  cursor: pointer;
 }
-.all-task-link:hover {
-  background: var(--color-recent-files-button-hover-background);
-  color: var(--color-primary);
+.all-task-row:hover > td,
+.all-task-row:focus-visible > td {
+  background: var(--color-task-card-hover-background);
 }
-.all-task-link .id {
-  font-size: 10px;
-  flex-shrink: 0;
+.all-task-row.detail-selected > td {
+  background: var(--color-selection);
 }
-.all-task-type {
-  font-size: 9px;
-  color: var(--color-text-secondary);
-  background: var(--color-detail-preview-tabs-button-span-background);
-  padding: 2px 5px;
-  border-radius: 4px;
-}
+
 .analytics-intro {
   padding: 22px 12px 28px;
 }

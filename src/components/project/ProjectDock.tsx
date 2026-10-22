@@ -1,3 +1,4 @@
+import { Icon } from '../shared/Icon';
 import { folderName } from '../../domain/project-paths';
 import { messages } from '../../i18n/messages';
 import { useEffect, useRef, useState } from 'react';
@@ -110,18 +111,27 @@ export function ProjectDock({ store, state }: { store: WorkspaceStore; state: Wo
       >
         {state.recent.length ? (
           state.recent.map((path) => (
-            <button
-              key={path}
-              type="button"
-              title={path}
-              onClick={() => {
-                setRecentOpen(false);
-                void store.open(path);
-              }}
-            >
-              {path.split(/[\\/]/).pop()}
-              <span>{path}</span>
-            </button>
+            <div className="recent-project-row" key={path}>
+              <button
+                type="button"
+                title={path}
+                onClick={() => {
+                  setRecentOpen(false);
+                  void store.open(path);
+                }}
+              >
+                {folderName(path)}
+                <span>{path}</span>
+              </button>
+              <button
+                type="button"
+                className="recent-project-remove"
+                aria-label={messages.removeRecentProject + ' · ' + folderName(path)}
+                onClick={() => store.removeRecentProject(path)}
+              >
+                <Icon name="close" />
+              </button>
+            </div>
           ))
         ) : (
           <p>{messages.noRecentProjects}</p>

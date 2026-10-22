@@ -13,3 +13,11 @@ test('드롭다운은 화면 가장자리와 좁은 화면·공간에 맞춘다'
  assert.equal(result.left,8);assert.equal(result.width,304);assert.equal(result.maxHeight,106);
  assert.ok(result.top+result.maxHeight<=172);
 });
+
+test('내용 너비를 지정하면 버튼보다 넓거나 좁은 목록도 화면 안에 배치한다',()=>{
+ const anchor={left:680,top:80,bottom:120,width:180};
+ const wide=floatingListPosition(anchor,{width:800,height:600},200,300);
+ assert.equal(wide.width,300);assert.equal(wide.left,492);
+ const narrow=floatingListPosition(anchor,{width:800,height:600},200,150);
+ assert.equal(narrow.width,150);assert.equal(narrow.left,642);
+});

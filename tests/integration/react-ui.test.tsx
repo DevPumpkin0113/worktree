@@ -1606,7 +1606,7 @@ test('유형·공통 라벨 뱃지는 추가·중복 차단·삭제하며 유형
     await f.click('[data-workspace-page="tasks"]');
     assert.equal(
       f
-        .element<HTMLElement>('.all-task-link[data-id="W001"] .value-badge')
+        .element<HTMLElement>('.all-task-row[data-id="W001"] .value-badge')
         .style.getPropertyValue('--badge-color'),
       '#cc3300',
     );
@@ -2552,10 +2552,197 @@ test('칸반은 상태 뱃지 대신 유형을 ID 행에 두고 보기 간 우�
     await act(() => f.store.setPage('tasks'));
     assert.equal(
       f
-        .element<HTMLElement>('.all-task-link[data-id="W001"]')
+        .element<HTMLElement>('.all-task-row[data-id="W001"] .all-task-id')
         .style.getPropertyValue('--task-priority-color'),
       color,
     );
+  } finally {
+    await f.close();
+  }
+});
+
+test('최근 기록 제거는 프로젝트와 파일을 유지하고 세션에 반영하며 다시 열면 복원한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.selectProject('C:/QA'));
+    const paths = f.store.getSnapshot().projects.map((project) => project.path);
+    const files = [...f.files];
+    await f.click('#recentOpen');
+    await f.click('#recentFiles .recent-project-remove');
+    assert.equal(f.store.getSnapshot().recent.includes('C:/QA'), false);
+    assert.deepEqual(
+      f.store.getSnapshot().projects.map((project) => project.path),
+      paths,
+    );
+    assert.deepEqual([...f.files], files);
+    const saved = f.calls.filter((call) => call.command === 'save_session').at(-1)?.args
+      ?.session as { recentProjects: string[] };
+    assert.ok(saved);
+    assert.equal(saved.recentProjects.includes('C:/QA'), false);
+    await act(() => f.store.selectProject('C:/QA'));
+    assert.equal(f.store.getSnapshot().recent[0], 'C:/QA');
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업과 마일스톤 수정은 상세 X 버튼의 자리를 유지하며 숨긴다', async () => {
+  const f = await fixture();
+  try {
+    for (const id of ['W001', 'MS001']) {
+      await act(() => f.store.selectWork(id));
+      await f.click('#taskEditOpen');
+      const close = f.element<HTMLButtonElement>('#detail #close');
+      assert.equal(close.style.visibility, 'hidden');
+      assert.equal(close.hidden, false);
+      assert.equal(close.tabIndex, -1);
+      assert.equal(close.getAttribute('aria-hidden'), 'true');
+      await f.click('#taskEditorCancel');
+      assert.equal(f.element<HTMLElement>('#detail #close').style.visibility, '');
+    }
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업·마일스톤은 탭 이동 시 수정 초안을 유지하지만 닫고 다시 열면 정보 화면이다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    for (const id of ['W001', 'MS001']) {
+      const originalName = f.store.active!.model!.rows.find((row) => row.id === id)!.name;
+      await act(() => f.store.selectWork(id));
+      await f.click('#taskEditOpen');
+      await f.value('#taskEditor-name', '저장하지 않은 초안');
+      await act(() => f.store.selectWork('W002'));
+      await act(() => f.store.selectWork(id));
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-name').value, '저장하지 않은 초안');
+      await f.click('#task-tab-' + id + ' + .task-tab-close');
+      await act(() => f.store.selectWork(id));
+      assert.equal(f.host.querySelector('#taskEditor'), null);
+      assert.ok(f.element('#taskEditOpen'));
+      assert.equal(f.element('#detailTitle').textContent, originalName);
+    }
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업분류 필터를 선택해 목록을 좁히고 프로젝트 전환 시 초기화한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setPage('tasks'));
+    await f.click('#taskTypeFilter');
+    await f.click('#taskTypeFilter-options [data-value="type:bug"]');
+    assert.equal(f.store.getSnapshot().taskType, 'type:bug');
+    assert.equal(f.host.querySelector('.all-task-row'), null);
+    await f.click('#taskTypeFilter');
+    await f.click('#taskTypeFilter-options [data-value="type:feature"]');
+    assert.equal(f.host.querySelectorAll('.all-task-row').length, 2);
+    await act(() => f.store.setFilters({ owner: 'owner:codex' }));
+    assert.equal(f.host.querySelectorAll('.all-task-row').length, 1);
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.getSnapshot().taskType, 'all');
+  } finally {
+    await f.close();
+  }
+});
+
+test('상세 정보 표시 설정은 공용 드롭다운으로 선택하고 저장한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#settingsOpen');
+    assert.equal(f.host.querySelector('#settings select'), null);
+    await f.click('#detailMode');
+    await f.click('#detailMode-options [data-value="tabs"]');
+    assert.equal(f.store.getSnapshot().settings.detailMode, 'tabs');
+    await f.click('#detailMode');
+    await f.click('#detailMode-options [data-value="sidebar"]');
+    assert.equal(f.store.getSnapshot().settings.detailMode, 'sidebar');
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업 목록은 ID·제목·분류를 별도 열로 표시하고 행 전체에서 상세를 연다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setPage('tasks'));
+    assert.deepEqual(
+      [...f.host.querySelectorAll('.all-tasks th')].map((node) => node.textContent),
+      ['ID', '제목', '분류', '상태', '담당자', '종료일'],
+    );
+    const row = f.element('.all-task-row[data-id="W001"]').closest('tr')!;
+    const cells = row.querySelectorAll('td');
+    assert.equal(cells.length, 6);
+    assert.match(cells[0].textContent ?? '', /W001/);
+    assert.equal(cells[1].textContent, '댓글 구현');
+    assert.equal(cells[2].textContent, 'feature');
+    for (const index of [0, 1, 2, 3, 4, 5]) {
+      await act(() => f.store.selectWork(null));
+      await f.click('.all-task-row[data-id="W001"] td:nth-child(' + (index + 1) + ')');
+      assert.equal(f.store.getSnapshot().selectedId, 'W001');
+    }
+    for (const key of ['Enter', ' ']) {
+      await act(() => f.store.selectWork(null));
+      await act(() => {
+        f.element('.all-task-row[data-id="W001"]').dispatchEvent(
+          new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+        );
+      });
+      assert.equal(f.store.getSnapshot().selectedId, 'W001');
+    }
+  } finally {
+    await f.close();
+  }
+});
+
+test('우선순위 필터는 다른 조건과 조합하고 프로젝트 전환 시 해제한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setPage('tasks'));
+    await f.click('#priorityFilter');
+    await f.click('#priorityFilter-options [data-value="priority:high"]');
+    assert.equal(f.host.querySelectorAll('.all-task-row').length, 0);
+    await f.click('#priorityFilter');
+    await f.click('#priorityFilter-options [data-value="priority:normal"]');
+    assert.equal(f.host.querySelectorAll('.all-task-row').length, 2);
+    await act(() => f.store.setFilters({ owner: 'owner:codex' }));
+    assert.equal(f.host.querySelectorAll('.all-task-row').length, 1);
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.store.getSnapshot().priority, 'all');
+  } finally {
+    await f.close();
+  }
+});
+
+test('하루 일정은 작업·마일스톤 생성과 수정에서 날짜를 동기화하고 체크 해제를 지원한다', async () => {
+  const f = await fixture();
+  try {
+    for (const button of ['#taskAddOpen', '#milestoneAddOpen']) {
+      await f.click(button);
+      await f.value('#taskEditor-name', '하루 일정 확인');
+      await f.click('#taskEditor-sameDay');
+      await f.value('#taskEditor-start', '2026-10-23');
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-end').value, '2026-10-23');
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-end').disabled, true);
+      await f.value('#taskEditor-start', '2026-10-24');
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-end').value, '2026-10-24');
+      await f.submit();
+      const id = f.store.getSnapshot().selectedId!;
+      assert.equal(f.store.active!.model!.rows.find((row) => row.id === id)!.end, '2026-10-24');
+      await f.click('#taskEditOpen');
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-sameDay').checked, true);
+      await f.value('#taskEditor-start', '2026-10-25');
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-end').value, '2026-10-25');
+      await f.click('#taskEditor-sameDay');
+      assert.equal(f.element<HTMLInputElement>('#taskEditor-end').disabled, false);
+      await f.value('#taskEditor-end', '2026-10-26');
+      await f.submit();
+      const row = f.store.active!.model!.rows.find((row) => row.id === id)!;
+      assert.equal(row.start, '2026-10-25');
+      assert.equal(row.end, '2026-10-26');
+    }
   } finally {
     await f.close();
   }

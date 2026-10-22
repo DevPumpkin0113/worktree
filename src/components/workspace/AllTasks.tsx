@@ -1,21 +1,26 @@
-import { useContext, type CSSProperties } from 'react';
-import { priorityColor } from '../../views/priority-color';
-import { legacyPriorities } from '../../domain/project-priorities';
-import { ProjectPriorityContext } from '../../app/project-priority-context';
+import { useContext } from 'react';
+import { ProjectPriorityContext, priorityStyle } from '../../app/project-priority-context';
 import { TaskTypeBadge } from '../shared/TaskTypeBadge';
 import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { messages } from '../../i18n/messages';
 import { STATUS_NAMES } from '../../app/types';
 import type { ListProps } from './types';
 export function AllTasks(props: ListProps) {
-  const priorities = useContext(ProjectPriorityContext) ?? legacyPriorities();
+  const priorities = useContext(ProjectPriorityContext);
   const { date } = useProjectDates();
   return (
     <div className="all-tasks">
       <table>
         <thead>
           <tr>
-            {[messages.task, messages.status, messages.owner, messages.endDate].map((name) => (
+            {[
+              messages.taskIdColumn,
+              messages.taskTitleColumn,
+              messages.taskTypeColumn,
+              messages.status,
+              messages.owner,
+              messages.endDate,
+            ].map((name) => (
               <th scope="col" key={name}>
                 {name}
               </th>
@@ -24,29 +29,27 @@ export function AllTasks(props: ListProps) {
         </thead>
         <tbody>
           {props.rows.map((row) => (
-            <tr key={row.id}>
+            <tr
+              key={row.id}
+              className={'all-task-row' + (props.selectedId === row.id ? ' detail-selected' : '')}
+              data-id={row.id}
+              tabIndex={0}
+              aria-label={props.label(row.id) + ' · ' + row.name}
+              aria-selected={props.selectedId === row.id}
+              onClick={() => props.onSelect(row.id)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  props.onSelect(row.id);
+                }
+              }}
+            >
+              <td className="all-task-id" style={priorityStyle(row.priority ?? '-', priorities)}>
+                <span className="id">{props.label(row.id)}</span>
+              </td>
+              <td className="all-task-title">{row.name}</td>
               <td>
-                <button
-                  type="button"
-                  className={
-                    'all-task-link' + (props.selectedId === row.id ? ' detail-selected' : '')
-                  }
-                  style={
-                    {
-                      '--task-priority-color':
-                        priorityColor(
-                          priorities.findIndex((p) => p.id === row.priority),
-                          priorities.length,
-                        ) ?? 'transparent',
-                    } as CSSProperties
-                  }
-                  data-id={row.id}
-                  onClick={() => props.onSelect(row.id)}
-                >
-                  <span className="id">{props.label(row.id)}</span>
-                  <span>{row.name}</span>
-                  <TaskTypeBadge type={row.taskType ?? 'task'} />
-                </button>
+                <TaskTypeBadge type={row.taskType ?? 'task'} />
               </td>
               <td>
                 <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>

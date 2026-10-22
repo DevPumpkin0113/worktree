@@ -73,6 +73,8 @@ export interface WorkspaceSnapshot {
   query: string;
   owner: string;
   status: string;
+  taskType: string;
+  priority: string;
   selectedId: string | null;
   settingsOpen: boolean;
   problemsOpen: boolean;

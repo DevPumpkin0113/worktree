@@ -2,6 +2,11 @@
 :root,
 :root[data-theme='light'] {
   color-scheme: light;
+  --color-task-card-hover-background: color-mix(
+    in srgb,
+    var(--color-primary) 5%,
+    var(--color-surface)
+  );
   --color-priority-high: #d73a4a;
   --color-priority-middle: #eab308;
   --color-priority-low: #2da44e;

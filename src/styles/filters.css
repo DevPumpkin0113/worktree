@@ -135,3 +135,28 @@
   color: var(--color-text-secondary);
   font-size: 12px;
 }
+
+.workspace-filter-actions .filter-dropdown {
+  width: 120px;
+  min-width: 0;
+}
+.workspace-filter-actions .filter-trigger {
+  gap: 8px;
+  padding-inline: 8px;
+  font-size: 12px;
+}
+.workspace-filter-actions .filter-trigger > span {
+  flex: 1;
+  min-width: 0;
+}
+.filter-options-content {
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  min-width: min(142px, calc(100vw - 16px));
+}
+.filter-options-content .filter-option > span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+}

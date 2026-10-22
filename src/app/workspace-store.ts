@@ -49,6 +49,8 @@ export class WorkspaceStore {
     query: '',
     owner: 'all',
     status: 'all',
+    taskType: 'all',
+    priority: 'all',
     selectedId: null,
     settingsOpen: false,
     problemsOpen: false,
@@ -375,6 +377,8 @@ export class WorkspaceStore {
             ? (document?.activeTaskTab ?? null)
             : null,
         owner: same ? this.state.owner : 'all',
+        taskType: same ? this.state.taskType : 'all',
+        priority: same ? this.state.priority : 'all',
         recent: [
           project.path,
           ...this.state.recent.filter((item) => pathKey(item) !== pathKey(project.path)),
@@ -441,6 +445,8 @@ export class WorkspaceStore {
             page: 'initialize',
             selectedId: null,
             owner: 'all',
+            taskType: 'all',
+            priority: 'all',
             query: '',
             status: 'all',
             operationProblems: [],
@@ -453,6 +459,10 @@ export class WorkspaceStore {
   }
   selectProject(path: string) {
     return this.open(path);
+  }
+  removeRecentProject(path: string) {
+    this.patch({ recent: this.state.recent.filter((item) => pathKey(item) !== pathKey(path)) });
+    this.saveSession();
   }
   closeProject(path: string) {
     ++this.openRevision;
@@ -477,6 +487,8 @@ export class WorkspaceStore {
                 ? (selectedDocument?.activeTaskTab ?? null)
                 : null,
             owner: 'all',
+            taskType: 'all',
+            priority: 'all',
             operationProblems: [],
             problemsOpen: false,
           }
@@ -532,7 +544,11 @@ export class WorkspaceStore {
       ),
     });
   }
-  setFilters(filters: Partial<Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status'>>) {
+  setFilters(
+    filters: Partial<
+      Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status' | 'taskType' | 'priority'>
+    >,
+  ) {
     if ('query' in filters && this.detailMode === 'tabs' && this.state.selectedId) {
       const page = this.state.page === 'tasks' ? 'tasks' : 'board';
       this.patch({
@@ -796,6 +812,19 @@ export class WorkspaceStore {
             documents: this.state.documents.map((doc) => (doc.path === path ? next : doc)),
             selectedId: this.validSelection(next.model),
             owner,
+            priority:
+              !next.model ||
+              this.state.priority === 'priority:-' ||
+              next.model.priorities?.some(
+                (priority) => 'priority:' + priority.id === this.state.priority,
+              )
+                ? this.state.priority
+                : 'all',
+            taskType:
+              !next.model ||
+              next.model.taskTypes?.some((type) => 'type:' + type === this.state.taskType)
+                ? this.state.taskType
+                : 'all',
             operationProblems: [],
             problemsOpen: next.problems.length ? this.state.problemsOpen : false,
           });

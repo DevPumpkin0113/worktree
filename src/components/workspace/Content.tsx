@@ -1,3 +1,6 @@
+import { legacyPriorities } from '../../domain/project-priorities';
+import { priorityColor } from '../../views/priority-color';
+import { taskTypeColor } from '../../domain/task-type-colors';
 import { TaskTabs } from './TaskTabs';
 import { ProjectInitializer } from '../project/ProjectInitializer';
 import { messages } from '../../i18n/messages';
@@ -38,6 +41,7 @@ export function Content({
   creation,
   label,
   onAddTask,
+  onCloseTaskTab,
   onAddMilestone,
   initializationStep,
   onInitializationStep,
@@ -50,6 +54,7 @@ export function Content({
   state: WorkspaceSnapshot;
   label: (id: string) => string;
   onAddTask: () => void;
+  onCloseTaskTab: (id: string) => void;
   onAddMilestone: () => void;
 }) {
   const active = store.active,
@@ -72,11 +77,26 @@ export function Content({
       rows?.filter(
         (row) =>
           row.type !== 'group' &&
-          matchesWork(row, { query: state.query, status: state.status, owner: state.owner }, label),
+          matchesWork(
+            row,
+            {
+              query: state.query,
+              status: state.status,
+              owner: state.owner,
+              taskType: state.taskType,
+              priority: state.priority,
+            },
+            label,
+          ),
       ) ?? [],
-    [rows, state.query, state.status, state.owner, label],
+    [rows, state.query, state.status, state.owner, state.taskType, state.priority, label],
   );
-  const showEmptyMilestones = !state.query && state.owner === 'all' && state.status === 'all';
+  const showEmptyMilestones =
+    !state.query &&
+    state.owner === 'all' &&
+    state.status === 'all' &&
+    state.taskType === 'all' &&
+    state.priority === 'all';
   const visibleIds = useMemo(() => new Set(filtered.map((row) => row.id)), [filtered]);
   const owners = useMemo(() => (rows ? (workOwners(rows) as string[]) : []), [rows]);
   const capture = () => {
@@ -117,7 +137,7 @@ export function Content({
           model={model}
           label={label}
           onSelect={selectWork}
-          onClose={(id) => store.closeTaskTab(id)}
+          onClose={onCloseTaskTab}
           onMove={(source, target, after) => store.reorderTaskTabs(source, target, after)}
           enabled={!state.settingsOpen}
         />
@@ -154,6 +174,47 @@ export function Content({
             </button>
           ))}
           <div className="workspace-filter-actions">
+            <FilterDropdown
+              key={'priority:' + active?.path + state.page + state.settingsOpen}
+              id="priorityFilter"
+              label={messages.priority}
+              value={state.priority}
+              options={[
+                { value: 'all', label: messages.allPriorities },
+                { value: 'priority:-', label: messages.unassignedPriority },
+                ...(model?.priorities ?? legacyPriorities()).map((priority, index, priorities) => ({
+                  value: 'priority:' + priority.id,
+                  label: priority.name,
+                  badge: true,
+                  color: priorityColor(index, priorities.length),
+                })),
+              ]}
+              disabled={state.settingsOpen}
+              onChange={(priority) => {
+                capture();
+                store.setFilters({ priority });
+              }}
+            />
+            <FilterDropdown
+              key={'taskType:' + active?.path + state.page + state.settingsOpen}
+              id="taskTypeFilter"
+              label={messages.taskType}
+              value={state.taskType}
+              options={[
+                { value: 'all', label: messages.allTaskTypes },
+                ...(model?.taskTypes ?? []).map((type) => ({
+                  value: 'type:' + type,
+                  label: type,
+                  badge: true,
+                  color: taskTypeColor(model?.taskTypeColors, type),
+                })),
+              ]}
+              disabled={state.settingsOpen}
+              onChange={(taskType) => {
+                capture();
+                store.setFilters({ taskType });
+              }}
+            />
             <FilterDropdown
               key={'owner:' + active?.path + state.page + state.settingsOpen}
               id="owner"

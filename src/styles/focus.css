@@ -28,9 +28,11 @@
   background: var(--color-statusbar-error-hover-background);
   color: var(--color-statusbar-error-hover-color);
 }
+.graph-node:focus {
+  outline: none;
+}
 .graph-node:focus-visible rect {
   fill: var(--color-nav-selected);
-  stroke: var(--color-primary);
 }
 .task-delete-open:focus-visible:not(:disabled),
 .task-delete:focus-visible:not(:disabled),
@@ -38,4 +40,9 @@
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
   color: var(--color-text-inverse);
+}
+
+.gantt-view :is(.gantt-scroll, .gantt-label, .timeline-row, .unscheduled-list button):focus {
+  outline: none;
+  box-shadow: none;
 }

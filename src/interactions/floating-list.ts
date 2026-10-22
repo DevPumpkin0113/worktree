@@ -5,8 +5,12 @@ export function floatingListPosition(
   anchor: { left: number; top: number; bottom: number; width: number },
   viewport: { width: number; height: number },
   contentHeight: number,
+  contentWidth?: number,
 ) {
-  const width = Math.min(Math.max(anchor.width, 142), Math.max(0, viewport.width - EDGE_GAP * 2));
+  const width = Math.min(
+    Math.max(contentWidth ?? anchor.width, 142),
+    Math.max(0, viewport.width - EDGE_GAP * 2),
+  );
   const below = Math.max(0, viewport.height - anchor.bottom - TRIGGER_GAP - EDGE_GAP);
   const above = Math.max(0, anchor.top - TRIGGER_GAP - EDGE_GAP);
   const desired = Math.min(MAX_HEIGHT, contentHeight);

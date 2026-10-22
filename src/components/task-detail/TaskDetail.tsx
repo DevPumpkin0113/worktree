@@ -6,7 +6,7 @@ import { DetailTabs } from './DetailTabs';
 import { useCommentThreads } from './use-comment-threads';
 import { TaskInfo } from './TaskInfo';
 import { Icon } from '../shared/Icon';
-import { STATUS_NAMES, TYPE_NAMES, type DetailMode, type WorkModel } from '../../app/types';
+import { STATUS_NAMES, type DetailMode, type WorkModel } from '../../app/types';
 export function TaskDetail({
   model,
   path,
@@ -113,16 +113,12 @@ export function TaskDetail({
               </button>
               {row ? (
                 <>
-                  <span className="detail-type">
-                    {row.milestone ? messages.milestone : TYPE_NAMES[row.type]}
-                  </span>
+                  <span className="detail-type">{label(row.id)}</span>
                   <span className={'detail-status ' + row.status}>{STATUS_NAMES[row.status]}</span>
                 </>
               ) : null}
             </div>
-            <h2 id="detailTitle">
-              {row ? (row.milestone ? row.name : label(row.id) + ' · ' + row.name) : ''}
-            </h2>
+            <h2 id="detailTitle">{row?.name ?? ''}</h2>
           </div>
 
           {row ? (
@@ -133,16 +129,6 @@ export function TaskDetail({
               onClick={() => onEdit(row.id)}
             >
               {messages.edit}
-            </button>
-          ) : null}
-          {row ? (
-            <button
-              type="button"
-              id="taskDeleteOpen"
-              className="task-delete-open"
-              onClick={() => onDelete(row.id)}
-            >
-              {messages.delete}
             </button>
           ) : null}
           <button
@@ -172,7 +158,13 @@ export function TaskDetail({
                 aria-labelledby="previewInfoTab"
                 hidden={thread.tab !== 'info'}
               >
-                <TaskInfo row={row} model={model} label={label} onSelect={onSelect} />
+                <TaskInfo
+                  row={row}
+                  model={model}
+                  label={label}
+                  onSelect={onSelect}
+                  onDelete={onDelete}
+                />
               </section>
               <section
                 id="previewCommentsPanel"

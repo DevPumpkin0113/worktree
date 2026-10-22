@@ -48,7 +48,7 @@ textarea {
 button {
   cursor: pointer;
 }
-button:hover,
+button:hover:not(:disabled),
 button.active {
   background: var(--color-primary);
   color: var(--color-text-inverse);

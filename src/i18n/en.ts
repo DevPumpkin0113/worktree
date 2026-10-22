@@ -73,12 +73,14 @@ export const en = {
   deleteChildrenTitle: (count: string | number) => `Handle ${count} child tasks`,
   deleteKeepChildren: 'Keep tasks and remove their milestone assignment',
   deleteWithChildren: 'Delete child tasks too',
-  deleteDependentTitle: (count: string | number) =>
-    `${count} tasks with affected predecessor links`,
-  deleteDetachPredecessors: 'Keep the tasks above and remove only links to deleted items',
+  deleteDependentTitle: (count: string | number) => `${count} affected tasks`,
+  deleteDetachPredecessors: 'Keep these tasks and remove only the predecessor links shown.',
+  deleteDependentHint:
+    'These tasks will not be deleted. Only deleted items are removed from their predecessor lists; other links remain.',
+  deleteTaskKept: 'Kept',
+  deleteRemovedLinks: 'Predecessors to remove',
   deleteReferencesRequired: 'Choose whether to remove the affected predecessor links.',
   invalidDeleteOption: 'Invalid deletion option.',
-  confirmDeleteCount: (count: string | number) => `Delete ${count} items`,
 
   parentMilestone: 'Milestone',
   milestoneDetailSuffix: ' milestone details',
@@ -259,7 +261,7 @@ export const en = {
   idCollisionPrefix: ' Duplicate display IDs: ',
   idCollisionSuffix: '. Original IDs are shown alongside them.',
   identifiers: 'Identifiers',
-  idFormat: 'ID format',
+  idFormat: 'ID display format',
   idPrefixPart: 'Prefix',
   idSeparatorPart: 'Separator',
   idPrefix: 'ID prefix',

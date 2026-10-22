@@ -9,11 +9,13 @@ export function TaskInfo({
   model,
   label,
   onSelect,
+  onDelete,
 }: {
   row: WorkRow;
   model: WorkModel;
   label: (id: string) => string;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { date } = useProjectDates();
   const byId = new Map(model.rows.map((item) => [item.id, item]));
@@ -143,27 +145,37 @@ export function TaskInfo({
           ))}
         </div>
       ) : null}
-      {!row.milestone ? (
-        <details className="detail-identifiers">
-          <summary>{messages.identifiers}</summary>
-          <dl>
-            <dt>{messages.displayId}</dt>
-            <dd>{label(row.id)}</dd>
-            <dt>{messages.sourceId}</dt>
-            <dd>{row.id}</dd>
-            <dt>
-              {byId.get(row.parent)?.milestone ? messages.parentMilestone : messages.parentId}
-            </dt>
-            <dd>
-              {row.parent === '-'
-                ? messages.none
-                : byId.get(row.parent)?.milestone
-                  ? byId.get(row.parent)!.name
-                  : row.parent}
-            </dd>
-          </dl>
-        </details>
-      ) : null}
+      <div className="detail-info-actions">
+        {!row.milestone ? (
+          <details className="detail-identifiers">
+            <summary>{messages.identifiers}</summary>
+            <dl>
+              <dt>{messages.displayId}</dt>
+              <dd>{label(row.id)}</dd>
+              <dt>{messages.sourceId}</dt>
+              <dd>{row.id}</dd>
+              <dt>
+                {byId.get(row.parent)?.milestone ? messages.parentMilestone : messages.parentId}
+              </dt>
+              <dd>
+                {row.parent === '-'
+                  ? messages.none
+                  : byId.get(row.parent)?.milestone
+                    ? byId.get(row.parent)!.name
+                    : row.parent}
+              </dd>
+            </dl>
+          </details>
+        ) : null}
+        <button
+          type="button"
+          id="taskDeleteOpen"
+          className="task-delete-open"
+          onClick={() => onDelete(row.id)}
+        >
+          {messages.delete}
+        </button>
+      </div>
     </>
   );
 }

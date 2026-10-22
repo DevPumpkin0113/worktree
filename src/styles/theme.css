@@ -35,7 +35,9 @@
   --color-status-doing-text: #265fa1; /* 진행 글자 */
   --color-status-blocked-bg: #ffe1dd; /* 막힘 배경 */
   --color-status-blocked-text: #aa392c; /* 막힘 글자 */
-  --color-error-focus: #8a3928; /* 오류 포커스 */
+  --color-danger: #dc2626; /* 삭제·초기화 등 위험 동작 */
+  --color-danger-hover: #b91c1c;
+  --color-error-focus: var(--color-danger); /* 오류 강조 */
   --color-window-close-hover: #c42b1c; /* 창 닫기 강조 */
   --color-surface: #fff;
   --color-text-inverse: #fff;

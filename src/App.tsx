@@ -90,8 +90,6 @@ export function App({ store }: { store: WorkspaceStore }) {
       mode={state.settings.detailMode}
       settingsOpen={
         state.settingsOpen ||
-        !!editor ||
-        !!deletion ||
         (state.settings.detailMode === 'tabs' && page !== 'board' && page !== 'tasks')
       }
       collapsed={collapsed}

@@ -1,3 +1,4 @@
+import { useModalDismiss } from '../../hooks/use-modal-dismiss';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
 
@@ -17,6 +18,7 @@ export function ProjectResetDialog({
   const [saving, setSaving] = useState(false);
   const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState('');
+  const dismiss = useModalDismiss(onClose, () => busy.current);
   useLayoutEffect(() => {
     const node = dialog.current!;
     const opener = document.activeElement;
@@ -51,13 +53,7 @@ export function ProjectResetDialog({
       className="task-editor project-reset-dialog"
       aria-labelledby="projectResetTitle"
       aria-describedby="projectResetHint"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') event.stopPropagation();
-      }}
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!busy.current) onClose();
-      }}
+      {...dismiss}
     >
       <form
         autoComplete="off"

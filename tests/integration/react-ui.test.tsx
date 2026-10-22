@@ -375,8 +375,20 @@ test('작업 삭제는 선행 참조 해제 선택과 실패 보존을 지원한
       '#taskDeleteDialog input[type="checkbox"]',
     );
     assert.equal(checks.length, 1);
+    const affected = f.element('.delete-dependency-card');
+    assert.match(affected.querySelector('.delete-dependency-heading')!.textContent ?? '', /W002/);
+    assert.equal(affected.querySelector('.delete-kept-badge')!.textContent, '유지됨');
+    assert.match(affected.querySelector('.delete-removed-link')!.textContent ?? '', /W001/);
     assert.ok(f.element<HTMLButtonElement>('#taskDeleteConfirm').disabled);
+    assert.equal(f.element('#taskDeleteConfirm').textContent, '작업 삭제');
+    await act(() => {
+      f.element('#taskDeleteDialog form').dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true }),
+      );
+    });
+    assert.ok(readSource(f.files.get(first)!).files['tasks/W001.md']);
     await act(() => checks[0].click());
+    assert.equal(f.element<HTMLButtonElement>('#taskDeleteConfirm').disabled, false);
     await f.click('#taskDeleteConfirm');
     assert.ok(!readSource(f.files.get(first)!).files['tasks/W001.md']);
     assert.deepEqual(f.store.active?.model?.rows.find((r) => r.id === 'W002')?.deps, []);
@@ -1554,7 +1566,7 @@ test('초기화 최종 확인은 경로 표기·짝지은 항목·작업 규칙 
       '프로젝트 이름',
       '프로젝트 폴더',
       '데이터 저장 위치',
-      'ID 형식',
+      'ID 표시 형식',
       '날짜·시간 형식',
       '작업 유형',
       '라벨',
@@ -1599,7 +1611,7 @@ test('프로젝트 관리 조회와 편집은 최종 확인 기준의 순서·�
       '프로젝트 이름',
       '프로젝트 폴더',
       '데이터 저장 위치',
-      'ID 형식',
+      'ID 표시 형식',
       '날짜·시간 형식',
       '작업 유형',
       '라벨',
@@ -1654,7 +1666,7 @@ test('초기화 예상 작업 시간은 작업 규칙 라디오 선택을 최종
     await f.click('#initializationNext');
     assert.equal(f.element<HTMLInputElement>('#initializationReview-useEffort').checked, true);
     assert.equal(f.element<HTMLInputElement>('#initializationReview-useEffort').disabled, true);
-    assert.ok(f.element('.initialization-review').textContent?.includes('ID 형식'));
+    assert.ok(f.element('.initialization-review').textContent?.includes('ID 표시 형식'));
     assert.ok(f.element('.initialization-review').textContent?.includes('날짜·시간 형식'));
     await f.click('#initializationPrevious');
     assert.equal(f.element<HTMLInputElement>('#initialization-useEffort').checked, true);
@@ -1767,7 +1779,13 @@ test('탭 상세는 홈 화면을 유지하고 여러 작업의 탭·초안을 �
     assert.equal(home.hasAttribute('hidden'), false);
     assert.equal(content.scrollTop, 135);
     await f.click('#task-tab-W002');
-    assert.match(f.element('#detailTitle').textContent ?? '', /W002/);
+    assert.equal(
+      f.element('#detailTitle').textContent,
+      f.store.active!.model!.rows.find((row) => row.id === 'W002')!.name,
+    );
+    assert.match(f.element('#detailMeta .detail-type').textContent ?? '', /W002/);
+    assert.ok(f.element('.detail-info-actions #taskDeleteOpen'));
+    assert.equal(f.host.querySelector('.detail-header #taskDeleteOpen'), null);
     await act(() => f.store.selectProject('C:/QB'));
     assert.equal(f.host.querySelector('#task-tab-W002'), null);
     await act(() => f.store.selectWork('W001'));
@@ -2049,6 +2067,130 @@ test('앱 재시작 후 작업 탭 순서·활성 작업을 프로젝트별로 �
     assert.deepEqual(restored.active!.taskTabs, ['W001']);
     assert.equal(restored.getSnapshot().selectedId, null);
   } finally {
+    await f.close();
+  }
+});
+
+test('작업 수정·삭제 모달 뒤에서도 탭·분할 상세 화면을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    for (const mode of ['tabs', 'sidebar'] as const) {
+      await act(() => f.store.saveSetting('detailMode', mode));
+      await act(() => f.store.selectWork('W001'));
+      const title = f.element('#detailTitle').textContent;
+      await f.click('#taskEditOpen');
+      assert.equal(f.element('#detail').hasAttribute('hidden'), false);
+      if (mode === 'sidebar') assert.equal(f.element<HTMLDialogElement>('#detail').open, true);
+      assert.equal(f.element('#detailTitle').textContent, title);
+      await f.click('#taskEditorCancel');
+      await f.click('#taskDeleteOpen');
+      assert.equal(f.element('#detail').hasAttribute('hidden'), false);
+      if (mode === 'sidebar') assert.equal(f.element<HTMLDialogElement>('#detail').open, true);
+      assert.equal(f.element('#detailTitle').textContent, title);
+      await f.click('#taskDeleteCancel');
+    }
+  } finally {
+    await f.close();
+  }
+});
+
+test('수정·삭제·초기화 모달은 배경 클릭으로 닫고 내부에서 시작한 조작은 닫지 않는다', async () => {
+  const f = await fixture();
+  const backdrop = async (selector: string, startOutside = true, cancel = false) => {
+    const modal = f.element(selector);
+    modal.getBoundingClientRect = () => ({
+      left: 100,
+      right: 600,
+      top: 100,
+      bottom: 500,
+      width: 500,
+      height: 400,
+      x: 100,
+      y: 100,
+      toJSON() {},
+    });
+    await act(() => {
+      modal.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          button: 0,
+          clientX: startOutside ? 50 : 150,
+          clientY: 150,
+          bubbles: true,
+        }),
+      );
+      if (cancel) modal.dispatchEvent(new Event('pointercancel', { bubbles: true }));
+      modal.dispatchEvent(
+        new MouseEvent('click', { button: 0, clientX: 50, clientY: 150, bubbles: true }),
+      );
+    });
+  };
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    await backdrop('#taskEditor', false);
+    assert.ok(f.host.querySelector('#taskEditor'));
+    await backdrop('#taskEditor', true, true);
+    assert.ok(f.host.querySelector('#taskEditor'));
+    await backdrop('#taskEditor');
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+    await f.click('#taskDeleteOpen');
+    await backdrop('#taskDeleteDialog');
+    assert.equal(f.host.querySelector('#taskDeleteDialog'), null);
+    assert.ok(readSource(f.files.get(first)!).files['tasks/W001.md']);
+    await act(() => f.store.setPage('project'));
+    await f.click('#projectResetOpen');
+    await backdrop('#projectResetDialog');
+    assert.equal(f.host.querySelector('#projectResetDialog'), null);
+    assert.ok(f.files.has(first));
+  } finally {
+    await f.close();
+  }
+});
+
+test('모달 저장 처리 중에는 배경 클릭으로 닫지 않는다', async () => {
+  const f = await fixture();
+  let release: () => void = () => {};
+  try {
+    const original = f.platform.invoke.bind(f.platform);
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    f.platform.invoke = async <T,>(command: string, args?: Record<string, unknown>) => {
+      if (command === 'save_project') await gate;
+      return original<T>(command, args);
+    };
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '저장 중');
+    await f.click('#taskEditorSave');
+    const modal = f.element('#taskEditor');
+    modal.getBoundingClientRect = () => ({
+      left: 100,
+      right: 600,
+      top: 100,
+      bottom: 500,
+      width: 500,
+      height: 400,
+      x: 100,
+      y: 100,
+      toJSON() {},
+    });
+    await act(() => {
+      modal.dispatchEvent(
+        new MouseEvent('pointerdown', { button: 0, clientX: 50, clientY: 150, bubbles: true }),
+      );
+      modal.dispatchEvent(
+        new MouseEvent('click', { button: 0, clientX: 50, clientY: 150, bubbles: true }),
+      );
+    });
+    assert.ok(f.host.querySelector('#taskEditor'));
+    await act(async () => {
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    assert.equal(f.host.querySelector('#taskEditor'), null);
+  } finally {
+    release();
     await f.close();
   }
 });

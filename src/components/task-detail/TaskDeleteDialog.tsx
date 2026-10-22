@@ -1,3 +1,7 @@
+import { useModalDismiss } from '../../hooks/use-modal-dismiss';
+import { DeleteDependencyImpact } from './DeleteDependencyImpact';
+import { parseProject } from '../../domain/project-document';
+import { createIdLabels } from '../../domain/id-display';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
 import type { DeleteOptions } from '../../domain/task-deletion';
@@ -22,6 +26,12 @@ export function TaskDeleteDialog({
   const [children, setChildren] = useState<DeleteOptions['children']>('keep');
   const [detach, setDetach] = useState(false);
   const [error, setError] = useState('');
+  const dismiss = useModalDismiss(onClose, () => busy.current);
+  const labels = useMemo(() => {
+    const model = parseProject(session.text);
+    return createIdLabels(model, model.idSeparator ?? 'none');
+  }, [session.text]);
+  const label = (id: string) => labels.get(id) ?? id;
   const impact = useMemo(
     () => deletionImpact(session.text, session.id, children),
     [session.text, session.id, children],
@@ -33,7 +43,7 @@ export function TaskDeleteDialog({
     return () => node.close();
   }, []);
   async function remove() {
-    if (busy.current) return;
+    if (busy.current || (impact.dependents.length > 0 && !detach)) return;
     busy.current = true;
     setSaving(true);
     setError('');
@@ -53,13 +63,7 @@ export function TaskDeleteDialog({
       id="taskDeleteDialog"
       className="task-editor"
       aria-labelledby="taskDeleteTitle"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') event.stopPropagation();
-      }}
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!busy.current) onClose();
-      }}
+      {...dismiss}
     >
       <form
         autoComplete="off"
@@ -76,7 +80,7 @@ export function TaskDeleteDialog({
         <p className="delete-target">
           {impact.target.milestone
             ? impact.target.name
-            : impact.target.id + ' · ' + impact.target.name}
+            : label(impact.target.id) + ' · ' + impact.target.name}
         </p>
         <p className="task-editor-hint">{messages.deleteSourceHint}</p>
         <p className="task-editor-source" title={session.path}>
@@ -92,7 +96,7 @@ export function TaskDeleteDialog({
             <legend>{messages.deleteChildrenTitle(impact.childRows.length)}</legend>
             <ul>
               {impact.childRows.map((row) => (
-                <li key={row.id}>{row.id + ' · ' + row.name}</li>
+                <li key={row.id}>{label(row.id) + ' · ' + row.name}</li>
               ))}
             </ul>
             {(['keep', 'delete'] as const).map((value) => (
@@ -113,23 +117,16 @@ export function TaskDeleteDialog({
           </fieldset>
         ) : null}
         {impact.dependents.length ? (
-          <fieldset className="delete-options" disabled={saving}>
-            <legend>{messages.deleteDependentTitle(impact.dependents.length)}</legend>
-            <ul>
-              {impact.dependents.map((row) => (
-                <li key={row.id}>{row.id + ' · ' + row.name}</li>
-              ))}
-            </ul>
-            <label>
-              <input
-                id="deleteDetachPredecessors"
-                type="checkbox"
-                checked={detach}
-                onChange={(event) => setDetach(event.target.checked)}
-              />
-              {messages.deleteDetachPredecessors}
-            </label>
-          </fieldset>
+          <DeleteDependencyImpact
+            dependents={impact.dependents}
+            removedRows={[impact.target, ...impact.childRows].filter((row) =>
+              impact.removed.has(row.id),
+            )}
+            label={label}
+            checked={detach}
+            disabled={saving}
+            onChange={setDetach}
+          />
         ) : null}
         {error ? (
           <p id="taskDeleteError" className="task-editor-error" role="alert">
@@ -146,7 +143,11 @@ export function TaskDeleteDialog({
             className="task-delete"
             disabled={saving || (impact.dependents.length > 0 && !detach)}
           >
-            {saving ? messages.deletingTask : messages.confirmDeleteCount(impact.removed.size)}
+            {saving
+              ? messages.deletingTask
+              : impact.target.milestone
+                ? messages.deleteMilestone
+                : messages.deleteTask}
           </button>
         </div>
       </form>

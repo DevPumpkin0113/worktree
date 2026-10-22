@@ -1,3 +1,4 @@
+import { useModalDismiss } from '../../hooks/use-modal-dismiss';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { messages } from '../../i18n/messages';
 import { parseProject } from '../../domain/project-document';
@@ -30,6 +31,7 @@ export function TaskEditor({
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const [error, setError] = useState('');
+  const dismiss = useModalDismiss(onClose, () => savingRef.current);
   const model = useMemo(() => parseProject(session.text), [session.text]);
   const id = useMemo(
     () =>
@@ -66,13 +68,7 @@ export function TaskEditor({
       id="taskEditor"
       className="task-editor"
       aria-labelledby="taskEditorTitle"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') event.stopPropagation();
-      }}
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!savingRef.current) onClose();
-      }}
+      {...dismiss}
     >
       <form
         autoComplete="off"

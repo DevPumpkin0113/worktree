@@ -1,3 +1,4 @@
+import { saveProjectComment } from '../../src/domain/comment-editing.ts';
 import { deleteProjectTask } from '../../src/domain/task-deletion.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -58,4 +59,27 @@ test('새 규격 오류는 언어 전환 후에도 실제 파일·행·입력값
 test('레거시 WBS·표 형식은 프로젝트 문서로 읽지 않는다',()=>{assert.throws(()=>parseProject('---\nschema_version: 2\n---\n## 작업 목록'));});
 test('프로젝트 자체의 문서 집합이 유효하고 WBS·템플릿 파일은 제거되어 있다',()=>{
  const directory=JSON.parse(fs.readFileSync('worktree.json','utf8')).dataDirectory;const files={'project.json':fs.readFileSync(path.join(directory,'project.json'),'utf8')};for(const folder of ['tasks','milestones'])for(const file of fs.readdirSync(path.join(directory,folder)))files[folder+'/'+file]=fs.readFileSync(path.join(directory,folder,file),'utf8');assert.ok(parseProject(serializeSource({dataDirectory:directory,files})).rows.length>70);for(const dir of ['templates','examples','planning'])if(fs.existsSync(dir))assert.ok(fs.readdirSync(dir).every(file=>!file.endsWith('.wbs')));
+});
+
+
+test('작업과 마일스톤 구분자는 표시만 변경하며 원본 ID·파일명·참조는 유지한다',()=>{
+ const data=readSource(source), config=JSON.parse(data.files['project.json']);config.idSeparator='hyphen';data.files['project.json']=JSON.stringify(config);
+ let text=serializeSource(data);
+ const result=updateProjectTask(text,{...projectTaskDraft(text),type:'milestone',name:'마일스톤'},undefined,timestamp);
+ assert.equal(result.id,'MS002');text=result.text;
+ assert.ok(readSource(text).files['milestones/MS002.md']);
+ assert.equal(readTaskFile('milestones/MS002.md',readSource(text).files['milestones/MS002.md']).metadata.id,'MS002');
+ const labels=createIdLabels(parseProject(text),'hyphen');
+ assert.equal(labels.get('W001'),'W-001');assert.equal(labels.get('MS002'),'MS-002');assert.equal(labels.get('MS001'),'MS-001');
+ text=updateProjectTask(text,{...projectTaskDraft(text,'W001'),parent:'MS002'},'W001',timestamp).text;
+ text=saveProjectComment(text,'MS002','작성자','마일스톤 댓글',undefined,timestamp);
+ assert.equal(parseProject(text).rows.find(row=>row.id==='W001').parent,'MS002');
+ assert.equal(parseProject(text).comments[0].taskId,'MS002');
+ assert.equal(nextProjectId(text,true),'MS003');
+ const changed=readSource(text), settings=JSON.parse(changed.files['project.json']);settings.idSeparator='none';changed.files['project.json']=JSON.stringify(settings);
+ const withoutSeparator=serializeSource(changed);
+ assert.equal(createIdLabels(parseProject(withoutSeparator),'none').get('MS002'),'MS002');
+ assert.equal(readSource(withoutSeparator).files['milestones/MS002.md'],readSource(text).files['milestones/MS002.md']);
+ assert.equal(parseProject(withoutSeparator).rows.find(row=>row.id==='W001').parent,'MS002');
+ assert.equal(nextProjectId(withoutSeparator,true),'MS003');
 });

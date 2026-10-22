@@ -772,3 +772,19 @@ body:has(#settings[open]) #detailResize {
 #detail.task-detail-tab .detail-preview-tabs {
   top: 0;
 }
+
+.detail-info-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.detail-info-actions .detail-identifiers {
+  flex: 1;
+  min-width: 0;
+}
+.detail-info-actions .task-delete-open {
+  flex-shrink: 0;
+  margin-left: auto;
+}

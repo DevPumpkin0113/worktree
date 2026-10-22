@@ -116,11 +116,26 @@
   font-size: 11px;
   padding: 5px 8px;
   color: var(--color-text-inverse);
-  background: var(--color-error-focus);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
 }
 .task-delete {
   color: var(--color-text-inverse);
-  background: var(--color-error-focus);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.task-delete-open:hover:not(:disabled),
+.task-delete:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+  color: var(--color-text-inverse);
+}
+.task-delete-open:disabled,
+.task-delete:disabled {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
 }
 .delete-options {
   margin: 16px 0;
@@ -179,4 +194,66 @@
 }
 .detail-description {
   white-space: pre-wrap;
+}
+
+.delete-dependency-explanation {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+.delete-options .delete-dependency-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  max-height: 220px;
+}
+.delete-dependency-card {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+}
+.delete-dependency-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.delete-dependency-id {
+  color: var(--color-text-secondary);
+}
+.delete-kept-badge {
+  margin-left: auto;
+  background: var(--color-nav-selected);
+  color: var(--color-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.delete-removed-links {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.delete-removed-links > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.delete-removed-link {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  color: var(--color-danger);
+}
+.delete-options .delete-dependency-consent {
+  margin-bottom: 0;
+  font-size: 12px;
+  line-height: 1.6;
 }

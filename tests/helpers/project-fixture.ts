@@ -1,6 +1,6 @@
-import { DEFAULT_TASK_TYPES, defaultTaskTypeColors } from '../../src/domain/default-task-types';
-import { serializeSource, type ProjectSource } from '../../src/domain/project-source';
-import { writeTaskFile } from '../../src/domain/task-file';
+import { DEFAULT_TASK_TYPES, defaultTaskTypeColors } from '@worktree/core/default-task-types';
+import { serializeSource, type ProjectSource } from '@worktree/core/project-source';
+import { writeTaskFile } from '@worktree/core/task-file';
 export const timestamp = '2026-10-21T00:00:00.000Z';
 export function projectFixture(name = 'Test project', prefix = 'W') {
   const config = {

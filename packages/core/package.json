@@ -1,0 +1,9 @@
+{
+  "name": "@worktree/core",
+  "version": "0.33.2",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  }
+}

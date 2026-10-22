@@ -1,11 +1,11 @@
-import { DEFAULT_TASK_TYPES, defaultTaskTypeColors } from '../../src/domain/default-task-types.ts';
+import { DEFAULT_TASK_TYPES, defaultTaskTypeColors } from '@worktree/core/default-task-types';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validTaskTypeColors, taskTypeColor } from '../../src/domain/task-type-colors.ts';
-import { projectSettingsDraft, updateProjectSettings } from '../../src/domain/project-settings.ts';
+import { validTaskTypeColors, taskTypeColor } from '@worktree/core/task-type-colors';
+import { projectSettingsDraft, updateProjectSettings } from '@worktree/core/project-settings';
 import { projectFixture } from '../helpers/project-fixture.ts';
-import { readSource, serializeSource } from '../../src/domain/project-source.ts';
-import { parseProject } from '../../src/domain/project-document.ts';
+import { readSource, serializeSource } from '@worktree/core/project-source';
+import { parseProject } from '@worktree/core/project-document';
 test('작업 유형 색상은 정의된 유형과 6자리 HEX만 허용한다',()=>{
  assert.equal(validTaskTypeColors({feature:'#AAbb00'},['feature']),true);
  for(const value of [null,[],{feature:'red'},{feature:'#fff'},{feature:'#ff00ff00'},{feature:'var(--color-primary)'},{outside:'#112233'}]) assert.equal(validTaskTypeColors(value,['feature']),false);

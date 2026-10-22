@@ -1,17 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { projectFixture, timestamp } from '../helpers/project-fixture';
-import { saveProjectComment, deleteProjectComment } from '../../src/domain/comment-editing';
-import { readCommentFile, writeCommentFile } from '../../src/domain/comment-file';
-import { validDisplayName } from '../../src/domain/display-name';
-import { parseProject } from '../../src/domain/project-document';
-import {
-  readSource,
-  serializeSource,
-  ProjectValidationError,
-} from '../../src/domain/project-source';
-import { deleteProjectTask } from '../../src/domain/task-deletion';
-import { describeDocumentErrors } from '../../src/domain/document-errors';
+import { saveProjectComment, deleteProjectComment } from '@worktree/core/comment-editing';
+import { readCommentFile, writeCommentFile } from '@worktree/core/comment-file';
+import { validDisplayName } from '@worktree/core/display-name';
+import { parseProject } from '@worktree/core/project-document';
+import { readSource, serializeSource, ProjectValidationError } from '@worktree/core/project-source';
+import { deleteProjectTask } from '@worktree/core/task-deletion';
+import { describeDocumentErrors } from '../../apps/desktop/src/domain/document-errors';
 
 const original = projectFixture();
 function add(text = original, task = 'W001', author = '박대호', body = '검토 의견\n두 번째 줄') {

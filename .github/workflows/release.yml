@@ -55,13 +55,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
+          workspaces: apps/desktop/src-tauri -> target
       - run: npm ci
       - run: npm test
       - run: npm run check:types
       - run: npm run format:check
       - run: npm run version:check
-      - run: cargo test --manifest-path src-tauri/Cargo.toml
+      - run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
       - name: Verify release version
         env:
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
@@ -79,15 +79,15 @@ jobs:
           node scripts/update-manifest.mjs
           if ($LASTEXITCODE -ne 0) { throw 'Updater manifest generation failed' }
       - name: Verify installer signature and tamper rejection
-        working-directory: src-tauri
+        working-directory: apps/desktop/src-tauri
         run: cargo test signed_installer_verifies_and_tampering_is_rejected -- --ignored
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: Worktree-Windows-x64
           path: |
-            src-tauri/target/release/bundle/nsis/*-setup.exe
-            src-tauri/target/release/bundle/nsis/*-setup.exe.sig
-            src-tauri/target/release/bundle/nsis/latest.json
+            apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
+            apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe.sig
+            apps/desktop/src-tauri/target/release/bundle/nsis/latest.json
           if-no-files-found: error
       - name: Publish GitHub Release
         shell: pwsh
@@ -96,9 +96,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: |
-          $installers = @(Get-ChildItem -LiteralPath 'src-tauri/target/release/bundle/nsis' -Filter '*-setup.exe' -File)
+          $installers = @(Get-ChildItem -LiteralPath 'apps/desktop/src-tauri/target/release/bundle/nsis' -Filter '*-setup.exe' -File)
           if ($installers.Count -eq 0) { throw 'Installer was not generated' }
-          $directory = 'src-tauri/target/release/bundle/nsis'
+          $directory = 'apps/desktop/src-tauri/target/release/bundle/nsis'
           $signature = $installers[0].FullName + '.sig'
           $manifest = Join-Path $directory 'latest.json'
           if (-not (Test-Path -LiteralPath $signature) -or -not (Test-Path -LiteralPath $manifest)) { throw 'Signed updater artifacts missing' }

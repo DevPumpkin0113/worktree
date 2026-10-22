@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { projectFixture } from '../helpers/project-fixture.ts';
-import { projectTaskDraft, updateProjectTask } from '../../src/domain/task-editing.ts';
-import { validateTaskDraft } from '../../src/domain/task-draft-validation.ts';
+import { projectTaskDraft, updateProjectTask } from '@worktree/core/task-editing';
+import { validateTaskDraft } from '@worktree/core/task-draft-validation';
 
 test('편집 검증은 제목·일정·공수·개별 참조 오류를 필드로 구분한다', () => {
   const text = projectFixture();

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {workOwners,matchesWork} from '../../src/domain/work-filter.ts';
+import {workOwners,matchesWork} from '@worktree/core/work-filter';
 import {renderTree} from '../helpers/render-helpers.tsx';
 
 test('담당자·상태·검색을 함께 적용하고 미정과 all이라는 담당자를 구분한다',()=>{

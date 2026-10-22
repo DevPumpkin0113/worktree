@@ -1,10 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { TreeView } from '../../src/components/workspace/TreeView';
-import { MetricsContent } from '../../src/components/workspace/MetricsContent';
-import { TaskDetail } from '../../src/components/task-detail/TaskDetail';
-import { Problems } from '../../src/components/problems/Problems';
-import type { Problem, WorkModel, WorkRow } from '../../src/app/types';
-import { summarizeWork } from '../../src/domain/work-summary.ts';
+import { TreeView } from '../../apps/desktop/src/components/workspace/TreeView';
+import { MetricsContent } from '../../apps/desktop/src/components/workspace/MetricsContent';
+import { TaskDetail } from '../../apps/desktop/src/components/task-detail/TaskDetail';
+import { Problems } from '../../apps/desktop/src/components/problems/Problems';
+import type { Problem, WorkModel, WorkRow } from '../../apps/desktop/src/app/types';
+import { summarizeWork } from '@worktree/core/work-summary';
 export const renderMetrics = (summary: ReturnType<typeof summarizeWork>, useEffort = true) =>
   renderToStaticMarkup(<MetricsContent summary={summary} useEffort={useEffort} />);
 export const renderTree = (

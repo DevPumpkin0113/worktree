@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createDocumentViewState} from '../../src/interactions/document-view-state.ts';
+import {createDocumentViewState} from '../../apps/desktop/src/interactions/document-view-state.ts';
 
 test('문서·보기별 스크롤과 필터로 숨겨진 그룹 접힘을 유지하고 삭제된 그룹은 잊는다',()=>{
  const store=createDocumentViewState(),group={dataset:{workId:'W001'},parentElement:{open:false}};

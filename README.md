@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/worktree-icon.png" width="100" alt="Worktree 아이콘" />
+  <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree 아이콘" />
   <h1>Worktree</h1>
   <p>작업과 일정을 한눈에 정리하는 Windows 데스크톱 앱</p>
   <p><strong>Beta Worktree 0.33.1</strong></p>

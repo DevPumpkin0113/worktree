@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { floatingListPosition } from '../../src/interactions/floating-list.ts';
+import { floatingListPosition } from '../../apps/desktop/src/interactions/floating-list.ts';
 test('드롭다운은 버튼 아래에 뜨고 아래 공간이 부족하면 위에 배치한다',()=>{
  const viewport={width:800,height:600};
  const below=floatingListPosition({left:100,top:100,bottom:140,width:180},viewport,200);

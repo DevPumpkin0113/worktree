@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {summarizeWork} from '../../src/domain/work-summary.ts';
+import {summarizeWork} from '@worktree/core/work-summary';
 import {renderMetrics} from '../helpers/render-helpers.tsx';
-import {statusNotice as renderStatusNotice} from '../../src/domain/work-summary.ts';
+import {statusNotice as renderStatusNotice} from '@worktree/core/work-summary';
 
 test('공수 가중 진척도는 그룹·마일스톤과 중복 합산하지 않는다',()=>{
  const rows=[{type:'group'}, {type:'task',effort:'2',status:'done',start:'-'}, {type:'task',effort:'6',status:'doing',start:'2026-10-20'}, {type:'group',milestone:true,status:'done',start:'-'}];

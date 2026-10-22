@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validTaskPrefix, validInitializationDirectory, splitInitializationDirectory } from '../../src/domain/project-initialization.ts';
+import { validTaskPrefix, validInitializationDirectory, splitInitializationDirectory } from '@worktree/core/project-initialization';
 test('초기화 접두어는 대문자 길이와 예약어·문자 범위를 검사한다',()=>{
  for(const value of ['W','DEV','MSA','A'.repeat(20)])assert.equal(validTaskPrefix(value),true,value);
  for(const value of ['', 'MS','ms','W1','W-',' W','W ','ß','개발','A'.repeat(21)])assert.equal(validTaskPrefix(value),false,value);

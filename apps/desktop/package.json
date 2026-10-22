@@ -1,0 +1,22 @@
+{
+  "name": "@worktree/desktop",
+  "version": "0.33.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
+    "build": "vite build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "@worktree/core": "*"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@vitejs/plugin-react": "^5.2.0",
+    "vite": "^7"
+  }
+}

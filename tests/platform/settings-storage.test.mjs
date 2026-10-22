@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createSettingsStorage} from '../../src/platform/settings-storage.ts';
+import {createSettingsStorage} from '../../apps/desktop/src/platform/settings-storage.ts';
 const defaults=()=>({schemaVersion:2,language:'ko',displayName:'',idSeparator:'none',detailMode:'tabs',autoCheckUpdates:true});
 function fixture({settings=null,legacy={},failLoad=false,failSave=false}={}){
  const calls=[];let saved=settings;

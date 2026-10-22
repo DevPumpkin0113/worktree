@@ -10,7 +10,7 @@ export function createUpdateManifest({version,signature,notes='',publishedAt=new
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
  const {version}=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
- const directory=path.join(root,'src-tauri/target/release/bundle/nsis');
+ const directory=path.join(root,'apps/desktop/src-tauri/target/release/bundle/nsis');
  const installer=path.join(directory,`Worktree_${version}_x64-setup.exe`);
  if(!fs.statSync(installer).isFile())throw new Error('Installer missing');
  const signature=fs.readFileSync(installer+'.sig','utf8');

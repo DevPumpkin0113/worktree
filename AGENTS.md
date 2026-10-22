@@ -95,9 +95,9 @@
 ### 검증과 생성 파일
 
 - npm test: 도메인·ID·세션·React DOM 통합 테스트. npm run check:types: strict TypeScript. npm run format:check: TS·TSX·CSS 포맷. npm run version:check: 버전 일치. npm run build: Vite 빌드.
-- Rust 변경은 src-tauri에서 cargo test로 검증한다. jsdom은 실제 WebView2의 배치·포인터·설치 확인을 대체하지 않는다. 실제 사용자 인수는 별도로 기록한다.
+- Rust 변경은 apps/desktop/src-tauri에서 cargo test로 검증한다. jsdom은 실제 WebView2의 배치·포인터·설치 확인을 대체하지 않는다. 실제 사용자 인수는 별도로 기록한다.
 - npm run tauri dev: 개발 실행. npm run tauri build: Windows exe·NSIS 설치 빌드. 일반 개발에는 설치 빌드를 반복하지 않는다. 정식 설치 빌드는 릴리즈 CI에서 수행한다. 사용자가 설치 빌드를 요청하면 bundle/nsis 안의 이전 설치 파일만 정리하며 클린빌드는 하지 않는다.
-- node_modules·dist·src-tauri/target·src-tauri/gen은 생성 파일이며 커밋하지 않는다. npm·Cargo 잠금 파일은 커밋한다. .local/updater의 서명 비밀 키·암호는 읽어 출력하거나 커밋하지 않는다.
+- node_modules·dist·apps/desktop/src-tauri/target·apps/desktop/src-tauri/gen은 생성 파일이며 커밋하지 않는다. npm·Cargo 잠금 파일은 커밋한다. .local/updater의 서명 비밀 키·암호는 읽어 출력하거나 커밋하지 않는다.
 
 ### 브랜치와 커밋 운영
 
@@ -124,7 +124,7 @@
 - 하나의 컴포넌트 파일은 하나의 화면/UI 책임을 갖는다. 독립 폼·표시·생명주기를 분리한다. React 소유 DOM은 상태·이벤트·ref로 관리하며 문자열 HTML 삽입은 DependencyChart의 SVG 어댑터에만 허용한다.
 - project-source.ts는 스냅샷·설정, task-file.ts는 Markdown codec, project-document.ts는 집합 검증·모델 조합, task-editing.ts·task-deletion.ts·project-settings.ts는 순수 변환이다. 향후 CLI도 사용할 수 있도록 파일 I/O와 분리한다. CLI 자체는 이번 범위 밖이다.
 - projects.rs는 검색·초기화·명령, project_files.rs는 경로·읽기, project_write.rs는 스냅샷 비교·교체·복구를 담당한다. 다른 프로젝트 파일이나 템플릿을 전역 검색하지 않는다.
-- 한국어·영어 표시는 src/i18n/ko.ts·en.ts와 messages.ts를 사용한다. Rust 문구는 src-tauri/src/i18n에 둔다. 문서 속성 키는 번역하지 않는다. 오류 판단에 번역 문자열을 파싱하지 않는다.
+- 한국어·영어 표시는 apps/desktop/src/i18n/ko.ts·en.ts와 messages.ts를 사용한다. Rust 문구는 apps/desktop/src-tauri/apps/desktop/src/i18n에 둔다. 문서 속성 키는 번역하지 않는다. 오류 판단에 번역 문자열을 파싱하지 않는다.
 - 색상·SVG는 테마 CSS 변수를 사용하고 공용 포커스 색상을 따른다. 재사용 입력은 shared 컴포넌트로 둔다.
 
 ### 현재 화면 구성
@@ -216,3 +216,12 @@
 0.33.0부터 useAppInfo는 App에서 한 번 호출하고 앱 정보 화면과 업데이트 상태를 공유한다. available/manual 결과에만 설정 아이콘 레드닷·닫을 수 있는 안내를 표시한다. 안내 닫기는 레드닷을 유지하며 설정 화면 방문은 해당 버전 알림을 해제한다. 확인 상태는 현재 창 메모리에만 유지하고 자동 다운로드·설치를 시작하지 않는다.
 
 2026-10-22 문서 정리: planning은 docs로 통합하고 템플릿 폴더는 제거했다. 0.33.0 이전 변경 이력은 docs/archive/CHANGELOG-before-0.33.0.md에 보존한다. 초기화 전 기록은 Git에서 제외한 docs/PROJECT_RESET_NOTES.md에 있으며 데이터 저장 폴더 밖에 둔다. 이 문서는 앱 초기화 입력이나 자동 복원 자료가 아니다. GitHub의 기존 릴리즈와 로컬·원격 Git 태그는 사용자 요청으로 모두 삭제했으며 브랜치·커밋 이력은 유지한다.
+
+
+### 패키지 구조 (0.33.2)
+
+- npm workspaces 단일 저장소이며 `apps/desktop`은 기존 데스크톱, `apps/cli`는 독립 CLI 준비 패키지, `packages/core`는 공통 문서 규칙·검증·순수 변환이다. 루트 `npm run dev`, `npm run build`, `npm run tauri dev` 명령은 데스크톱으로 전달한다.
+- 앞선 화면 책임 설명의 `src`, `index.html`, `vite.config.ts`는 `apps/desktop` 내부 경로다. 공통 도메인은 `packages/core/src`에 두며 소비자는 `@worktree/core/<모듈명>`으로 접근한다. 데스크톱 전용 상세 설정·오류 표시 어댑터는 `apps/desktop/src/domain`에 유지한다.
+- core는 데스크톱·React·Tauri·파일 I/O를 참조하지 않는다. 공통 오류·규칙 문구는 core의 i18n에 두고 앱 번역에 합성한다. 앱 언어 변경은 core에도 전달한다. CLI의 독립 프로세스는 core 언어를 직접 지정할 수 있다.
+- 루트 package.json이 제품 버전 기준이며 workspace 패키지·npm lock·Tauri·Cargo 버전을 `npm run version:set -- X.Y.Z`로 함께 갱신한다. 테스트는 당분간 루트 tests에서 통합 실행한다.
+- CLI 명령·별도 실행 파일·배포·쓰기 I/O는 이번 구조 분리에 포함하지 않는다. 쓰기 명령 추가 전 Rust의 안전한 저장과 공유할 경계를 확정한다. CLI가 자체 덮어쓰기 구현으로 우회하면 안 된다.

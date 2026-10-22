@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { projectFixture } from '../helpers/project-fixture.ts';
-import { readSource, serializeSource, projectConfig } from '../../src/domain/project-source.ts';
-import { parseProject } from '../../src/domain/project-document.ts';
-import { projectSettingsDraft, updateProjectSettings } from '../../src/domain/project-settings.ts';
+import { readSource, serializeSource, projectConfig } from '@worktree/core/project-source';
+import { parseProject } from '@worktree/core/project-document';
+import { projectSettingsDraft, updateProjectSettings } from '@worktree/core/project-settings';
 const source=projectFixture();
 test('프로젝트 설정은 허용된 필드만 저장하고 작업 파일·번호·프리픽스를 보존한다',()=>{
  const data=readSource(source);const original=JSON.parse(data.files['project.json']);original.extraKey={note:'preserve'};data.files['project.json']=JSON.stringify(original);const text=serializeSource(data);

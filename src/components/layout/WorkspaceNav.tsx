@@ -1,3 +1,4 @@
+import { worktreeReleaseStage } from '../../domain/release-name';
 import { messages } from '../../i18n/messages';
 import { version } from '../../../package.json';
 import { InitializationSteps } from '../project/InitializationSteps';
@@ -83,7 +84,7 @@ export function WorkspaceNav({
       )}
       <div className="workspace-nav-footer">
         <div className="workspace-footer-copy">
-          Worktree<span>v{version}</span>
+          {worktreeReleaseStage(version)} Worktree<span>{version}</span>
         </div>
         <button
           id="workspaceCollapse"

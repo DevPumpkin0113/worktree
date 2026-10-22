@@ -103,5 +103,7 @@ jobs:
           $manifest = Join-Path $directory 'latest.json'
           if (-not (Test-Path -LiteralPath $signature) -or -not (Test-Path -LiteralPath $manifest)) { throw 'Signed updater artifacts missing' }
           $assets = @($installers.FullName) + @($signature, (Resolve-Path -LiteralPath $manifest).Path)
-          gh release create $env:RELEASE_TAG @assets --target $env:GITHUB_SHA --generate-notes --title "Worktree $env:RELEASE_TAG"
+          $version = $env:RELEASE_TAG -replace '^v', ''
+          $stage = if ($version.StartsWith('0.')) { 'Beta' } else { 'Release' }
+          gh release create $env:RELEASE_TAG @assets --target $env:GITHUB_SHA --generate-notes --title "$stage Worktree $version"
           if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }

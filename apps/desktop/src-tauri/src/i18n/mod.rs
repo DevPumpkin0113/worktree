@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 static ENGLISH: AtomicBool = AtomicBool::new(false);
 pub fn set_language(language: &str) {
     ENGLISH.store(language == "en", Ordering::Relaxed);
+    worktree_storage::set_language(language);
 }
 pub fn browser_failed() -> &'static str {
     if ENGLISH.load(Ordering::Relaxed) {
@@ -270,8 +271,6 @@ mod tests {
         assert_ne!(en::BROWSER_FAILED, ko::BROWSER_FAILED);
         assert!(!en::CHECK_UPDATE_FIRST.is_empty());
         assert_ne!(en::CHECK_UPDATE_FIRST, ko::CHECK_UPDATE_FIRST);
-        assert!(!en::INVALID_PROJECT.is_empty());
-        assert_ne!(en::INVALID_PROJECT, ko::INVALID_PROJECT);
         assert!(!en::INSTALLER_FAILED.is_empty());
         assert_ne!(en::INSTALLER_FAILED, ko::INSTALLER_FAILED);
         assert!(!en::INVALID_APP_VERSION.is_empty());
@@ -294,8 +293,6 @@ mod tests {
         assert_ne!(en::RELEASE_READ_FAILED, ko::RELEASE_READ_FAILED);
         assert!(!en::RELEASE_VERSION_MISSING.is_empty());
         assert_ne!(en::RELEASE_VERSION_MISSING, ko::RELEASE_VERSION_MISSING);
-        assert!(!en::PROJECT_RECOVERY_CONFLICT.is_empty());
-        assert_ne!(en::PROJECT_RECOVERY_CONFLICT, ko::PROJECT_RECOVERY_CONFLICT);
         assert!(!en::SESSION_FOLDER_MISSING.is_empty());
         assert_ne!(en::SESSION_FOLDER_MISSING, ko::SESSION_FOLDER_MISSING);
         assert!(!en::SESSION_SAVE_TOO_LARGE.is_empty());
@@ -361,73 +358,10 @@ pub fn open_project() -> &'static str {
     }
 }
 
-pub fn invalid_project() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::INVALID_PROJECT
-    } else {
-        ko::INVALID_PROJECT
-    }
-}
-pub fn project_recovery_conflict() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::PROJECT_RECOVERY_CONFLICT
-    } else {
-        ko::PROJECT_RECOVERY_CONFLICT
-    }
-}
-
 pub fn select_project_parent() -> &'static str {
     if ENGLISH.load(Ordering::Relaxed) {
         en::SELECT_PROJECT_PARENT
     } else {
         ko::SELECT_PROJECT_PARENT
-    }
-}
-
-pub fn reset_name_mismatch() -> &'static str {
-    if ENGLISH.load(Ordering::Relaxed) {
-        en::RESET_NAME_MISMATCH
-    } else {
-        ko::RESET_NAME_MISMATCH
-    }
-}
-
-#[derive(Clone, Copy)]
-pub enum ResetOperation {
-    Read,
-    Inspect,
-    Create,
-    Move,
-    DeleteFile,
-    DeleteDirectory,
-    SaveJournal,
-    Restore,
-    Snapshot,
-}
-pub fn reset_failure(
-    operation: ResetOperation,
-    path: &std::path::Path,
-    error: impl std::fmt::Display,
-) -> String {
-    let index = operation as usize;
-    if ENGLISH.load(Ordering::Relaxed) {
-        format!(
-            "{}\nPath: {}\nCause: {error}",
-            en::RESET_OPERATIONS[index],
-            path.display()
-        )
-    } else {
-        format!(
-            "{}\n경로: {}\n원인: {error}",
-            ko::RESET_OPERATIONS[index],
-            path.display()
-        )
-    }
-}
-pub fn reset_recovery_failure(error: &str, recovery: &str) -> String {
-    if ENGLISH.load(Ordering::Relaxed) {
-        format!("{error}\n\nRecovery also failed:\n{recovery}")
-    } else {
-        format!("{error}\n\n복구 중에도 오류가 발생했습니다:\n{recovery}")
     }
 }

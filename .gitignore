@@ -25,3 +25,6 @@ apps/desktop/src-tauri/gen/
 # Retained local build cache from the pre-workspace layout.
 /src-tauri/target/
 /src-tauri/gen/
+
+/apps/cli/native/target/
+/packages/storage/target/

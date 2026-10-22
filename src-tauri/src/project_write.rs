@@ -149,6 +149,46 @@ pub fn save(root: &Path, expected: &str, text: &str) -> Result<&'static str, Str
 #[cfg(test)]
 mod tests {
     use super::*;
+    const COMMENT: &str = "comments/W001/12345678-1234-1234-1234-123456789abc.md";
+    #[test]
+    fn nested_comments_round_trip_conflict_and_deletion() {
+        let (temp, before) = fixture();
+        let mut after = before.clone();
+        after.files.insert(COMMENT.into(), "comment body".into());
+        let expected = serde_json::to_string(&before).unwrap();
+        let saved = serde_json::to_string(&after).unwrap();
+        assert_eq!(save(temp.path(), &expected, &saved).unwrap(), "saved");
+        assert_eq!(files::read(temp.path()).unwrap(), after);
+        assert_eq!(save(temp.path(), &expected, &saved).unwrap(), "conflict");
+        assert_eq!(save(temp.path(), &saved, &expected).unwrap(), "saved");
+        assert_eq!(files::read(temp.path()).unwrap(), before);
+        assert!(!temp.path().join("docs/worktree").join(COMMENT).exists());
+    }
+    #[cfg(windows)]
+    #[test]
+    fn failed_write_rolls_back_new_nested_comment_file() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let (temp, before) = fixture();
+        let mut after = before.clone();
+        after.files.insert(COMMENT.into(), "comment body".into());
+        after.files.insert("tasks/W001.md".into(), "updated".into());
+        let data = temp.path().join("docs/worktree");
+        let locked = fs::OpenOptions::new()
+            .read(true)
+            .share_mode(1)
+            .open(data.join("tasks/W001.md"))
+            .unwrap();
+        assert!(save(
+            temp.path(),
+            &serde_json::to_string(&before).unwrap(),
+            &serde_json::to_string(&after).unwrap()
+        )
+        .is_err());
+        drop(locked);
+        recover(temp.path(), "docs/worktree").unwrap();
+        assert_eq!(files::read(temp.path()).unwrap(), before);
+        assert!(!data.join(COMMENT).exists());
+    }
     fn fixture() -> (tempfile::TempDir, ProjectSource) {
         let temp = tempfile::tempdir().unwrap();
         let data = temp.path().join("docs/worktree");

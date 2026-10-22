@@ -82,6 +82,11 @@ export function TaskDeleteDialog({
         <p className="task-editor-source" title={session.path}>
           {session.path.split(/[\\/]/).at(-1)}
         </p>
+        {impact.commentCount ? (
+          <p className="task-editor-hint">
+            {messages.commentsDeletedWithTask(impact.commentCount)}
+          </p>
+        ) : null}
         {impact.childRows.length ? (
           <fieldset className="delete-options" disabled={saving}>
             <legend>{messages.deleteChildrenTitle(impact.childRows.length)}</legend>

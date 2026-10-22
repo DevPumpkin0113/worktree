@@ -33,6 +33,7 @@ export interface DownloadEvent {
   total?: number;
 }
 export interface Settings {
+  displayName: string;
   language: Language;
   detailMode: DetailMode;
   ready: boolean;

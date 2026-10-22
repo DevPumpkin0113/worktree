@@ -14,7 +14,9 @@ import { deleteProjectTask } from '../../src/domain/task-deletion';
 import type { Platform } from '../../src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
-async function fixture(options: { sessionFailure?: boolean; language?: 'ko' | 'en' } = {}) {
+async function fixture(
+  options: { sessionFailure?: boolean; language?: 'ko' | 'en'; displayName?: string } = {},
+) {
   const files = new Map([
     [first, projectFixture('첫 프로젝트')],
     [second, projectFixture('둘째 프로젝트')],
@@ -34,6 +36,7 @@ async function fixture(options: { sessionFailure?: boolean; language?: 'ko' | 'e
           settings: {
             schemaVersion: 2,
             language: options.language ?? 'ko',
+            displayName: options.displayName ?? '',
             idSeparator: 'none',
             detailMode: 'sidebar',
             autoCheckUpdates: false,
@@ -502,31 +505,115 @@ test('설정 파일이 있지만 읽기에 실패한 프로젝트에는 초기�
     await f.close();
   }
 });
-test('댓글 미리보기는 프로젝트·작업별로 초안을 분리하고 문자열을 안전하게 표시한다', async () => {
-  const f = await fixture();
+test('댓글을 표시 이름으로 저장하고 프로젝트·작업별 초안과 영구 파일을 분리한다', async () => {
+  const f = await fixture({ displayName: '박대호' });
   try {
     await act(() => f.store.selectWork('W001'));
     await f.click('#previewCommentsTab');
-    await f.value('#previewAuthor', '박대호');
-    await f.value('#previewComment', '<script>실행하지 않음</script>');
-    await act(async () => {
-      f.element('.preview-comment-form').dispatchEvent(
-        new Event('submit', { bubbles: true, cancelable: true }),
-      );
-    });
-    assert.ok(f.element('#detail').textContent?.includes('<script>실행하지 않음</script>'));
+    assert.ok(f.element('.comment-list').textContent?.includes('아직 댓글이 없습니다'));
+    await f.value('#commentContent', '<script>실행하지 않음</script>');
+    await f.click('.comment-form button[type="submit"]');
+    const firstComment = parseProject(f.files.get(first)!).comments![0];
+    assert.equal(firstComment.author, '박대호');
+    assert.equal(firstComment.text, '<script>실행하지 않음</script>');
     assert.equal(f.host.querySelector('#detail script'), null);
+    await f.value('#commentContent', '첫 프로젝트 초안');
     await act(() => f.store.selectProject('C:/QB'));
     await act(() => f.store.selectWork('W001'));
     await f.click('#previewCommentsTab');
-    assert.ok(!f.element('#detail').textContent?.includes('<script>실행하지 않음</script>'));
+    assert.equal(f.element<HTMLTextAreaElement>('#commentContent').value, '');
+    await f.value('#commentContent', '둘째 프로젝트 초안');
     await act(() => f.store.selectProject('C:/QA'));
     await act(() => f.store.selectWork('W001'));
-    assert.ok(f.element('#detail').textContent?.includes('<script>실행하지 않음</script>'));
+    assert.equal(f.element<HTMLTextAreaElement>('#commentContent').value, '첫 프로젝트 초안');
+    await act(() => f.store.closeProject('C:/QA'));
+    await act(() => f.store.open('C:/QA'));
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#previewCommentsTab');
+    assert.equal(f.element<HTMLTextAreaElement>('#commentContent').value, '');
+    assert.ok(f.element('.comment-list').textContent?.includes('<script>실행하지 않음</script>'));
   } finally {
     await f.close();
   }
 });
+
+test('표시 이름 설정과 저장 실패는 입력을 유지하며 새 댓글만 새 작성자를 사용한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#previewCommentsTab');
+    assert.equal(f.element<HTMLTextAreaElement>('#commentContent').disabled, true);
+    await f.click('.comment-author button');
+    await f.value('#displayName', '박대호');
+    f.setSettingsFailure(true);
+    await f.click('.display-name-controls button');
+    assert.equal(f.element<HTMLInputElement>('#displayName').value, '박대호');
+    assert.equal(f.store.getSnapshot().settings.displayName, '');
+    f.setSettingsFailure(false);
+    await f.click('.display-name-controls button');
+    await f.click('#settingsClose');
+    await f.value('#commentContent', '저장할 의견');
+    f.setSaveFailure(true);
+    await f.click('.comment-form button[type="submit"]');
+    assert.equal(f.element<HTMLTextAreaElement>('#commentContent').value, '저장할 의견');
+    assert.match(f.element('.comment-feedback[role="alert"]').textContent ?? '', /disk failure/);
+    f.setSaveFailure(false);
+    await f.click('.comment-form button[type="submit"]');
+    await act(() => f.store.saveSetting('displayName', '새 이름'));
+    await f.value('#commentContent', '두 번째');
+    await f.click('.comment-form button[type="submit"]');
+    assert.deepEqual(
+      parseProject(f.files.get(first)!)
+        .comments!.map((c) => c.author)
+        .sort(),
+      ['박대호', '새 이름'].sort(),
+    );
+  } finally {
+    await f.close();
+  }
+});
+
+test('댓글 수정·삭제는 충돌과 실패에서 입력·확인을 유지하고 외부 변경을 덮지 않는다', async () => {
+  const f = await fixture({ displayName: '박대호' });
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#previewCommentsTab');
+    await f.value('#commentContent', '원본 의견');
+    await f.click('.comment-form button[type="submit"]');
+    const originalComment = parseProject(f.files.get(first)!).comments![0];
+    await f.click('.comment-edit');
+    await f.value('#commentEditContent', '보존할 수정');
+    const external = readSource(f.files.get(first)!);
+    const file = `comments/W001/${originalComment.id}.md`;
+    external.files[file] = external.files[file].replace('원본 의견', '외부 수정');
+    f.files.set(first, serializeSource(external));
+    await act(() => f.store.poll());
+    await f.click('.comment-list .comment-form button[type="submit"]');
+    assert.equal(f.element<HTMLTextAreaElement>('#commentEditContent').value, '보존할 수정');
+    assert.match(f.element('.comment-feedback[role="alert"]').textContent ?? '', /외부/);
+    assert.equal(parseProject(f.files.get(first)!).comments![0].text, '외부 수정');
+    await f.click('.comment-list .comment-form button[type="button"]');
+    await f.click('.comment-edit');
+    await f.value('#commentEditContent', '확정 수정');
+    await act(() => f.store.saveSetting('displayName', '새 이름'));
+    await f.click('.comment-list .comment-form button[type="submit"]');
+    const updated = parseProject(f.files.get(first)!).comments![0];
+    assert.equal(updated.author, '박대호');
+    assert.equal(updated.createdAt, originalComment.createdAt);
+    assert.equal(updated.text, '확정 수정');
+    await f.click('.comment-actions button:last-child');
+    f.setSaveFailure(true);
+    await f.click('.comment-delete-confirm');
+    assert.ok(f.host.querySelector('.comment-delete-confirm'));
+    assert.equal(parseProject(f.files.get(first)!).comments!.length, 1);
+    f.setSaveFailure(false);
+    await f.click('.comment-delete-confirm');
+    assert.equal(parseProject(f.files.get(first)!).comments!.filter((c) => !c.deleted).length, 0);
+  } finally {
+    await f.close();
+  }
+});
+
 test('프로젝트 문서 집합에서도 간트 7일·5주와 단위별 스크롤 복원을 유지한다', async () => {
   const f = await fixture();
   try {
@@ -1612,6 +1699,38 @@ test('초기화는 기본 정보에 이름·저장 위치를 묶고 ID·날짜�
     await f.click('#initializationNext');
     assert.match(f.element('.initialization-step-count').textContent ?? '', /3 \/ 3/);
     assert.ok(f.host.querySelector('#initializationSubmit'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('답글 대상 번호를 표시하고 답글의 답글도 한 단계로 유지하며 원댓글 삭제 후 답글을 남긴다', async () => {
+  const f = await fixture({ displayName: '박대호' });
+  try {
+    await act(() => f.store.selectWork('W001'));
+    await f.click('#previewCommentsTab');
+    await f.value('#commentContent', '원댓글');
+    await f.click('.comment-form button[type="submit"]');
+    await f.click('.comment-reply');
+    await f.value('#commentContent', '첫 답글');
+    await f.click('.comment-form button[type="submit"]');
+    await f.click('.comment-replies .comment-reply');
+    await f.value('#commentContent', '답글의 답글');
+    await f.click('.comment-form button[type="submit"]');
+    assert.equal(f.host.querySelectorAll('.comment-replies > .comment').length, 2);
+    assert.equal(f.host.querySelectorAll('.comment-replies .comment-replies').length, 0);
+    assert.match(f.host.querySelectorAll('.comment-reference')[1].textContent ?? '', /#002/);
+    const editButtons = f.host.querySelectorAll<HTMLButtonElement>('.comment-edit');
+    assert.equal(editButtons[0].disabled, true);
+    assert.equal(editButtons[1].disabled, true);
+    assert.equal(editButtons[2].disabled, false);
+    assert.match(f.element('.comment-edit-tooltip').textContent ?? '', /답글/);
+    assert.equal(f.host.querySelectorAll('.comment-timestamps time').length, 3);
+    await f.click('.comment-thread > .comment .comment-actions button:last-child');
+    await f.click('.comment-delete-confirm');
+    assert.equal(f.host.querySelectorAll('.comment-replies > .comment').length, 2);
+    assert.match(f.element('.comment-thread > .comment').textContent ?? '', /삭제된 댓글/);
+    assert.equal(f.host.querySelectorAll('.comment-number').length, 3);
   } finally {
     await f.close();
   }

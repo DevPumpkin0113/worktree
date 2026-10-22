@@ -19,6 +19,9 @@ export function projectDeletionImpact(
   const removed = new Set([id, ...(children === 'delete' ? childRows.map((row) => row.id) : [])]);
   return {
     target,
+    commentCount:
+      model.comments?.filter((comment) => removed.has(comment.taskId) && !comment.deleted).length ??
+      0,
     childRows,
     removed,
     dependents: model.rows.filter(
@@ -55,6 +58,10 @@ export function deleteProjectTask(
       metadata.updatedAt = row.updatedAt! > now ? row.updatedAt : now;
       source.files[file] = writeTaskFile(metadata, description);
     }
+  }
+  for (const comment of parseProject(text).comments ?? []) {
+    if (impact.removed.has(comment.taskId))
+      delete source.files[`comments/${comment.taskId}/${comment.id}.md`];
   }
   const result = serializeSource(source);
   parseProject(result);

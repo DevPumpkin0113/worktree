@@ -1,6 +1,8 @@
+import { validDisplayName } from '../domain/display-name';
 import { messages, isLanguage, type Language } from '../i18n/messages';
 import type { Platform, SettingsStorage } from '../app/types';
 interface SavedSettings {
+  displayName: string;
   language: Language;
   schemaVersion: number;
   idSeparator: 'none' | 'hyphen';
@@ -10,18 +12,21 @@ interface SavedSettings {
 type Field = Exclude<keyof SavedSettings, 'schemaVersion'>;
 const keys: Record<string, Field> = {
   'worktree.language': 'language',
+  'worktree.display-name': 'displayName',
   'worktree.id-separator': 'idSeparator',
   'worktree.detail-mode': 'detailMode',
   'worktree.autoCheckUpdates': 'autoCheckUpdates',
 };
 const defaults = (): SavedSettings => ({
   schemaVersion: 2,
+  displayName: '',
   language: 'ko',
   idSeparator: 'none',
   detailMode: 'sidebar',
   autoCheckUpdates: true,
 });
 function valueFor(field: Field, value: string) {
+  if (field === 'displayName' && validDisplayName(value, true)) return value;
   if (field === 'language' && isLanguage(value)) return value;
   if (field === 'idSeparator' && ['none', 'hyphen'].includes(value))
     return value as SavedSettings[Field];
@@ -75,7 +80,7 @@ export function createSettingsStorage({
       try {
         const legacy = legacyStorage();
         for (const [key, field] of Object.entries(keys)) {
-          if (field === 'language') continue;
+          if (field === 'language' || field === 'displayName') continue;
           const value = legacy.getItem(key);
           if (value !== null && value !== undefined) {
             try {

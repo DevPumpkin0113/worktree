@@ -1,3 +1,4 @@
+import { saveProjectComment, deleteProjectComment } from '../domain/comment-editing';
 import {
   projectRuleValues,
   type ProjectInitializationDraft,
@@ -54,6 +55,7 @@ export class WorkspaceStore {
     operationProblems: [],
     settings: {
       language: 'ko',
+      displayName: '',
       detailMode: 'sidebar',
       ready: false,
       error: '',
@@ -115,6 +117,7 @@ export class WorkspaceStore {
       this.patch({
         settings: {
           language,
+          displayName: this.storage.getItem('worktree.display-name') ?? '',
           detailMode: readDetailMode(this.storage),
           ready: true,
           error: this.storage.warning,
@@ -483,6 +486,29 @@ export class WorkspaceStore {
     await this.saveProjectSource(path, expected, update.text, update.id);
     return update.id;
   }
+  async saveComment(
+    path: string,
+    expected: string,
+    taskId: string,
+    content: string,
+    id?: string,
+    replyTo?: string,
+  ) {
+    const text = saveProjectComment(
+      expected,
+      taskId,
+      this.state.settings.displayName,
+      content,
+      id,
+      undefined,
+      replyTo,
+    );
+    await this.saveProjectSource(path, expected, text, taskId, messages.commentConflict);
+  }
+  async deleteComment(path: string, expected: string, taskId: string, id: string) {
+    const text = deleteProjectComment(expected, taskId, id);
+    await this.saveProjectSource(path, expected, text, taskId, messages.commentConflict);
+  }
   async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
     const text = deleteProjectTask(expected, id, options);
     await this.saveProjectSource(path, expected, text, null, messages.deleteConflict);
@@ -512,7 +538,7 @@ export class WorkspaceStore {
       });
     }
   }
-  async saveSetting(key: 'detailMode' | 'language', value: string) {
+  async saveSetting(key: 'detailMode' | 'language' | 'displayName', value: string) {
     if (this.state.settings.saving) return;
     this.patch({ settings: { ...this.state.settings, saving: true, error: '' } });
     try {
@@ -520,8 +546,10 @@ export class WorkspaceStore {
         if (!isLanguage(value)) throw Error(messages.invalidSetting);
         await this.storage.setItem('worktree.language', value);
         setLanguage(value);
-      } else await saveDetailMode(this.storage, value);
+      } else if (key === 'displayName') await this.storage.setItem('worktree.display-name', value);
+      else await saveDetailMode(this.storage, value);
       this.patch({ settings: { ...this.state.settings, [key]: value, saving: false } });
+      return true;
     } catch (error) {
       this.patch({
         settings: {

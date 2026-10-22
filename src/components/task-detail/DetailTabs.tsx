@@ -4,8 +4,10 @@ import type { Thread } from './comment-types';
 export function DetailTabs({
   thread,
   onChange,
+  commentCount,
 }: {
   thread: Thread;
+  commentCount: number;
   onChange: (tab: Thread['tab']) => void;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -39,7 +41,7 @@ export function DetailTabs({
           ) : (
             <>
               {messages.comments + ' '}
-              <span>{thread.comments.length}</span>
+              <span>{commentCount}</span>
             </>
           )}
         </button>

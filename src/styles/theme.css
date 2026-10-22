@@ -5,6 +5,11 @@
   --color-priority-high: #d73a4a;
   --color-priority-middle: #eab308;
   --color-priority-low: #2da44e;
+  --color-comment-reply-selected-background: color-mix(
+    in srgb,
+    var(--color-primary) 10%,
+    var(--color-surface)
+  );
   --color-primary: #176b73; /* 강조색 */
   --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, #000);
   --color-accent: #267d83; /* 보조 강조색 */
@@ -154,17 +159,12 @@
   --color-detail-complete-color: #3d866b;
   --color-detail-link-id-color: #6b8993;
   --color-detail-empty-color: #94a0ae;
-  --color-detail-footer-color: #8290a2;
   --color-detail-sidebar-border-left: #d9e2eb;
   --color-detail-sidebar-box-shadow: #14233812;
   --color-detail-preview-tabs-button-span-background: #edf2f5;
-  --color-comments-preview-notice-background: #eff6f7;
-  --color-comments-preview-notice-border: #d8e8ea;
-  --color-comments-preview-notice-color: #3d626a;
-  --color-preview-comment-avatar-background: #e8eff4;
-  --color-preview-comment-avatar-color: #526a7c;
-  --color-preview-comment-content-time-color: #7b8798;
-  --color-preview-sample-background: #f1f4f7;
+  --color-comment-avatar-background: #e8eff4;
+  --color-comment-avatar-color: #526a7c;
+  --color-comment-content-time-color: #7b8798;
   --color-detailresize-hover-background: #267d8366;
   --color-workspace-nav-label-color: #7c8b9d;
   --color-workspace-nav-nav-button-color: #627185;

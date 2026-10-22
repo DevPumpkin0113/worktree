@@ -27,6 +27,12 @@ export const renderTree = (
 export const renderTaskDetail = (model: WorkModel, id: string, label: (id: string) => string) => ({
   body: renderToStaticMarkup(
     <TaskDetail
+      documents={[]}
+      source=""
+      displayName=""
+      onSaveComment={async () => {}}
+      onDeleteComment={async () => {}}
+      onOpenSettings={() => {}}
       model={{ ...model, useEffort: model.useEffort !== false }}
       id={id}
       path="C:/test/worktree.json"

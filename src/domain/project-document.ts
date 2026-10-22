@@ -1,3 +1,4 @@
+import { readProjectComments } from './comment-file';
 import { legacyPriorities } from './project-priorities';
 import type { WorkModel, WorkRow, Status } from './types';
 import {
@@ -16,7 +17,7 @@ export function parseProject(text: string): WorkModel {
   for (const [file, content] of Object.entries(source.files).sort(([a], [b]) =>
     a.localeCompare(b),
   )) {
-    if (file === 'project.json') continue;
+    if (file === 'project.json' || file.startsWith('comments/')) continue;
     if (!/^(tasks|milestones)\/[A-Z]+\d{3,}\.md$/.test(file) || typeof content !== 'string')
       throw new ProjectValidationError(file, 'filename', file);
     const { metadata: m, lines, description } = readTaskFile(file, content);
@@ -203,5 +204,6 @@ export function parseProject(text: string): WorkModel {
     labels: [...new Set([...config.labels, ...rows.flatMap((row) => row.labels ?? [])])],
     dataDirectory: source.dataDirectory,
     rows,
+    comments: readProjectComments(source, new Set(rows.map((row) => row.id))),
   };
 }

@@ -1,3 +1,4 @@
+import { DisplayNameSetting } from './DisplayNameSetting';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import { messages } from '../../i18n/messages';
 import type { WorkspaceStore } from '../../app/workspace-store';
@@ -16,6 +17,12 @@ export function GeneralSettings({
         <h3>{messages.general}</h3>
         <p>{messages.instantSettingsHint}</p>
       </div>
+      <DisplayNameSetting
+        key={state.settings.displayName}
+        value={state.settings.displayName}
+        disabled={!state.settings.ready || state.settings.saving}
+        onSave={(value) => store.saveSetting('displayName', value)}
+      />
       <div className="settings-card">
         <div className="setting-row">
           <div>

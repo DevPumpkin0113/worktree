@@ -1,3 +1,4 @@
+import type { OpenDocument } from '../../app/types';
 import { messages } from '../../i18n/messages';
 import { useDetailDialog } from './use-detail-dialog';
 import { Comments } from './Comments';
@@ -18,7 +19,19 @@ export function TaskDetail({
   onClose,
   onEdit,
   onDelete,
+  documents,
+  source,
+  displayName,
+  onSaveComment,
+  onDeleteComment,
+  onOpenSettings,
 }: {
+  documents: OpenDocument[];
+  source: string;
+  displayName: string;
+  onSaveComment: (expected: string, text: string, id?: string, replyTo?: string) => Promise<void>;
+  onDeleteComment: (expected: string, id: string) => Promise<void>;
+  onOpenSettings: () => void;
   model: WorkModel | null;
   path: string | null;
   id: string | null;
@@ -31,10 +44,11 @@ export function TaskDetail({
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const comments = useCommentThreads();
+  const comments = useCommentThreads(documents);
   const visible = !!model && !!id && !settingsOpen;
   const row = model?.rows.find((item) => item.id === id);
-  const thread = comments.get(JSON.stringify([path, id]));
+  const taskComments = model?.comments?.filter((comment) => comment.taskId === id) ?? [];
+  const thread = comments.get(path, id);
   const { dialog, header, handle, pressedOutside, isBackdrop } = useDetailDialog({
     visible,
     mode,
@@ -142,6 +156,7 @@ export function TaskDetail({
             <>
               <DetailTabs
                 thread={thread}
+                commentCount={taskComments.filter((comment) => !comment.deleted).length}
                 onChange={(tab) => {
                   thread.tab = tab;
                   comments.update();
@@ -163,16 +178,17 @@ export function TaskDetail({
               >
                 <Comments
                   thread={thread}
-                  author={comments.author}
-                  onAuthor={comments.setAuthor}
+                  comments={taskComments}
+                  source={source}
+                  author={displayName}
+                  onSave={onSaveComment}
+                  onDelete={onDeleteComment}
+                  onOpenSettings={onOpenSettings}
                   onChange={comments.update}
                 />
               </section>
             </>
           ) : null}
-        </div>
-        <div className="detail-footer">
-          <p>{messages.detailEditHint}</p>
         </div>
       </dialog>
     </>

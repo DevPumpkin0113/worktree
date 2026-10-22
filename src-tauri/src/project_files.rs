@@ -100,6 +100,23 @@ pub fn valid_file(file: &str) -> bool {
     let Some((folder, name)) = file.split_once('/') else {
         return false;
     };
+    if folder == "comments" {
+        let Some((task, comment)) = name.split_once('/') else {
+            return false;
+        };
+        let Some(id) = comment.strip_suffix(".md") else {
+            return false;
+        };
+        let parts: Vec<_> = id.split('-').collect();
+        return valid_file(&format!("tasks/{task}.md"))
+            && parts.len() == 5
+            && parts.iter().zip([8, 4, 4, 4, 12]).all(|(part, len)| {
+                part.len() == len
+                    && part
+                        .bytes()
+                        .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
+            });
+    }
     if !["tasks", "milestones"].contains(&folder) || !name.ends_with(".md") {
         return false;
     }
@@ -161,9 +178,96 @@ pub fn read(root: &Path) -> Result<ProjectSource, String> {
             }
         }
     }
+    let comments = safe_join(&data, "comments")?;
+    if comments.exists() {
+        for entry in fs::read_dir(comments).map_err(|e| e.to_string())? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            let task = entry.file_name().to_string_lossy().into_owned();
+            let folder = safe_join(&data, &format!("comments/{task}"))?;
+            if !folder.is_dir() || !valid_file(&format!("tasks/{task}.md")) {
+                return Err(invalid());
+            }
+            for comment in fs::read_dir(folder).map_err(|e| e.to_string())? {
+                let comment = comment.map_err(|e| e.to_string())?;
+                let name = comment.file_name().to_string_lossy().into_owned();
+                if !name.ends_with(".md") {
+                    continue;
+                }
+                let key = format!("comments/{task}/{name}");
+                if !valid_file(&key) {
+                    return Err(format!("{}: {}", invalid(), key));
+                }
+                let text = read_text(&safe_join(&data, &key)?)?;
+                files.insert(key, text);
+                if files.len() > MAX_FILES
+                    || files.values().map(|s| s.len()).sum::<usize>() > MAX_BYTES
+                {
+                    return Err(invalid());
+                }
+            }
+        }
+    }
     // The UI validates individual documents and reports their exact source file and field.
     Ok(ProjectSource {
         data_directory: directory,
         files,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn comment_paths_are_limited_to_task_ids_and_uuid_markdown_files() {
+        assert!(valid_file(
+            "comments/W001/12345678-1234-1234-1234-123456789abc.md"
+        ));
+        assert!(valid_file(
+            "comments/MS001/12345678-1234-1234-1234-123456789abc.md"
+        ));
+        for invalid in [
+            "comments/../12345678-1234-1234-1234-123456789abc.md",
+            "comments/W001/../../outside.md",
+            "comments/W001/name.md",
+            "comments/W001/12345678-1234-1234-1234-123456789abc.md/extra",
+            "comments/w001/12345678-1234-1234-1234-123456789abc.md",
+        ] {
+            assert!(!valid_file(invalid), "{invalid}");
+        }
+    }
+    #[cfg(windows)]
+    #[test]
+    fn comment_directory_junction_is_not_followed() {
+        let root = tempfile::tempdir().unwrap();
+        let outside = tempfile::tempdir().unwrap();
+        let data = root.path().join("docs/worktree");
+        fs::create_dir_all(data.join("comments")).unwrap();
+        fs::write(
+            root.path().join("worktree.json"),
+            r#"{"dataDirectory":"docs/worktree"}"#,
+        )
+        .unwrap();
+        fs::write(data.join("project.json"), r#"{"schemaVersion":1}"#).unwrap();
+        fs::write(outside.path().join("keep.txt"), "keep").unwrap();
+        let link = data.join("comments").join("W001");
+        let result = std::process::Command::new("cmd.exe")
+            .args(["/C", "mklink", "/J"])
+            .arg(display(&link).replace('/', "\\"))
+            .arg(display(outside.path()).replace('/', "\\"))
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success(),
+            "{} {}",
+            String::from_utf8_lossy(&result.stdout),
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let result = read(root.path());
+        fs::remove_dir(link).unwrap();
+        assert!(result.is_err());
+        assert_eq!(
+            fs::read_to_string(outside.path().join("keep.txt")).unwrap(),
+            "keep"
+        );
+    }
 }

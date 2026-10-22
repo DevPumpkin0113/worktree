@@ -158,6 +158,16 @@ export function App({ store }: { store: WorkspaceStore }) {
           <span className="statusbar-mode">{messages.localDocument}</span>
         </footer>
         <TaskDetail
+          documents={state.documents}
+          source={store.active?.text ?? ''}
+          displayName={state.settings.displayName}
+          onSaveComment={(expected, text, id, replyTo) =>
+            store.saveComment(state.activePath!, expected, state.selectedId!, text, id, replyTo)
+          }
+          onDeleteComment={(expected, id) =>
+            store.deleteComment(state.activePath!, expected, state.selectedId!, id)
+          }
+          onOpenSettings={() => store.toggleSettings()}
           model={model}
           path={state.activePath}
           id={state.selectedId}

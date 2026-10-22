@@ -22,6 +22,7 @@ export interface WorkRow {
   deps: string[];
 }
 export interface WorkModel {
+  comments?: import('./comment-file').ProjectComment[];
   nextTaskNumber?: string;
   nextMilestoneNumber?: string;
   title: string;

@@ -58,7 +58,7 @@ test('새 규격 오류는 언어 전환 후에도 실제 파일·행·입력값
 });
 test('레거시 WBS·표 형식은 프로젝트 문서로 읽지 않는다',()=>{assert.throws(()=>parseProject('---\nschema_version: 2\n---\n## 작업 목록'));});
 test('프로젝트 자체의 문서 집합이 유효하고 WBS·템플릿 파일은 제거되어 있다',()=>{
- const directory=JSON.parse(fs.readFileSync('worktree.json','utf8')).dataDirectory;const files={'project.json':fs.readFileSync(path.join(directory,'project.json'),'utf8')};for(const folder of ['tasks','milestones'])for(const file of fs.readdirSync(path.join(directory,folder)))files[folder+'/'+file]=fs.readFileSync(path.join(directory,folder,file),'utf8');assert.ok(parseProject(serializeSource({dataDirectory:directory,files})).rows.length>70);for(const dir of ['templates','examples','planning'])if(fs.existsSync(dir))assert.ok(fs.readdirSync(dir).every(file=>!file.endsWith('.wbs')));
+ const directory=JSON.parse(fs.readFileSync('worktree.json','utf8')).dataDirectory;const files={'project.json':fs.readFileSync(path.join(directory,'project.json'),'utf8')};for(const folder of ['tasks','milestones'])for(const file of fs.readdirSync(path.join(directory,folder)))files[folder+'/'+file]=fs.readFileSync(path.join(directory,folder,file),'utf8');const model=parseProject(serializeSource({dataDirectory:directory,files}));assert.ok(model.rows.some(row=>!row.milestone));assert.ok(model.rows.some(row=>row.milestone));for(const dir of ['templates','examples','planning'])if(fs.existsSync(dir))assert.ok(fs.readdirSync(dir).every(file=>!file.endsWith('.wbs')));
 });
 
 

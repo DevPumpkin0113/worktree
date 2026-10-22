@@ -1,139 +1,161 @@
+[English](README.md) | [한국어](README.ko.md)
+
 <div align="center">
-  <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree 아이콘" />
+  <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree icon" />
   <h1>Worktree</h1>
-  <p>작업과 일정을 한눈에 정리하는 Windows 데스크톱 앱</p>
-  <p><strong>Beta Worktree 0.33.1</strong></p>
+  <p>A Windows desktop app and CLI for tasks and schedules</p>
+  <p><strong>Beta Worktree 0.33.2</strong></p>
   <a href="https://github.com/DevPumpkin0113/worktree/releases">
-    <img src="https://img.shields.io/badge/Windows-다운로드-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 버전 다운로드" />
+    <img src="https://img.shields.io/badge/Windows-Download-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" />
   </a>
 </div>
 
 ---
 
-## 기능
+## Features
 
-- **다양한 보기** — 트리, 칸반, 작업 네트워크, 간트 차트, 작업 목록을 제공합니다.
-- **작업 관리** — 작업과 마일스톤을 추가·수정·삭제하고 진행률을 확인합니다.
-- **일정과 작업 관계** — 시작일·종료일, 예상 작업 시간, 선행·후속 작업을 관리합니다.
-- **분류와 검색** — 담당자, 상태, 우선순위, 작업 유형, 라벨로 작업을 정리하고 검색·필터로 찾습니다.
-- **상세 보기** — 여러 작업을 탭으로 열거나 목록 옆의 분할 패널에서 확인합니다.
-- **댓글과 답글** — 앱에 설정한 표시 이름으로 작업에 대한 의견을 남깁니다.
-- **프로젝트 관리** — 여러 프로젝트를 탭으로 전환하고 프로젝트별 작업 규칙을 설정합니다.
-- **로컬 저장** — 프로젝트 폴더에 데이터를 저장하고 외부 변경을 반영합니다.
-- **CLI** — 터미널에서 작업·마일스톤·댓글을 관리하고 대화형 콘솔을 사용합니다. [사용법](apps/cli/README.md)
-- **언어 설정** — 한국어와 영어를 지원합니다.
+- **Multiple views** — Tree, Kanban, dependency network, Gantt chart, and task list.
+- **Task management** — Create, edit, and delete tasks and milestones, and track progress.
+- **Schedules and dependencies** — Manage dates, estimated work hours, predecessors, and successors.
+- **Organization and search** — Organize tasks by assignee, status, priority, type, and labels; search and filter the results.
+- **Task details** — Open multiple tasks in tabs or use a side panel alongside the list.
+- **Comments and replies** — Discuss tasks using your configured display name.
+- **Project management** — Switch between project tabs and configure rules for each project.
+- **Local files** — Keep data in your project folder and refresh external changes.
+- **CLI** — Manage tasks, milestones, and comments from a terminal or interactive console. [CLI guide](apps/cli/README.md)
+- **Languages** — English and Korean.
 
-## 프로젝트에 저장되는 파일
+## CLI
 
-프로젝트를 초기화하면 루트에 `worktree.json`과 지정한 위치에 데이터 폴더를 생성합니다. 기본 저장 위치는 `docs/worktree`이며 초기화할 때 변경할 수 있습니다.
+Use the same project files from a terminal. Windows x64 and Node.js 24 or later are required.
 
-```text
-프로젝트/
-├─ worktree.json                 # 데이터 저장 위치
-└─ docs/
-   └─ worktree/
-      ├─ project.json            # 프로젝트 정보와 작업 규칙
-      ├─ tasks/
-      │  └─ W001.md              # 작업별 파일
-      ├─ milestones/
-      │  └─ MS001.md             # 마일스톤별 파일
-      └─ comments/
-         └─ W001/
-            └─ <UUID>.md         # 해당 작업의 댓글별 파일
+```powershell
+npm install --global @devpumpkin0113/worktree-cli
+cd C:\projects\example
+worktree init
+worktree shell
 ```
 
-작업 파일 이름의 `W`는 초기화할 때 지정하는 접두어입니다. 작업·마일스톤·댓글을 추가하면 각각의 파일이 생성되며, 제목을 바꿔도 ID와 파일 이름은 유지됩니다. 비어 있는 폴더는 첫 항목을 추가할 때 생성될 수 있습니다.
+The CLI supports tasks, milestones, comments, filters, batch changes, conflict checks, and recovery. Skip init for an existing desktop project. [English CLI guide](apps/cli/README.md) · [한국어 CLI 안내](apps/cli/README.ko.md)
 
-파일은 텍스트로 저장되어 직접 확인하거나 Git으로 함께 관리할 수 있습니다.
+## Files in your project
 
-## 예시 화면
+Initialization creates a root `worktree.json` and a data directory. The default is `docs/worktree`; you can choose a different relative directory during setup.
 
-Worktree 개발 내용을 바탕으로 구성한 예시입니다. 표시된 상태와 일정은 시연용입니다.
+```text
+project/
+├─ worktree.json                 # Data directory location
+└─ docs/
+   └─ worktree/
+      ├─ project.json            # Project settings and rules
+      ├─ tasks/
+      │  └─ W001.md              # One file per task
+      ├─ milestones/
+      │  └─ MS001.md             # One file per milestone
+      └─ comments/
+         └─ W001/
+            └─ <UUID>.md         # One file per comment on this task
+```
 
-### 프로젝트 관리
+The task prefix, `W` in this example, is chosen during initialization. Tasks, milestones, and comments have separate files. Renaming a title preserves the ID and filename. Empty directories may be created when their first item is added.
 
-프로젝트 정보와 작업 규칙을 확인하고 수정합니다.
+Files are text-based, so you can inspect them and track them with Git.
 
-<div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EA%B4%80%EB%A6%AC.png" width="1000" alt="Worktree 프로젝트 관리" />
-</div>
+## Screenshots
 
-### 작업 보드 · 트리
+These examples use Worktree development tasks. Dates and statuses are demonstration data.
 
-마일스톤별로 작업을 묶어 진행 상황을 확인합니다.
+### Project management
 
-<div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%ED%8A%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.png" width="1000" alt="Worktree 작업 보드 · 트리" />
-</div>
-
-### 작업 보드 · 칸반
-
-상태별로 작업을 나누어 진행 흐름을 확인합니다.
-
-<div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%B9%B8%EB%B0%98%EB%B3%B4%EA%B8%B0.png" width="1000" alt="Worktree 작업 보드 · 칸반" />
-</div>
-
-### 작업 보드 · 작업 네트워크
-
-작업 사이의 선행·후속 관계를 확인합니다.
+Review and edit project settings and task rules.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC.png" width="1000" alt="Worktree 작업 보드 · 작업 네트워크" />
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EA%B4%80%EB%A6%AC.png" width="1000" alt="Worktree Project management" />
 </div>
 
-### 작업 보드 · 간트 차트
+### Task board · Tree
 
-날짜별 작업 일정과 기간을 확인합니다.
+Group tasks by milestone and track progress.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EA%B0%84%ED%8A%B8%EC%B0%A8%ED%8A%B8.png" width="1000" alt="Worktree 작업 보드 · 간트 차트" />
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%ED%8A%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.png" width="1000" alt="Worktree Task board · Tree" />
 </div>
 
-### 작업 목록
+### Task board · Kanban
 
-전체 작업의 주요 정보를 표로 확인하고 검색·필터로 찾습니다.
+Follow the workflow with tasks grouped by status.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EB%AA%A9%EB%A1%9D.png" width="1000" alt="Worktree 작업 목록" />
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%B9%B8%EB%B0%98%EB%B3%B4%EA%B8%B0.png" width="1000" alt="Worktree Task board · Kanban" />
 </div>
 
-### 작업 상세
+### Task board · Dependency network
 
-일정과 설명, 담당자, 우선순위, 작업 관계를 확인하고 수정합니다.
+Explore predecessor and successor relationships.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EC%83%81%EC%84%B8.png" width="1000" alt="Worktree 작업 상세" />
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC.png" width="1000" alt="Worktree Task board · Dependency network" />
 </div>
 
-### 댓글과 답글
+### Task board · Gantt chart
 
-작업별 의견을 남기고 댓글 번호로 답글 대상을 확인합니다.
+Review task schedules and durations.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EB%8C%93%EA%B8%80.png" width="1000" alt="Worktree 댓글과 답글" />
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EA%B0%84%ED%8A%B8%EC%B0%A8%ED%8A%B8.png" width="1000" alt="Worktree Task board · Gantt chart" />
 </div>
 
-### 인사이트
+### Task list
 
-**추가 개발 필요** — 프로젝트 분석 기능은 개발 중입니다.
+Inspect all tasks in a table and use search and filters.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9D%B8%EC%82%AC%EC%9D%B4%ED%8A%B8.png" width="1000" alt="Worktree 인사이트" />
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EB%AA%A9%EB%A1%9D.png" width="1000" alt="Worktree Task list" />
 </div>
 
-## 시작하기
+### Task details
 
-1. 프로젝트로 사용할 폴더를 엽니다.
-2. 기본 정보와 작업 규칙을 설정합니다.
-3. 마일스톤과 작업을 추가해 일정을 관리합니다.
+Review and edit dates, descriptions, assignees, priorities, and dependencies.
 
-다운로드 버튼에서 공개 배포된 설치 파일을 확인할 수 있습니다.
+<div align="center">
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EC%83%81%EC%84%B8.png" width="1000" alt="Worktree Task details" />
+</div>
 
-현재 계정 로그인이나 서버를 통한 실시간 협업은 제공하지 않습니다.
+### Comments and replies
 
-## 오류 제보
+Discuss each task and identify reply targets by comment number.
 
-오류나 개선 의견은 [GitHub Issues](https://github.com/DevPumpkin0113/worktree/issues)에 남겨 주세요. 앱 설정의 **앱 정보**에서도 문제 제보 화면을 열 수 있습니다.
+<div align="center">
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EB%8C%93%EA%B8%80.png" width="1000" alt="Worktree Comments and replies" />
+</div>
 
-사용 중인 앱 버전, 오류가 발생한 상황, 오류 메시지를 함께 알려주시면 확인에 도움이 됩니다. 화면을 첨부할 때는 개인정보와 프로젝트의 민감한 내용을 가려 주세요.
+### Insights
+
+**Further development required** — Project analytics are still in development.
+
+<div align="center">
+  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9D%B8%EC%82%AC%EC%9D%B4%ED%8A%B8.png" width="1000" alt="Worktree Insights" />
+</div>
+
+## Getting started
+
+1. Open a folder for your project.
+2. Set project information and task rules.
+3. Add milestones and tasks to manage your schedule.
+
+Use the download button for published desktop installers.
+
+Account login and server-based real-time collaboration are not currently available.
+
+## Report an issue
+
+Report bugs and suggestions through [GitHub Issues](https://github.com/DevPumpkin0113/worktree/issues). You can also open the issue form from **App information** in the app settings.
+
+Include your version, reproduction steps, and error message. Remove personal information and sensitive project content from screenshots.
+
+## References and related projects
+
+Backlog.md was consulted while exploring document-based task management and human–AI collaboration. Linear is included as a related project-management service for comparison.
+
+- [Backlog.md](https://github.com/MrLesk/Backlog.md) — Markdown-based task management for people and AI agents.
+- [Linear](https://linear.app/features) — A collaborative product-development service for issue tracking, project planning, and cycles.

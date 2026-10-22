@@ -87,7 +87,7 @@
 ## Worktree 프로젝트 안내
 
 - Windows 데스크톱 앱이며 Tauri 2·Rust·Vite·React·TypeScript를 사용한다. 프런트엔드의 도메인·SVG·저장·입력 모듈은 TypeScript로 작성한다.
-- 먼저 루트 worktree.json과 지정 데이터 폴더의 project.json·작업(존재하는 경우), CHANGELOG.md·docs/ROADMAP.md를 읽는다. README.md는 사용자 요청으로 비워 두었다. docs/DEVELOPMENT.md·docs/PROJECT_FORMAT.md·docs/adr는 로컬에 존재할 때만 참고하며 Git에서 제외한다. 후속 후보는 docs/ROADMAP.md다.
+- 먼저 루트 worktree.json과 지정 데이터 폴더의 project.json·작업(존재하는 경우), CHANGELOG.md·docs/ROADMAP.md를 읽는다. 루트와 CLI의 README.md는 영문 기본, README.ko.md는 한국어 안내다. docs/DEVELOPMENT.md·docs/PROJECT_FORMAT.md·docs/adr는 로컬에 존재할 때만 참고하며 Git에서 제외한다. 후속 후보는 docs/ROADMAP.md다.
 - 0.24.0부터 프로젝트 하나는 문서 집합 하나다. 기본 docs/worktree 또는 사용자 지정 상대 경로에 project.json·tasks/작업ID.md·milestones/MS번호.md를 둔다. 0.29.0부터 댓글은 comments/원본작업ID/UUID.md에 별도 저장한다. 기존 WBS와 배포 템플릿은 제거했다. 외부 공용 템플릿은 수정하지 않는다.
 - 앱의 프로젝트 초기화가 파일을 만든다. 프리픽스는 초기화 시 지정하고 변경 기능은 보류한다. 삭제한 번호를 재사용하지 않으며 제목을 바꿔도 ID·파일명은 유지한다. 원본 ID·마일스톤 소속·선행 참조는 정확한 문자열이다. 하이픈 표시는 원본 ID를 바꾸지 않는다.
 - 결정 근거는 docs/adr/0015-project-document-collection.md다. 과거 WBS ADR·버전별 개발 기록은 역사로 보존하고 현행 저장 규칙으로 사용하지 않는다. 이 저장소의 기존 개발 작업 기록은 새 데이터 폴더에 옮겼다.
@@ -242,7 +242,7 @@
 - 읽기 결과 revision과 쓰기의 --expect로 에이전트의 이전 조회 이후 변경을 거부한다. 생성의 무조건 재시도는 중복 항목을 만들 수 있으므로 --expect를 권장한다. 저장 직전 공용 Rust 전체 스냅샷 비교도 유지한다.
 - `packages/storage`는 Rust 파일 읽기·검사·저장·복구의 공용 구현이며 데스크톱의 project_files/project_write 모듈은 이를 재노출한다. apps/cli/native는 JSON stdin 요청을 받아 저장하는 Windows 보조 실행 파일이다. 프로젝트 의미 검증·ID·변환은 TypeScript core에 유지한다.
 - 공용 LOCK은 프로세스 내 Mutex와 OS 파일 잠금을 함께 사용한다. 같은 사용자 임시 폴더의 worktree-storage-v1.lock은 프로젝트 내용 없이 잠금 식별에만 사용하며 파일은 남긴다. 잠금을 얻지 못하면 오류로 반환한다. 외부 편집기의 파일 쓰기까지 차단하는 CAS는 아니다.
-- npm run build:cli는 JS 번들과 저장 보조 실행 파일을 dist에 생성한다. 배포 런타임에는 Node.js 24가 필요하고 개발 빌드에는 Rust가 필요하다. npm prepack은 빌드를 실행한다. 실제 배포 이름·npm 게시는 별도 승인 대상이다.
+- npm run build:cli는 JS 번들과 저장 보조 실행 파일을 dist에 생성한다. 배포 런타임에는 Node.js 24가 필요하고 개발 빌드에는 Rust가 필요하다. npm prepack은 빌드를 실행한다. 패키지명은 @devpumpkin0113/worktree-cli이며 npm 게시는 별도 승인 대상이다.
 - shell은 프로젝트·언어·출력·작성자·명령 이력을 현재 프로세스 메모리에서만 유지한다. 명령을 OS 셸로 실행하지 않고 독립 토크나이저로 해석하며, use·language·format·author·exit를 제공한다. 표 렌더링은 독립 파일에 둔다. 전체 화면 방향키 UI는 제외한다.
 - root npm test는 pretest로 CLI/저장 보조 실행 파일을 빌드한다. Rust 검증은 desktop, packages/storage, apps/cli/native의 Cargo manifest별로 수행한다. 보조 실행 파일은 CLI 버전을 따르고 공용 Rust crate는 별도 내부 버전을 유지한다. version:check는 각 Cargo.lock의 공용 의존 버전도 검사한다.
 
@@ -269,3 +269,11 @@
 
 - TTY init은 init-wizard에서 입력·숫자 선택·기본값·최종 확인을 제공한다. 실제 변환·검사·저장은 기존 init-command를 재사용하며 확인 전에는 dry-run만 호출한다.
 - init --yes/--no-interactive, JSON·입력파일·비TTY 실행은 질문하지 않는다. shell은 별도 readline을 만들지 않고 기존 인터페이스에서 질문하며 SIGINT를 질문 중/명령 입력 중으로 분리한다. 질문의 SIGINT·close 리스너와 AbortController는 매번 정리한다.
+
+### CLI npm 배포
+
+- cli-publish.yml은 workflow_dispatch 전용이다. dry_run=true 기본, expected_version 일치 필수이며 실제 게시는 main에서만 허용한다. 앱 릴리즈 CI와 독립이다.
+- Windows 검증·패키징·별도 설치 후 아카이브를 전달하고 게시 작업만 OIDC 권한을 갖는다. 장기 npm 토큰을 사용하지 않는다. verify-cli-package.mjs는 이름·버전·허용 파일·아카이브 무결성과 공개 registry 중복 버전을 검사한다.
+- 최초 계정 로그인·게시·Trusted Publisher 연결은 사용자 수행/승인 대상이며 코드 준비를 게시 허가로 간주하지 않는다. 저장소 npm 빌드는 이름이 아닌 apps/cli workspace 경로로 호출한다.
+
+- npm 패키지에는 영문 README.md와 한국어 README.ko.md를 함께 포함한다. 루트/CLI 양쪽 언어 링크·실제 참고 프로젝트 링크·예시 JSON과 이미지 경로를 함께 검증한다.

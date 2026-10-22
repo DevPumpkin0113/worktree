@@ -274,7 +274,8 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 - [x] Rust 저장 코드 공유·프로세스 간 파일 잠금·저장 보조 실행 파일 구성.
 - [x] DB 콘솔 방식 shell과 문자 표, 프로젝트·언어·출력 방식·작성자 유지.
 - [x] npm 패키지 포함 파일·실행 명령·Windows x64 빌드 구성.
-- [ ] 소유한 npm 배포 이름 확정 및 실제 게시 승인.
+- [x] npm 배포 이름 확정: @devpumpkin0113/worktree-cli.
+- [ ] 실제 npm 게시 승인·최초 등록·Trusted Publisher 연결.
 - [ ] 실제 터미널에서 입력·폭·Ctrl+C 사용성 인수.
 
 검증: Node 전체 211개, 공용 저장 Rust 11개·데스크톱 Rust 40개 통과(네트워크·서명 설치 검증 2개 조건부 제외). CLI 보조 실행 파일 테스트 빌드·타입·포맷·버전·Vite/CLI 빌드·npm pack dry-run 통과. 실제 개발 프로젝트 데이터 변경 없음. 실제 TTY 사용성·설치 빌드·게시·CI 원격 실행은 미수행.
@@ -339,3 +340,24 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 - [x] --yes/--no-interactive·JSON·입력파일·비TTY 자동화 호환.
 - 검증: 전체 Node 244개 및 최신 초기화/help 관련 16개 통과. 실제 Windows 터미널의 독립 init 최종 취소·shell init Ctrl+C와 파일 미생성 확인. 실제 사용자 test-project-2는 초기화하지 않았음.
 - 사용자 확인(2026-10-23): CLI로 생성한 9작업·2마일스톤·10댓글이 실행 중인 앱에 자동 반영되고 동일하게 보임을 확인. 대화형 init도 사용자 동작 확인 완료. 대화 이력 없는 독립 에이전트는 help/CLI 출력으로 9개 사용 목표를 수행했으며 발견한 안내·JSON 응답 문제를 0.3.1에 보완.
+
+## CLI 0.4.1 npm 배포 준비
+
+- [x] 사용자 계정 scope로 이름·메타데이터 확정.
+- [x] cli-publish.yml 수동 검증/게시, 버전·branch·아카이브 구성·무결성·설치 검증·중복 게시 차단.
+- [ ] 최초 npm 게시·Trusted Publisher 연결·main 반영·원격 Actions 실행.
+- 검증: Node 246개·타입·포맷·버전 검사, workflow YAML 파싱, 로컬 npm pack/설치 후 CLI init·validate 통과. 실제 npm 게시 미수행.
+
+## 영문 기본 README와 참고 프로젝트
+
+- [x] 루트·CLI의 README.md(영어)/README.ko.md(한국어), 상호 언어 링크.
+- [x] 루트 CLI 설치·시작·공용 데이터 설명과 Backlog.md 및 Boardown/Task Master/Beads 비교 대상 안내.
+- 검증: 4개 문서의 상대 링크·이미지·JSON 예제, npm 아카이브 영문/한국어 원문 일치, 패키징 검사 테스트 2개 통과. 실제 npm 게시 미수행.
+
+- 참고 목록은 같은 분야의 작업 관리 프로젝트로 한정하며 실제 설계 참고와 새 유사 도구 조사를 구분했다. VS Code는 README 목록에서 제거. 공식 저장소를 확인하고 npm 아카이브의 영문·한국어 README를 다시 확인.
+
+- 사용자 요청으로 Linear를 같은 분야의 프로젝트 관리 서비스 비교 목록에 추가. 루트/CLI 영문·한국어 4문서 및 npm 아카이브에 반영.
+
+- 최종 사용자 요청에 따라 README 참고 목록은 Backlog.md·Linear만 유지. Boardown·Task Master·Beads는 제거.
+
+- CLI README를 명령별 간결한 사용법으로 재구성. 초기화는 옵션 없는 `worktree init` 기준으로 통일하고 작업 속성은 표, 필터는 개별 명령, JSON 목록은 여러 행으로 표시. 영문·한국어 및 루트 시작 예시에 반영. JSON 예제 파싱·실제 task add 도움말 대조 완료.

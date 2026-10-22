@@ -1,29 +1,20 @@
 {
-  "schemaVersion": 1,
-  "name": "Worktree",
-  "taskPrefix": "W",
-  "useEffort": false,
-  "taskTypes": [
-    "feature",
-    "bug",
-    "improvement",
-    "task",
-    "docs",
-    "spike",
-    "chore"
+  "assignees": [
+    "박대호",
+    "CODEX"
   ],
-  "labels": [],
-  "nextTaskNumber": 92,
-  "nextMilestoneNumber": 10,
-  "taskTypeColors": {
-    "feature": "#a2eeef",
-    "bug": "#d73a4a",
-    "improvement": "#f29a4e",
-    "task": "#e3dede",
-    "docs": "#1d76db",
-    "spike": "#d4c5f9",
-    "chore": "#6c757d"
-  },
+  "dateFormat": "yyyy.MM.dd",
+  "idSeparator": "hyphen",
+  "labels": [
+    "API",
+    "Back-End",
+    "Front-End",
+    "etc",
+    "Database"
+  ],
+  "name": "worktree",
+  "nextMilestoneNumber": 5,
+  "nextTaskNumber": 17,
   "priorities": [
     {
       "id": "high",
@@ -38,11 +29,26 @@
       "name": "하"
     }
   ],
-  "assignees": [
-    "codex",
-    "박대호"
+  "schemaVersion": 1,
+  "taskPrefix": "TASK",
+  "taskTypeColors": {
+    "bug": "#d73a4a",
+    "chore": "#6c757d",
+    "docs": "#1d76db",
+    "feature": "#a2eeef",
+    "improvement": "#f29a4e",
+    "spike": "#d4c5f9",
+    "task": "#e3dede"
+  },
+  "taskTypes": [
+    "feature",
+    "bug",
+    "improvement",
+    "task",
+    "docs",
+    "spike",
+    "chore"
   ],
-  "dateFormat": "yyyy-MM-dd",
   "timeFormat": "24h",
-  "idSeparator": "hyphen"
+  "useEffort": false
 }

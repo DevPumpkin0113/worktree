@@ -1,3 +1,5 @@
+import { SettingsButton } from './SettingsButton';
+import type { useUpdateNotice } from '../../hooks/use-update-notice';
 import { messages } from '../../i18n/messages';
 import { useEffect, useState } from 'react';
 import { Icon } from '../shared/Icon';
@@ -9,8 +11,10 @@ export function Titlebar({
   collapsed,
   query,
   searchEnabled,
+  updateNotice,
 }: {
   store: WorkspaceStore;
+  updateNotice: ReturnType<typeof useUpdateNotice>;
   settingsOpen: boolean;
   collapsed: boolean;
   query: string;
@@ -85,19 +89,11 @@ export function Titlebar({
         />
       </div>
       <div className="header-actions" role="group" aria-label={messages.documentTools}>
-        <button
-          id="settingsOpen"
-          className={settingsOpen ? 'active' : ''}
-          aria-haspopup="dialog"
-          aria-expanded={settingsOpen}
-          aria-pressed={settingsOpen}
-          aria-controls="settings"
-          aria-label={messages.appSettings}
-          title={messages.appSettings}
+        <SettingsButton
+          settingsOpen={settingsOpen}
           onClick={() => store.toggleSettings()}
-        >
-          <Icon name="settings" />
-        </button>
+          notice={updateNotice}
+        />
       </div>
       <div className="window-controls">
         {(['minimize', 'maximize', 'close'] as const).map((action, index) => (

@@ -15,7 +15,14 @@ import type { Platform } from '../../src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
 async function fixture(
-  options: { sessionFailure?: boolean; language?: 'ko' | 'en'; displayName?: string } = {},
+  options: {
+    sessionFailure?: boolean;
+    language?: 'ko' | 'en';
+    displayName?: string;
+    autoCheckUpdates?: boolean;
+    updateKind?: string;
+    updateVersion?: string;
+  } = {},
 ) {
   const files = new Map([
     [first, projectFixture('첫 프로젝트')],
@@ -39,7 +46,7 @@ async function fixture(
             displayName: options.displayName ?? '',
             idSeparator: 'none',
             detailMode: 'sidebar',
-            autoCheckUpdates: false,
+            autoCheckUpdates: options.autoCheckUpdates ?? false,
           },
           warning: '',
         };
@@ -107,7 +114,11 @@ async function fixture(
           platform: 'windows',
         };
       else if (command === 'check_app_update')
-        result = { kind: 'latest', version: '0.24.0', notes: '' };
+        result = {
+          kind: options.updateKind ?? 'latest',
+          version: options.updateVersion ?? '0.24.0',
+          notes: '',
+        };
       return result as T;
     },
   };
@@ -2743,6 +2754,50 @@ test('하루 일정은 작업·마일스톤 생성과 수정에서 날짜를 동
       assert.equal(row.start, '2026-10-25');
       assert.equal(row.end, '2026-10-26');
     }
+  } finally {
+    await f.close();
+  }
+});
+
+test('업데이트 안내 닫기는 레드닷을 유지하고 설정 방문은 같은 버전 알림을 해제한다', async () => {
+  for (const kind of ['available', 'manual']) {
+    const f = await fixture({ autoCheckUpdates: true, updateKind: kind, updateVersion: '9.0.0' });
+    try {
+      assert.ok(f.host.querySelector('.settings-update-dot'));
+      assert.match(f.element('.settings-update-notice').textContent ?? '', /9.0.0/);
+      assert.equal(f.calls.filter((call) => call.command === 'check_app_update').length, 1);
+      await f.click('#updateNoticeClose');
+      assert.equal(f.host.querySelector('.settings-update-notice'), null);
+      assert.ok(f.host.querySelector('.settings-update-dot'));
+      await f.click('#settingsOpen');
+      assert.equal(f.host.querySelector('.settings-update-dot'), null);
+      await f.click('#settingsAboutTab');
+      assert.match(f.element('#updateTitle').textContent ?? '', /9.0.0/);
+      await f.click('#checkUpdates');
+      await f.click('#settingsClose');
+      assert.equal(f.host.querySelector('.settings-update-dot'), null);
+      assert.equal(f.host.querySelector('.settings-update-notice'), null);
+      assert.equal(f.calls.filter((call) => call.command === 'install_app_update').length, 0);
+    } finally {
+      await f.close();
+    }
+  }
+});
+
+test('최신·개발·미공개 상태와 자동 확인 비활성에서는 업데이트 알림을 표시하지 않는다', async () => {
+  for (const kind of ['latest', 'ahead', 'no-release']) {
+    const f = await fixture({ autoCheckUpdates: true, updateKind: kind });
+    try {
+      assert.equal(f.host.querySelector('.settings-update-dot'), null);
+      assert.equal(f.host.querySelector('.settings-update-notice'), null);
+    } finally {
+      await f.close();
+    }
+  }
+  const f = await fixture({ autoCheckUpdates: false, updateKind: 'available' });
+  try {
+    assert.equal(f.calls.filter((call) => call.command === 'check_app_update').length, 0);
+    assert.equal(f.host.querySelector('.settings-update-dot'), null);
   } finally {
     await f.close();
   }

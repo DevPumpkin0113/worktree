@@ -1,3 +1,5 @@
+import { useAppInfo } from './hooks/use-app-info';
+import { useUpdateNotice } from './hooks/use-update-notice';
 import { ProjectPriorityContext } from './app/project-priority-context';
 import { ProjectTaskTypeContext, EMPTY_TASK_TYPE_COLORS } from './app/project-task-type-context';
 import {
@@ -25,6 +27,8 @@ import type { WorkspaceStore } from './app/workspace-store';
 export function App({ store }: { store: WorkspaceStore }) {
   const state = useWorkspace(store),
     model = store.active?.model ?? null;
+  const appInfo = useAppInfo(store.platform, store.storage);
+  const updateNotice = useUpdateNotice(appInfo.update, state.settingsOpen);
   const page = store.activeProject?.files.length === 0 ? 'initialize' : state.page;
   const creating = !!store.active?.creationTabs?.some((tab) => tab.id === state.selectedId);
   const edits = useTaskEditSessions(state.documents);
@@ -153,6 +157,7 @@ export function App({ store }: { store: WorkspaceStore }) {
       <ProjectTaskTypeContext.Provider value={model?.taskTypeColors ?? EMPTY_TASK_TYPE_COLORS}>
         <ProjectDateFormatProvider dateFormat={model?.dateFormat} timeFormat={model?.timeFormat}>
           <Titlebar
+            updateNotice={updateNotice}
             store={store}
             settingsOpen={state.settingsOpen}
             collapsed={collapsed}
@@ -247,7 +252,7 @@ export function App({ store }: { store: WorkspaceStore }) {
             </span>
             <span className="statusbar-mode">{messages.localDocument}</span>
           </footer>
-          <Settings store={store} state={state} />
+          <Settings store={store} state={state} app={appInfo} />
           {deletion ? (
             <TaskDeleteDialog
               session={deletion}

@@ -15,13 +15,13 @@ export function TaskMetadataFields({
   model,
   disabled,
   onChange,
-  section = 'all',
+  section,
 }: {
   draft: ProjectTaskDraft;
   model: WorkModel;
   disabled: boolean;
   onChange: (draft: ProjectTaskDraft) => void;
-  section?: 'all' | 'main' | 'side';
+  section: 'main' | 'side';
 }) {
   const errors = useContext(TaskFieldErrorsContext);
   const labels = draft.labels
@@ -32,7 +32,7 @@ export function TaskMetadataFields({
     onChange({ ...draft, [key]: value });
   return (
     <>
-      {section !== 'main' ? (
+      {section === 'side' ? (
         <>
           <div className="task-editor-field">
             <span>{messages.priority}</span>
@@ -95,7 +95,7 @@ export function TaskMetadataFields({
           </div>
         </>
       ) : null}
-      {section !== 'side' ? (
+      {section === 'main' ? (
         <>
           <label className="task-editor-field task-field-description">
             <span>{messages.description}</span>

@@ -87,7 +87,7 @@
 ## Worktree 프로젝트 안내
 
 - Windows 데스크톱 앱이며 Tauri 2·Rust·Vite·React·TypeScript를 사용한다. 프런트엔드의 도메인·SVG·저장·입력 모듈은 TypeScript로 작성한다.
-- 먼저 루트 worktree.json과 지정 데이터 폴더의 project.json·작업, README.md·CHANGELOG.md·docs/DEVELOPMENT.md·docs/PROJECT_FORMAT.md를 읽는다. 후속 후보는 planning/ROADMAP.md다.
+- 먼저 루트 worktree.json과 지정 데이터 폴더의 project.json·작업(존재하는 경우), CHANGELOG.md·docs/ROADMAP.md를 읽는다. README.md는 사용자 요청으로 비워 두었다. docs/DEVELOPMENT.md·docs/PROJECT_FORMAT.md·docs/adr는 로컬에 존재할 때만 참고하며 Git에서 제외한다. 후속 후보는 docs/ROADMAP.md다.
 - 0.24.0부터 프로젝트 하나는 문서 집합 하나다. 기본 docs/worktree 또는 사용자 지정 상대 경로에 project.json·tasks/작업ID.md·milestones/MS번호.md를 둔다. 0.29.0부터 댓글은 comments/원본작업ID/UUID.md에 별도 저장한다. 기존 WBS와 배포 템플릿은 제거했다. 외부 공용 템플릿은 수정하지 않는다.
 - 앱의 프로젝트 초기화가 파일을 만든다. 프리픽스는 초기화 시 지정하고 변경 기능은 보류한다. 삭제한 번호를 재사용하지 않으며 제목을 바꿔도 ID·파일명은 유지한다. 원본 ID·마일스톤 소속·선행 참조는 정확한 문자열이다. 하이픈 표시는 원본 ID를 바꾸지 않는다.
 - 결정 근거는 docs/adr/0015-project-document-collection.md다. 과거 WBS ADR·버전별 개발 기록은 역사로 보존하고 현행 저장 규칙으로 사용하지 않는다. 이 저장소의 기존 개발 작업 기록은 새 데이터 폴더에 옮겼다.
@@ -101,13 +101,15 @@
 
 ### 브랜치와 커밋 운영
 
-- main은 정식 배포 기준, develop은 다음 목표의 통합·유지보수 브랜치다. 기능·수정·문서 작업은 develop에서 직접 진행하며 기능 브랜치를 만들지 않는다. 과거 브랜치·이력은 임의로 삭제하거나 재작성하지 않는다.
+- main은 배포 기준, develop은 다음 목표의 통합·유지보수 브랜치다. 기능·수정·문서 작업은 develop에서 직접 진행하며 기능 브랜치를 만들지 않는다. 과거 브랜치·이력은 임의로 삭제하거나 재작성하지 않는다.
 - 시작·재개 시 브랜치·작업 트리를 확인하며 사용자 변경을 임의로 포함하지 않는다. 구현·검증·관련 문서 갱신 후 소스 변경은 미커밋으로 유지하고 박대호가 해당 범위의 커밋을 명시할 때만 목적별 커밋한다.
 - 문서·규칙만 변경한 경우 검증 후 별도 지시 없이 커밋할 수 있다. 소스가 섞이면 문서 예외를 적용하지 않는다. 순차 개발 요청은 커밋의 자동 허가가 아니며, 기능별 커밋까지 일괄 승인한 범위에서는 반복 확인하지 않는다.
 - 과거 커밋 요청은 새 작업의 상시 허가가 아니다. 커밋은 푸시·병합·배포를 허가하지 않는다. 목표 도달·통합 확인 후 박대호가 승인했을 때만 main에 병합한다. develop은 유지한다.
 - 커밋 유형은 feat·fix·docs를 기본으로 하고 refactor·test·chore·style을 필요에 따라 사용한다. 승인된 변경만 관련 파일을 선별해 기록한다.
 
 ### 버전과 릴리즈
+
+- 박대호가 완성도를 승인하기 전에는 `Beta Worktree 0.x.x`를 유지한다. 명시적인 정식 전환 승인 후 `Release Worktree 1.x.x`로 관리한다. 숫자 버전은 SemVer를 유지하고 Beta/Release는 앱 표시와 GitHub 릴리즈 제목에 적용한다. 빌드의 development/release 구분은 배포 빌드 여부이며 제품의 Beta/Release 완성도와 구분한다. 앱 식별자·실행 파일·설치/업데이트 경로는 유지한다.
 
 - package.json을 기준으로 MAJOR.MINOR.PATCH를 사용한다. 0.x의 새 기능·사용 흐름 변경은 MINOR, 기존 동작을 유지하는 오류 수정·작은 시각 조정은 PATCH다. 개발 버전도 갱신하며 공개 배포 여부와 구분한다.
 - npm run version:set -- X.Y.Z로만 버전을 동기화하고 version:check로 확인한다. package·lock·Tauri·Cargo 버전을 개별 수정하지 않는다.
@@ -210,3 +212,7 @@
 작업 유형 선택은 설정 색상 또는 기본 팔레트를 사용한 뱃지다. 작업 라벨은 공용 SearchMultiSelect의 생성 모드로 기존 공통·작업 라벨을 제안하고 새 값은 Enter로 중립 뱃지를 만든다. 생성한 라벨은 해당 작업에만 저장하며 프로젝트 공통 라벨을 자동 변경하지 않는다. 선행 작업 검색은 생성 모드를 사용하지 않는다.
 
 작업·마일스톤의 상세 탭을 닫으면 해당 작업의 편집 초안을 해제하며 재진입 시 작업 정보 화면으로 연다. 다른 작업 탭으로 단순 이동하는 경우 초안은 유지한다.
+
+0.33.0부터 useAppInfo는 App에서 한 번 호출하고 앱 정보 화면과 업데이트 상태를 공유한다. available/manual 결과에만 설정 아이콘 레드닷·닫을 수 있는 안내를 표시한다. 안내 닫기는 레드닷을 유지하며 설정 화면 방문은 해당 버전 알림을 해제한다. 확인 상태는 현재 창 메모리에만 유지하고 자동 다운로드·설치를 시작하지 않는다.
+
+2026-10-22 문서 정리: planning은 docs로 통합하고 템플릿 폴더는 제거했다. 0.33.0 이전 변경 이력은 docs/archive/CHANGELOG-before-0.33.0.md에 보존한다. 초기화 전 기록은 Git에서 제외한 docs/PROJECT_RESET_NOTES.md에 있으며 데이터 저장 폴더 밖에 둔다. 이 문서는 앱 초기화 입력이나 자동 복원 자료가 아니다. GitHub의 기존 릴리즈와 로컬·원격 Git 태그는 사용자 요청으로 모두 삭제했으며 브랜치·커밋 이력은 유지한다.

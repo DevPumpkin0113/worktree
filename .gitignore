@@ -15,3 +15,9 @@ src-tauri/gen/
 **/.worktree-init-*/
 **/.worktree-reset.json
 **/.worktree-reset-data-*/
+
+# Local development decisions and pre-reset notes (keep files locally).
+/docs/adr/
+/docs/DEVELOPMENT.md
+/docs/PROJECT_FORMAT.md
+/docs/PROJECT_RESET_NOTES.md

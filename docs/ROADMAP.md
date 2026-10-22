@@ -51,7 +51,7 @@ Jira와 비교하면 가장 큰 차이는 작업을 조회하는 기능에 비�
 | R05 긴 문서·Windows 사용성 검증 | 보류 | 접근성·대량 문서 검증은 추후 진행 |
 | W056~W058 AGENTS 준수 개선 | develop 통합·검증 완료, 0.5.2 미배포 | 작업 표 경계·구분선 검사, 집계·렌더링 분리, 개발·사용 문서 정합성 |
 
-이전 UI 구현 과정은 [과거 작업 기록](archive/Worktree-history.md), 현재 상태와 실행 작업은 [프로젝트 문서 집합](../docs/worktree/project.json)에서 확인한다.
+이전 UI 구현 과정은 [과거 작업 기록](archive/Worktree-history.md), 현재 상태와 실행 작업은 [프로젝트 문서 집합](worktree/project.json)에서 확인한다.
 
 ## 선택할 때 확인할 내용
 

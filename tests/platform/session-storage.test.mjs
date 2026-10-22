@@ -45,3 +45,16 @@ test('프로젝트 세션의 경계 밖 파일·경로 중복·선택 불일치�
   const value=sample();modify(value);assert.throws(()=>validateSession(value));
  }
 });
+
+
+test('작업 탭 순서와 활성 탭은 깊은 스냅샷으로 저장하고 잘못된 목록은 거부한다',async()=>{
+ const value=sample();value.tabs[0].taskTabs=['W002','W001'];value.tabs[0].activeTaskTab='W001';
+ const copy=validateSession(value);value.tabs[0].taskTabs.reverse();
+ assert.deepEqual(copy.tabs[0].taskTabs,['W002','W001']);
+ for(const modify of [v=>v.tabs[0].taskTabs=['W001','W001'],v=>v.tabs[0].taskTabs=['../W001'],v=>v.tabs[0].taskTabs=null,v=>v.tabs[0].activeTaskTab='W999']){
+  const invalid=structuredClone(copy);modify(invalid);assert.throws(()=>validateSession(invalid));
+ }
+ let saved;const storage=createSessionStorage(async(command,args)=>command==='load_session'?emptySession():(saved=args.session));
+ await storage.load();await storage.save(copy);
+ assert.deepEqual(saved.tabs[0].taskTabs,['W002','W001']);assert.equal(saved.tabs[0].activeTaskTab,'W001');
+});

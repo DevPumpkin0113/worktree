@@ -1,8 +1,12 @@
+import { Badge } from './Badge';
+import { useFloatingList } from '../../hooks/use-floating-list';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Icon } from './Icon';
 export interface FilterOption {
   value: string;
   label: string;
+  color?: string;
+  badge?: boolean;
 }
 export function FilterDropdown({
   id,
@@ -11,6 +15,8 @@ export function FilterDropdown({
   options,
   onChange,
   disabled = false,
+  invalid = false,
+  describedBy,
 }: {
   id: string;
   label: string;
@@ -18,16 +24,20 @@ export function FilterDropdown({
   options: FilterOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLDivElement>(null);
   const selected = Math.max(
     0,
     options.findIndex((option) => option.value === value),
   );
   const expanded = open && !disabled;
+  const position = useFloatingList(expanded, trigger, list, options.length, true);
   useEffect(() => {
     if (!expanded) return;
     const outside = (event: PointerEvent) => {
@@ -37,8 +47,13 @@ export function FilterDropdown({
     return () => document.removeEventListener('pointerdown', outside);
   }, [expanded]);
   useEffect(() => {
-    if (expanded)
-      document.getElementById(`${id}-option-${active}`)?.scrollIntoView?.({ block: 'nearest' });
+    if (!expanded) return;
+    const option = document.getElementById(`${id}-option-${active}`),
+      popup = list.current;
+    if (!option || !popup) return;
+    if (option.offsetTop < popup.scrollTop) popup.scrollTop = option.offsetTop;
+    else if (option.offsetTop + option.offsetHeight > popup.scrollTop + popup.clientHeight)
+      popup.scrollTop = option.offsetTop + option.offsetHeight - popup.clientHeight;
   }, [expanded, active, id]);
   function choose(index: number) {
     const option = options[index];
@@ -98,6 +113,8 @@ export function FilterDropdown({
         className="filter-trigger"
         role="combobox"
         aria-label={label}
+        aria-invalid={invalid}
+        aria-describedby={describedBy}
         aria-haspopup="listbox"
         aria-expanded={expanded}
         aria-controls={`${id}-options`}
@@ -109,11 +126,25 @@ export function FilterDropdown({
           setOpen(!expanded);
         }}
       >
-        <span>{options[selected]?.label}</span>
+        <span>
+          {options[selected]?.color || options[selected]?.badge ? (
+            <Badge label={options[selected].label} color={options[selected].color} />
+          ) : (
+            options[selected]?.label
+          )}
+        </span>
         <Icon name="chevron-right" className="filter-chevron" />
       </button>
       {expanded ? (
-        <div id={`${id}-options`} className="filter-options" role="listbox" aria-label={label}>
+        <div
+          ref={list}
+          id={`${id}-options`}
+          popover="manual"
+          style={position}
+          className="filter-options filter-options-content"
+          role="listbox"
+          aria-label={label}
+        >
           {options.map((option, index) => (
             <div
               id={`${id}-option-${index}`}
@@ -126,7 +157,13 @@ export function FilterDropdown({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => choose(index)}
             >
-              <span>{option.label}</span>
+              <span>
+                {option.color || option.badge ? (
+                  <Badge label={option.label} color={option.color} />
+                ) : (
+                  option.label
+                )}
+              </span>
               {option.value === value ? (
                 <span className="filter-check" aria-hidden="true">
                   ✓

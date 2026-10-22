@@ -8,3 +8,16 @@ src-tauri/gen/
 !.env.example
 
 .local/
+
+# Incomplete project transactions and temporary writes are local recovery data.
+**/.worktree-transaction.json
+**/.worktree-save-*
+**/.worktree-init-*/
+**/.worktree-reset.json
+**/.worktree-reset-data-*/
+
+# Local development decisions and pre-reset notes (keep files locally).
+/docs/adr/
+/docs/DEVELOPMENT.md
+/docs/PROJECT_FORMAT.md
+/docs/PROJECT_RESET_NOTES.md

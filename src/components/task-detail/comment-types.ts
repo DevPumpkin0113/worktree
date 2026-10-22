@@ -1,12 +1,10 @@
-export interface Comment {
-  author: string;
-  text: string;
-  time: string;
-  sample: boolean;
-}
 export interface Thread {
   tab: 'info' | 'comments';
   draft: string;
-  comments: Comment[];
   feedback: string;
+  error: boolean;
+  busy: boolean;
+  editing?: { id: string; author: string; text: string; expected: string };
+  replying?: { id: string; number: number; author: string; text: string };
+  deleting?: { id: string; expected: string };
 }

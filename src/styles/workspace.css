@@ -1,5 +1,9 @@
 :root {
   --workspace-nav-width: 208px;
+  --workspace-nav-padding: 16px;
+  --workspace-content-padding: 24px;
+  --workspace-top-gap: 12px;
+  --titlebar-control-width: 48px;
 }
 .workspace-nav {
   position: fixed;
@@ -9,7 +13,7 @@
     var(--document-dock-height) + var(--statusbar-height) + var(--problems-panel-height)
   );
   width: var(--workspace-nav-width);
-  padding: 24px 14px;
+  padding: var(--workspace-top-gap) var(--workspace-nav-padding) 16px;
   background: var(--color-sidebar);
   border-right: 1px solid var(--color-header-titlebar-border-bottom);
   display: flex;
@@ -68,6 +72,7 @@ main#workspace {
   max-width: none;
   margin-left: var(--workspace-nav-width);
   margin-right: 0;
+  padding: var(--workspace-top-gap) var(--workspace-content-padding) 16px;
 }
 body:has(#detail.sidebar[open]) main#workspace {
   width: calc(100% - var(--workspace-nav-width) - var(--detail-panel-width));
@@ -76,11 +81,12 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .workspace-page-heading {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 15px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -95,16 +101,26 @@ body:has(#detail.sidebar[open]) main#workspace {
   color: var(--color-workspace-page-heading-p-color);
 }
 
+#content:has(> .all-tasks) {
+  display: flex;
+  flex-direction: column;
+}
 .all-tasks {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 .all-tasks table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
   font-size: 12px;
   text-align: left;
 }
 .all-tasks th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   color: var(--color-detail-fact-span-color);
   background: var(--color-all-tasks-th-background);
   font-size: 10px;
@@ -117,37 +133,25 @@ body:has(#detail.sidebar[open]) main#workspace {
   border-bottom: 1px solid var(--color-tag-background);
   white-space: nowrap;
 }
-.all-tasks td:first-child {
-  width: 65%;
+.all-tasks .all-task-id {
+  white-space: nowrap;
+}
+.all-tasks .all-task-title {
+  width: 55%;
+  min-width: 160px;
   white-space: normal;
 }
-.all-task-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  border: 0;
-  padding: 6px 0;
-  background: transparent;
-  text-align: left;
-  font-size: 12px;
-  border-radius: 4px;
+.all-task-row {
+  cursor: pointer;
 }
-.all-task-link:hover {
-  background: var(--color-recent-files-button-hover-background);
-  color: var(--color-primary);
+.all-task-row:hover > td,
+.all-task-row:focus-visible > td {
+  background: var(--color-task-card-hover-background);
 }
-.all-task-link .id {
-  font-size: 10px;
-  flex-shrink: 0;
+.all-task-row.detail-selected > td {
+  background: var(--color-selection);
 }
-.all-task-type {
-  font-size: 9px;
-  color: var(--color-text-secondary);
-  background: var(--color-detail-preview-tabs-button-span-background);
-  padding: 2px 5px;
-  border-radius: 4px;
-}
+
 .analytics-intro {
   padding: 22px 12px 28px;
 }
@@ -213,12 +217,11 @@ body:has(#detail.sidebar[open]) main#workspace {
 @media (max-width: 900px) {
   :root {
     --workspace-nav-width: 164px;
-  }
-  .workspace-nav {
-    padding: 20px 8px;
+    --workspace-nav-padding: 8px;
+    --workspace-content-padding: 16px;
   }
   .workspace-page-heading {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .workspace-page-heading h2 {
     font-size: 18px;
@@ -258,6 +261,7 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .workspace-nav-collapsed {
   --workspace-nav-width: 64px;
+  --workspace-nav-padding: 8px;
 }
 .workspace-nav-collapsed .workspace-nav {
   padding-inline: 8px;
@@ -322,9 +326,21 @@ body:has(#detail.sidebar[open]) main#workspace {
   stroke-linejoin: round;
 }
 
+.workspace-progress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  flex: 0 1 440px;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: auto;
+}
+.workspace-progress-actions .compact-progress {
+  flex: 1 1 150px;
+  min-width: 0;
+}
 .compact-progress {
-  flex: 0 1 190px;
-  min-width: 145px;
   font-size: 11px;
   color: var(--color-text-secondary);
 }
@@ -366,17 +382,21 @@ body:has(#detail.sidebar[open]) main#workspace {
   background: var(--color-primary);
   border-radius: 4px;
 }
-@media (max-width: 600px) {
-  .workspace-page-heading {
-    flex-wrap: wrap;
-  }
-  .compact-progress {
-    flex-basis: 170px;
-  }
-}
 
 #workspaceTools {
   align-items: center;
+  min-height: 42px;
+}
+#workspaceTools .filter-trigger {
+  min-height: 42px;
+}
+.workspace-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+  max-width: 100%;
 }
 .task-add-button {
   display: inline-flex;
@@ -395,13 +415,24 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 
 .workspace-create-actions {
-  margin-left: auto;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  flex: 1 1 180px;
+  min-width: 0;
 }
 .workspace-create-actions .task-add-button {
+  width: 100%;
+  min-width: 0;
   margin-left: 0;
+  padding-inline: 8px;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+.workspace-create-actions .task-add-button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 .milestone-label {
   font-size: 10px;
@@ -420,7 +451,7 @@ body:has(#detail.sidebar[open]) main#workspace {
   font-size: 11px;
   color: var(--color-text-secondary);
 }
-.milestone-summary progress {
+.task-count-progress progress {
   width: 100px;
   height: 5px;
   accent-color: var(--color-primary);
@@ -430,4 +461,103 @@ body:has(#detail.sidebar[open]) main#workspace {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+
+.task-count-progress {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.unassigned-tasks .task-count-progress {
+  margin-left: 12px;
+}
+
+/* Share the sidebar width and colors while keeping the titlebar a separate region. */
+.titlebar .title-drag {
+  justify-content: flex-start;
+  padding-inline: 16px;
+}
+.titlebar-search {
+  position: relative;
+  display: block;
+  flex: 0 1 300px;
+  min-width: 0;
+  max-width: 100%;
+}
+.titlebar-search input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 3px 10px 3px 28px;
+  border-radius: 6px;
+  background: var(--color-nav-selected);
+  font-size: 12px;
+  user-select: text;
+}
+.titlebar-search > svg {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+.titlebar-search input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.titlebar-workspace {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 var(--workspace-nav-width);
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--workspace-nav-padding);
+  background: var(--color-sidebar);
+  border-right: 1px solid var(--color-header-titlebar-border-bottom);
+}
+.titlebar-workspace .header-actions-left {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.workspace-nav-collapsed .titlebar-workspace {
+  justify-content: center;
+  padding: 0;
+}
+
+.titlebar-workspace .app-mark {
+  margin-inline: 6px;
+}
+.titlebar-workspace .header-actions-left button {
+  width: 32px;
+  height: 30px;
+}
+.titlebar > .header-actions {
+  padding: 0 4px;
+  margin: 0;
+}
+.titlebar > .header-actions button {
+  width: calc(var(--titlebar-control-width) - 8px);
+  height: 30px;
+}
+
+.workspace-home {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.workspace-home[hidden] {
+  display: none;
+}
+.workspace-home > .tools {
+  flex-shrink: 0;
 }

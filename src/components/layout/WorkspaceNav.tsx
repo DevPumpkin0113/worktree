@@ -1,9 +1,14 @@
+import { worktreeReleaseStage } from '../../domain/release-name';
 import { messages } from '../../i18n/messages';
 import { version } from '../../../package.json';
+import { InitializationSteps } from '../project/InitializationSteps';
 import { ProjectEntry } from '../project/ProjectEntry';
 import { Icon } from '../shared/Icon';
 import type { Page } from '../../app/types';
 export const PAGES: Record<Page, [string, string]> = {
+  get initialize() {
+    return [messages.initializeProject, messages.initializationDescription] as [string, string];
+  },
   get project() {
     return [messages.projectManagement, messages.projectManagementDescription] as [string, string];
   },
@@ -18,16 +23,14 @@ export const PAGES: Record<Page, [string, string]> = {
   },
 };
 const PAGE_ICONS: Record<Page, string> = {
+  initialize: 'project',
   project: 'project',
   board: 'workspace',
   tasks: 'task-list',
   analytics: 'insights',
 };
 export function WorkspaceNav({
-  projectPath,
-  files,
-  activePath,
-  onFile,
+  initializationStep,
   projectTitle,
   onManage,
   page,
@@ -36,10 +39,7 @@ export function WorkspaceNav({
   onCollapse,
   inert,
 }: {
-  projectPath: string | null;
-  files: string[];
-  activePath: string | null;
-  onFile: (path: string) => void;
+  initializationStep: number;
   projectTitle: string | null;
   onManage: () => void;
   page: Page;
@@ -56,39 +56,35 @@ export function WorkspaceNav({
       aria-label={messages.workspace}
       inert={inert}
     >
-      <ProjectEntry
-        projectPath={projectPath}
-        files={files}
-        activePath={activePath}
-        onFile={onFile}
-        title={projectTitle}
-        onManage={onManage}
-        resizable={!collapsed && !inert}
-        disabled={!projectTitle}
-        active={page === 'project'}
-      />
-      <p className="workspace-nav-label">{messages.workspace}</p>
-      <nav aria-label={messages.workspaceMenu}>
-        {(['board', 'tasks', 'analytics'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            data-workspace-page={key}
-            aria-label={PAGES[key][0]}
-            title={PAGES[key][0]}
-            aria-current={key === page ? 'page' : undefined}
-            onClick={() => onPage(key)}
-          >
-            <span className="workspace-nav-icon" aria-hidden="true">
-              <Icon name={PAGE_ICONS[key]} />
-            </span>
-            <span className="workspace-nav-text">{PAGES[key][0]}</span>
-          </button>
-        ))}
-      </nav>
+      <ProjectEntry title={projectTitle} onManage={onManage} active={page === 'project'} />
+      {page === 'initialize' ? (
+        <InitializationSteps step={initializationStep} />
+      ) : (
+        <>
+          <p className="workspace-nav-label">{messages.workspace}</p>
+          <nav aria-label={messages.workspaceMenu}>
+            {(['board', 'tasks', 'analytics'] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                data-workspace-page={key}
+                aria-label={PAGES[key][0]}
+                title={PAGES[key][0]}
+                aria-current={key === page ? 'page' : undefined}
+                onClick={() => onPage(key)}
+              >
+                <span className="workspace-nav-icon" aria-hidden="true">
+                  <Icon name={PAGE_ICONS[key]} />
+                </span>
+                <span className="workspace-nav-text">{PAGES[key][0]}</span>
+              </button>
+            ))}
+          </nav>
+        </>
+      )}
       <div className="workspace-nav-footer">
         <div className="workspace-footer-copy">
-          Worktree<span>v{version}</span>
+          {worktreeReleaseStage(version)} Worktree<span>{version}</span>
         </div>
         <button
           id="workspaceCollapse"

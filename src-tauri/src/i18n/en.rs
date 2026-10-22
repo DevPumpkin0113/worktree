@@ -6,7 +6,6 @@ pub const CHECK_UPDATE_FIRST: &str = "Check for updates first.";
 pub fn cleanup_failed(error: impl Display) -> String {
     format!("Could not clean up temporary update files: {error}")
 }
-pub const DOCUMENT_TOO_LARGE: &str = "Only document files up to 5 MB can be opened.";
 pub fn install_confirm(version: impl Display) -> String {
     format!("Download and install Worktree {version}?\nThe app will close when installation starts. Restart Worktree after installation.")
 }
@@ -33,7 +32,6 @@ pub const RELEASE_MISMATCH: &str =
     "The release and installer information do not match. Check for updates again.";
 pub const RELEASE_READ_FAILED: &str = "Could not read release information.";
 pub const RELEASE_VERSION_MISSING: &str = "The release version is missing.";
-pub const SELECT_WBS: &str = "Select a WBS document file.";
 pub const SESSION_FOLDER_MISSING: &str = "Could not find the session folder.";
 pub fn session_read_failed(error: impl Display) -> String {
     format!("Could not read the session file. The original file is preserved: {error}")
@@ -68,9 +66,23 @@ pub const UPDATE_TITLE: &str = "Worktree update";
 pub const VERIFICATION_FAILED: &str =
     "Download or signature verification failed. Nothing was installed. Try again.";
 
-pub const PROJECT_FOLDER_REQUIRED: &str = "Select a project folder.";
-pub const PROJECT_SCAN_LIMIT: &str =
-    "The project scan limit was exceeded. Select a smaller folder.";
 pub const OPEN_PROJECT: &str = "Open project folder";
 
-pub const DOCUMENT_READONLY: &str = "Cannot save a read-only document.";
+pub const INVALID_PROJECT: &str = "Check the project configuration, paths, and document format.";
+pub const PROJECT_RECOVERY_CONFLICT: &str = "Recovery stopped because files were edited after an interrupted save. Resolve the conflict before continuing.";
+
+pub const SELECT_PROJECT_PARENT: &str = "Select a parent folder inside the project.";
+
+pub const RESET_NAME_MISMATCH: &str = "The project name does not match.";
+
+pub const RESET_OPERATIONS: [&str; 9] = [
+    "Failed to read reset file",
+    "Failed to inspect reset target",
+    "Failed to create reset staging directory",
+    "Failed to move reset data directory",
+    "Failed to delete reset file",
+    "Failed to delete reset directory",
+    "Failed to save reset journal",
+    "Failed to restore reset data",
+    "Failed to check reset project snapshot",
+];

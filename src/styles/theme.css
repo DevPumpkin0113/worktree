@@ -2,7 +2,22 @@
 :root,
 :root[data-theme='light'] {
   color-scheme: light;
+  --color-task-card-hover-background: color-mix(
+    in srgb,
+    var(--color-primary) 5%,
+    var(--color-surface)
+  );
+  --color-update-indicator: #e5484d;
+  --color-priority-high: #d73a4a;
+  --color-priority-middle: #eab308;
+  --color-priority-low: #2da44e;
+  --color-comment-reply-selected-background: color-mix(
+    in srgb,
+    var(--color-primary) 10%,
+    var(--color-surface)
+  );
   --color-primary: #176b73; /* 강조색 */
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, #000);
   --color-accent: #267d83; /* 보조 강조색 */
   --color-focus-ring: #176b7333; /* 검색 포커스 링 */
   --color-text: #243249; /* 기본 글자 */
@@ -10,7 +25,7 @@
   --color-text-muted: #718097; /* 안내 글자 */
   --color-canvas: #f3f5f8; /* 앱 배경 */
   --color-surface-muted: #f6f8fa; /* 상세 배경 */
-  --color-titlebar: #f9fafc; /* 타이틀바 */
+  --color-titlebar: var(--color-canvas); /* 콘텐츠 배경과 연결되는 타이틀바 */
   --color-sidebar: #eef2f6; /* 좌측 패널 */
   --color-border-control: #d4dce6; /* 입력 테두리 */
   --color-border: #e0e6ed; /* 카드 테두리 */
@@ -26,7 +41,9 @@
   --color-status-doing-text: #265fa1; /* 진행 글자 */
   --color-status-blocked-bg: #ffe1dd; /* 막힘 배경 */
   --color-status-blocked-text: #aa392c; /* 막힘 글자 */
-  --color-error-focus: #8a3928; /* 오류 포커스 */
+  --color-danger: #dc2626; /* 삭제·초기화 등 위험 동작 */
+  --color-danger-hover: #b91c1c;
+  --color-error-focus: var(--color-danger); /* 오류 강조 */
   --color-window-close-hover: #c42b1c; /* 창 닫기 강조 */
   --color-surface: #fff;
   --color-text-inverse: #fff;
@@ -75,7 +92,6 @@
   --color-view-button-color: #526d70;
   --color-view-button-hover-background: #edf3f4;
   --color-view-button-hover-border-color: #adc6c8;
-  --color-view-button-active-background: #dfecef;
   --color-view-button-active-border-color: #73969a;
   --color-view-button-hover-color: #3f6267;
   --color-task-detail-selected-box-shadow: #26777e;
@@ -151,17 +167,12 @@
   --color-detail-complete-color: #3d866b;
   --color-detail-link-id-color: #6b8993;
   --color-detail-empty-color: #94a0ae;
-  --color-detail-footer-color: #8290a2;
   --color-detail-sidebar-border-left: #d9e2eb;
   --color-detail-sidebar-box-shadow: #14233812;
   --color-detail-preview-tabs-button-span-background: #edf2f5;
-  --color-comments-preview-notice-background: #eff6f7;
-  --color-comments-preview-notice-border: #d8e8ea;
-  --color-comments-preview-notice-color: #3d626a;
-  --color-preview-comment-avatar-background: #e8eff4;
-  --color-preview-comment-avatar-color: #526a7c;
-  --color-preview-comment-content-time-color: #7b8798;
-  --color-preview-sample-background: #f1f4f7;
+  --color-comment-avatar-background: #e8eff4;
+  --color-comment-avatar-color: #526a7c;
+  --color-comment-content-time-color: #7b8798;
   --color-detailresize-hover-background: #267d8366;
   --color-workspace-nav-label-color: #7c8b9d;
   --color-workspace-nav-nav-button-color: #627185;

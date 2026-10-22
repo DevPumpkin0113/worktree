@@ -1,11 +1,15 @@
+import type { OpenDocument } from '../../app/types';
+import { useState, type ReactNode } from 'react';
+import { TaskEditorTitleContext } from './task-editor-title-context';
 import { messages } from '../../i18n/messages';
 import { useDetailDialog } from './use-detail-dialog';
 import { Comments } from './Comments';
 import { DetailTabs } from './DetailTabs';
 import { useCommentThreads } from './use-comment-threads';
 import { TaskInfo } from './TaskInfo';
+import { TaskTimestamps } from './TaskTimestamps';
 import { Icon } from '../shared/Icon';
-import { STATUS_NAMES, TYPE_NAMES, type DetailMode, type WorkModel } from '../../app/types';
+import { STATUS_NAMES, type DetailMode, type WorkModel } from '../../app/types';
 export function TaskDetail({
   model,
   path,
@@ -17,7 +21,22 @@ export function TaskDetail({
   onSelect,
   onClose,
   onEdit,
+  editing,
+  editors,
+  onDelete,
+  documents,
+  source,
+  displayName,
+  onSaveComment,
+  onDeleteComment,
+  onOpenSettings,
 }: {
+  documents: OpenDocument[];
+  source: string;
+  displayName: string;
+  onSaveComment: (expected: string, text: string, id?: string, replyTo?: string) => Promise<void>;
+  onDeleteComment: (expected: string, id: string) => Promise<void>;
+  onOpenSettings: () => void;
   model: WorkModel | null;
   path: string | null;
   id: string | null;
@@ -28,11 +47,16 @@ export function TaskDetail({
   onSelect: (id: string) => void;
   onClose: () => void;
   onEdit: (id: string) => void;
+  editing: boolean;
+  editors: ReactNode;
+  onDelete: (id: string) => void;
 }) {
-  const comments = useCommentThreads();
+  const comments = useCommentThreads(documents);
+  const [titleTarget, setTitleTarget] = useState<HTMLDivElement | null>(null);
   const visible = !!model && !!id && !settingsOpen;
   const row = model?.rows.find((item) => item.id === id);
-  const thread = comments.get(JSON.stringify([path, id]));
+  const taskComments = model?.comments?.filter((comment) => comment.taskId === id) ?? [];
+  const thread = comments.get(path, id);
   const { dialog, header, handle, pressedOutside, isBackdrop } = useDetailDialog({
     visible,
     mode,
@@ -41,10 +65,12 @@ export function TaskDetail({
     collapsed,
     onClose,
   });
+  const Frame = mode === 'tabs' ? 'section' : 'dialog';
   return (
     <>
       <div
         ref={handle}
+        hidden={mode !== 'sidebar'}
         id="detailResize"
         role="separator"
         aria-label={messages.resizeDetail}
@@ -53,11 +79,15 @@ export function TaskDetail({
         tabIndex={0}
         title={messages.resizeDetailHint}
       />
-      <dialog
-        ref={dialog}
+      <Frame
+        ref={mode === 'sidebar' ? dialog : undefined}
+        hidden={mode === 'tabs' && !visible}
+        role={mode === 'tabs' ? 'tabpanel' : undefined}
         id="detail"
-        className={mode === 'sidebar' ? 'sidebar' : ''}
-        aria-labelledby="detailTitle"
+        className={
+          (mode === 'sidebar' ? 'sidebar' : 'task-detail-tab') + (editing ? ' detail-editing' : '')
+        }
+        aria-labelledby={mode === 'tabs' && id ? 'task-tab-' + id : 'detailTitle'}
         onCancel={(event) => {
           event.preventDefault();
           onClose();
@@ -79,7 +109,7 @@ export function TaskDetail({
         }}
       >
         <header ref={header} className="detail-header">
-          <div className="detail-heading">
+          <div className="detail-header-row">
             <div id="detailMeta">
               <button
                 id="detailHide"
@@ -93,76 +123,96 @@ export function TaskDetail({
               </button>
               {row ? (
                 <>
-                  <span className="detail-type">
-                    {row.milestone ? messages.milestone : TYPE_NAMES[row.type]}
-                  </span>
+                  <span className="detail-type">{label(row.id)}</span>
                   <span className={'detail-status ' + row.status}>{STATUS_NAMES[row.status]}</span>
                 </>
               ) : null}
             </div>
-            <h2 id="detailTitle">
-              {row ? (row.milestone ? row.name : label(row.id) + ' · ' + row.name) : ''}
-            </h2>
+            <div className="detail-header-actions">
+              {row && !editing ? (
+                <button
+                  id="taskEditOpen"
+                  type="button"
+                  className="task-edit-open"
+                  onClick={() => onEdit(row.id)}
+                >
+                  {messages.edit}
+                </button>
+              ) : null}
+              <button
+                id="close"
+                style={editing ? { visibility: 'hidden' } : undefined}
+                aria-hidden={editing || undefined}
+                tabIndex={editing ? -1 : undefined}
+                className="modal-close"
+                aria-label={messages.closeTaskDetail}
+                title={messages.close}
+                onClick={onClose}
+              >
+                <Icon name="close" />
+              </button>
+            </div>
           </div>
-
-          {row ? (
-            <button
-              id="taskEditOpen"
-              type="button"
-              className="task-edit-open"
-              onClick={() => onEdit(row.id)}
-            >
-              {row.milestone ? messages.editMilestone : messages.editTask}
-            </button>
-          ) : null}
-          <button
-            id="close"
-            className="modal-close"
-            aria-label={messages.closeTaskDetail}
-            title={messages.close}
-            onClick={onClose}
-          >
-            <Icon name="close" />
-          </button>
+          <div className="detail-title-row">
+            {editing ? (
+              <div id="detailTitle" className="detail-title-editor" ref={setTitleTarget} />
+            ) : (
+              <h2 id="detailTitle">{row?.name ?? ''}</h2>
+            )}
+            {row ? <TaskTimestamps row={row} /> : null}
+          </div>
         </header>
         <div id="detailBody">
+          <TaskEditorTitleContext.Provider value={titleTarget}>
+            {editors}
+          </TaskEditorTitleContext.Provider>
           {row && model ? (
             <>
-              <DetailTabs
-                thread={thread}
-                onChange={(tab) => {
-                  thread.tab = tab;
-                  comments.update();
-                }}
-              />
+              {!editing ? (
+                <DetailTabs
+                  thread={thread}
+                  commentCount={taskComments.filter((comment) => !comment.deleted).length}
+                  onChange={(tab) => {
+                    thread.tab = tab;
+                    comments.update();
+                  }}
+                />
+              ) : null}
               <section
                 id="previewInfoPanel"
                 role="tabpanel"
                 aria-labelledby="previewInfoTab"
-                hidden={thread.tab !== 'info'}
+                hidden={editing || thread.tab !== 'info'}
               >
-                <TaskInfo row={row} model={model} label={label} onSelect={onSelect} />
+                <TaskInfo
+                  row={row}
+                  model={model}
+                  label={label}
+                  onSelect={onSelect}
+                  onDelete={onDelete}
+                />
               </section>
               <section
                 id="previewCommentsPanel"
                 role="tabpanel"
                 aria-labelledby="previewCommentsTab"
-                hidden={thread.tab !== 'comments'}
+                hidden={editing || thread.tab !== 'comments'}
               >
                 <Comments
                   thread={thread}
-                  author={comments.author}
-                  onAuthor={comments.setAuthor}
+                  comments={taskComments}
+                  source={source}
+                  author={displayName}
+                  onSave={onSaveComment}
+                  onDelete={onDeleteComment}
+                  onOpenSettings={onOpenSettings}
                   onChange={comments.update}
                 />
               </section>
             </>
           ) : null}
         </div>
-        <div className="detail-footer">
-          <p>{messages.detailReadOnlyHint}</p>
-        </div>
-      </dialog>
+      </Frame>
     </>
   );
 }

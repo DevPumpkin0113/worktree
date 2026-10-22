@@ -15,15 +15,17 @@ pub struct Settings {
     detail_mode: String,
     auto_check_updates: bool,
     language: String,
+    display_name: String,
 }
 impl Default for Settings {
     fn default() -> Self {
         Self {
             schema_version: 2,
             id_separator: "none".into(),
-            detail_mode: "sidebar".into(),
+            detail_mode: "tabs".into(),
             auto_check_updates: true,
             language: "ko".into(),
+            display_name: String::new(),
         }
     }
 }
@@ -34,7 +36,10 @@ impl Settings {
         }
         if !["ko", "en"].contains(&self.language.as_str())
             || !["none", "hyphen"].contains(&self.id_separator.as_str())
-            || !["modal", "sidebar"].contains(&self.detail_mode.as_str())
+            || !["modal", "tabs", "sidebar"].contains(&self.detail_mode.as_str())
+            || self.display_name.trim() != self.display_name
+            || self.display_name.encode_utf16().count() > 40
+            || self.display_name.contains(['\r', '\n', '\0'])
         {
             return Err(crate::i18n::invalid_settings().into());
         }
@@ -201,6 +206,43 @@ pub fn save_settings(settings: Settings, state: State<SettingsStore>) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn tab_detail_mode_round_trips_and_legacy_modal_remains_readable() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = SettingsStore::at(dir.path());
+        let mut settings = Settings::default();
+        settings.detail_mode = "tabs".into();
+        store.write(&settings).unwrap();
+        assert_eq!(store.read().unwrap().settings.unwrap(), settings);
+        settings.detail_mode = "modal".into();
+        assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn display_name_defaults_and_round_trip_preserve_old_settings() {
+        let root = tempfile::tempdir().unwrap();
+        let store = SettingsStore::at(root.path());
+        fs::write(
+            &store.path,
+            r#"{"schemaVersion":2,"language":"en","detailMode":"modal"}"#,
+        )
+        .unwrap();
+        let mut settings = store.read().unwrap().settings.unwrap();
+        assert!(settings.display_name.is_empty());
+        settings.display_name = "박대호".into();
+        store.write(&settings).unwrap();
+        assert_eq!(store.read().unwrap().settings.unwrap(), settings);
+        let bytes = fs::read(&store.path).unwrap();
+        for invalid in [
+            " padded".to_string(),
+            "line\nbreak".to_string(),
+            "x".repeat(41),
+        ] {
+            settings.display_name = invalid;
+            assert!(store.write(&settings).is_err());
+            assert_eq!(fs::read(&store.path).unwrap(), bytes);
+        }
+    }
     #[test]
     fn language_migrates_from_v1_and_roundtrips_in_v2() {
         let dir = tempfile::tempdir().unwrap();

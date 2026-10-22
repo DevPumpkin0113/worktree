@@ -3,8 +3,13 @@ import type { GroupSummary } from '../domain/group-summary';
 const effortNumber = (value: number) =>
   value.toLocaleString('ko-KR', { maximumSignificantDigits: 15 });
 
-export function groupSchedule(summary: GroupSummary) {
-  const range = summary.start ? summary.start + ' ~ ' + summary.end : messages.unscheduled;
+export function groupSchedule(
+  summary: GroupSummary,
+  date: (value: string) => string = (value) => value,
+) {
+  const range = summary.start
+    ? date(summary.start) + ' ~ ' + date(summary.end ?? '-')
+    : messages.unscheduled;
   return range + (summary.start && summary.missingDates ? messages.includesUnscheduled : '');
 }
 export function groupEffort(summary: GroupSummary) {

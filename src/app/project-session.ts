@@ -16,7 +16,15 @@ export function projectSession(state: WorkspaceSnapshot): Session {
   return {
     schemaVersion: 2,
     recentFiles: [],
-    tabs: documents.map(({ path, view, ganttUnit }) => ({ path, view, ganttUnit })),
+    tabs: documents.map(({ path, view, ganttUnit, taskTabs, activeTaskTab, creationTabs }) => ({
+      path,
+      view,
+      ganttUnit,
+      taskTabs: (taskTabs ?? []).filter((id) => !creationTabs?.some((tab) => tab.id === id)),
+      activeTaskTab: creationTabs?.some((tab) => tab.id === activeTaskTab)
+        ? null
+        : (activeTaskTab ?? null),
+    })),
     activePath: state.activePath,
     projects: state.projects.map(({ path, activePath }) => ({ path, activePath })),
     activeProjectPath: state.activeProjectPath,

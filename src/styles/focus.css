@@ -1,11 +1,48 @@
-/* Low specificity lets controls keep intentional local focus treatments. */
-:where(:focus-visible) {
-  outline: 2px solid var(--color-primary);
+/* Scroll surfaces and other containers do not need an enclosing focus ring. */
+:focus-visible {
+  outline: none;
+}
+
+:is(input, textarea, select):focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-focus-ring);
+}
+:is(input[type='checkbox'], input[type='radio']):focus-visible {
+  outline: 1px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-#search:focus {
-  border-color: var(--color-primary);
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 1px;
+:is(button, [role='button'], [role='tab'], [role='option'], a[href], summary):focus-visible {
+  background: var(--color-nav-selected);
+  color: var(--color-primary);
+}
+
+#settings .settings-menu-item:focus-visible,
+.header-actions button:focus-visible,
+.window-controls button:focus-visible {
+  background: var(--color-nav-selected);
+  color: var(--color-primary);
+}
+.statusbar-error:focus-visible {
+  background: var(--color-statusbar-error-hover-background);
+  color: var(--color-statusbar-error-hover-color);
+}
+.graph-node:focus {
+  outline: none;
+}
+.graph-node:focus-visible rect {
+  fill: var(--color-nav-selected);
+}
+.task-delete-open:focus-visible:not(:disabled),
+.task-delete:focus-visible:not(:disabled),
+.project-reset-button:focus-visible:not(:disabled) {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+  color: var(--color-text-inverse);
+}
+
+.gantt-view :is(.gantt-scroll, .gantt-label, .timeline-row, .unscheduled-list button):focus {
+  outline: none;
+  box-shadow: none;
 }

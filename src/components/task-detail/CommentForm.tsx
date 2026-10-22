@@ -1,85 +1,85 @@
 import { messages } from '../../i18n/messages';
-import type { Thread } from './comment-types';
+import { MAX_COMMENT_LENGTH } from '../../domain/comment-file';
 export function CommentForm({
-  thread,
   author,
-  onAuthor,
+  text,
+  busy,
+  editing = false,
+  canSubmit = true,
   onChange,
+  onSubmit,
+  onCancel,
+  onOpenSettings,
 }: {
-  thread: Thread;
   author: string;
-  onAuthor: (author: string) => void;
-  onChange: () => void;
+  text: string;
+  busy: boolean;
+  editing?: boolean;
+  canSubmit?: boolean;
+  onChange: (text: string) => void;
+  onSubmit: () => Promise<void>;
+  onCancel?: () => void;
+  onOpenSettings?: () => void;
 }) {
+  const id = editing ? 'commentEditContent' : 'commentContent';
   return (
     <form
-      className="preview-comment-form"
+      autoComplete="off"
+      className="comment-form"
       onSubmit={(event) => {
         event.preventDefault();
-        const name = author.trim(),
-          text = thread.draft.trim();
-        if (!name || !text || name.length > 40 || text.length > 2000) {
-          thread.feedback = messages.commentRequired;
-          onChange();
-          return;
-        }
-        thread.comments.push({
-          author: name,
-          text,
-          time: new Intl.DateTimeFormat('ko-KR', {
-            month: 'numeric',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }).format(new Date()),
-          sample: false,
-        });
-        thread.draft = '';
-        thread.feedback = messages.commentAdded;
-        onChange();
+        if (!busy && canSubmit && author && text.trim()) void onSubmit();
       }}
     >
-      <div className="preview-composer-heading">
-        <h3>{messages.writeComment}</h3>
-        <span>{messages.leaveOpinion}</span>
+      <div className="comment-composer-heading">
+        <h3>{editing ? messages.editComment : messages.writeComment}</h3>
+        <div className="comment-author">
+          <span>
+            {messages.authorName}: {author || messages.displayNameMissing}
+          </span>
+          {!editing ? (
+            <button type="button" disabled={busy} onClick={onOpenSettings}>
+              {messages.displayNameSettings}
+            </button>
+          ) : null}
+        </div>
       </div>
-      <label htmlFor="previewAuthor">{messages.authorName}</label>
-      <input
-        id="previewAuthor"
-        name="author"
-        maxLength={40}
-        value={author}
-        onChange={(event) => onAuthor(event.target.value)}
-        required
-        autoComplete="off"
-      />
-      <label htmlFor="previewComment">{messages.content}</label>
+      {!author ? <p className="comment-name-hint">{messages.displayNameRequired}</p> : null}
       <textarea
-        id="previewComment"
+        id={id}
         name="comment"
-        rows={4}
-        maxLength={2000}
+        aria-label={messages.content}
+        rows={2}
+        maxLength={MAX_COMMENT_LENGTH}
         required
+        disabled={busy || !author}
         placeholder={messages.commentPlaceholder}
-        value={thread.draft}
-        onChange={(event) => {
-          thread.draft = event.target.value;
-          onChange();
-        }}
+        value={text}
+        onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
-          if (event.ctrlKey && event.key === 'Enter') {
+          if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key === 'Enter' &&
+            !event.nativeEvent.isComposing
+          ) {
             event.preventDefault();
             event.currentTarget.form?.requestSubmit();
           }
         }}
       />
-      <div className="preview-composer-actions">
+      <div className="comment-composer-actions">
         <small>{messages.commentShortcut}</small>
-        <button type="submit">{messages.submitComment}</button>
+        <div className="comment-edit-actions">
+          {onCancel ? (
+            <button type="button" disabled={busy} onClick={onCancel}>
+              {messages.cancelEdit}
+            </button>
+          ) : null}
+          <button type="submit" disabled={busy || !canSubmit || !author || !text.trim()}>
+            {busy ? messages.savingTask : editing ? messages.saveTask : messages.submitComment}
+          </button>
+        </div>
       </div>
-      <p className="preview-comment-feedback" role="status" aria-live="polite">
-        {thread.feedback}
-      </p>
     </form>
   );
 }

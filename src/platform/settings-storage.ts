@@ -1,31 +1,37 @@
+import { validDisplayName } from '../domain/display-name';
 import { messages, isLanguage, type Language } from '../i18n/messages';
 import type { Platform, SettingsStorage } from '../app/types';
 interface SavedSettings {
+  displayName: string;
   language: Language;
   schemaVersion: number;
   idSeparator: 'none' | 'hyphen';
-  detailMode: 'sidebar' | 'modal';
+  detailMode: 'sidebar' | 'tabs';
   autoCheckUpdates: boolean;
 }
 type Field = Exclude<keyof SavedSettings, 'schemaVersion'>;
 const keys: Record<string, Field> = {
   'worktree.language': 'language',
+  'worktree.display-name': 'displayName',
   'worktree.id-separator': 'idSeparator',
   'worktree.detail-mode': 'detailMode',
   'worktree.autoCheckUpdates': 'autoCheckUpdates',
 };
 const defaults = (): SavedSettings => ({
   schemaVersion: 2,
+  displayName: '',
   language: 'ko',
   idSeparator: 'none',
-  detailMode: 'sidebar',
+  detailMode: 'tabs',
   autoCheckUpdates: true,
 });
 function valueFor(field: Field, value: string) {
+  if (field === 'displayName' && validDisplayName(value, true)) return value;
   if (field === 'language' && isLanguage(value)) return value;
   if (field === 'idSeparator' && ['none', 'hyphen'].includes(value))
     return value as SavedSettings[Field];
-  if (field === 'detailMode' && ['modal', 'sidebar'].includes(value))
+  if (field === 'detailMode' && value === 'modal') return 'tabs';
+  if (field === 'detailMode' && ['tabs', 'sidebar'].includes(value))
     return value as SavedSettings[Field];
   if (field === 'autoCheckUpdates' && ['true', 'false'].includes(value)) return value === 'true';
   throw Error(messages.invalidSetting);
@@ -67,7 +73,15 @@ export function createSettingsStorage({
       );
       storage.warning = result.warning || '';
       if (result.settings) {
-        settings = { ...defaults(), ...result.settings, schemaVersion: 2 };
+        settings = {
+          ...defaults(),
+          ...result.settings,
+          schemaVersion: 2,
+          detailMode: valueFor(
+            'detailMode',
+            result.settings.detailMode ?? 'tabs',
+          ) as SavedSettings['detailMode'],
+        };
         return;
       }
       const migrated = defaults();
@@ -75,7 +89,7 @@ export function createSettingsStorage({
       try {
         const legacy = legacyStorage();
         for (const [key, field] of Object.entries(keys)) {
-          if (field === 'language') continue;
+          if (field === 'language' || field === 'displayName') continue;
           const value = legacy.getItem(key);
           if (value !== null && value !== undefined) {
             try {

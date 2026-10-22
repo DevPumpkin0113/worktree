@@ -86,9 +86,7 @@
   font-weight: 600;
   box-shadow: inset 3px 0 var(--color-settings-settings-menu-item-active-box-shadow);
 }
-#settings .settings-menu-item:focus-visible {
-  outline-offset: -2px;
-}
+
 .settings-brand {
   display: flex;
   align-items: center;
@@ -154,13 +152,7 @@
   margin: 0;
   line-height: 1.8;
 }
-#settings .setting-row select {
-  width: 100%;
-  font-size: 13px;
-  padding: 9px 11px;
-  min-width: 0;
-  background: var(--color-settings-settings-topbar-background);
-}
+
 .settings-preview {
   margin: 20px 0 0;
   border-top: 1px solid var(--color-settings-preview-border-top);
@@ -500,4 +492,72 @@ header.titlebar {
 #updatePreferenceError {
   color: var(--color-updatepreferenceerror-color);
   font-size: 12px;
+}
+
+.display-name-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.display-name-controls input {
+  width: 180px;
+  min-width: 0;
+  max-width: 100%;
+}
+.display-name-controls button {
+  flex-shrink: 0;
+}
+.display-name-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-button-container {
+  position: relative;
+}
+#settingsOpen {
+  position: relative;
+}
+.settings-update-dot {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-update-indicator);
+  pointer-events: none;
+}
+.settings-update-notice {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  max-width: calc(100vw - 16px);
+  padding: 14px 40px 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 8px 24px var(--color-filter-options-box-shadow);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
+}
+.settings-update-notice strong {
+  display: block;
+  font-size: 13px;
+}
+.settings-update-notice p {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+}
+.titlebar .settings-update-notice .update-notice-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
 }

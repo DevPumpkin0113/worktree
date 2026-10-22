@@ -1,12 +1,20 @@
-import { updateTaskSource, type TaskDraft } from '../domain/task-editing';
-import { pathKey, folderName, withinProject } from '../domain/project-paths';
+import { saveProjectComment, deleteProjectComment } from '../domain/comment-editing';
+import {
+  projectRuleValues,
+  type ProjectInitializationDraft,
+} from '../domain/project-initialization';
+import { updateProjectSettings, type ProjectSettingsDraft } from '../domain/project-settings';
+import { deleteProjectTask } from '../domain/task-deletion';
+import type { DeleteOptions } from '../domain/task-deletion';
+import { updateProjectTask, type ProjectTaskDraft } from '../domain/task-editing';
+import { serializeSource, readSource } from '../domain/project-source';
+import { parseProject } from '../domain/project-document';
+import { pathKey, folderName } from '../domain/project-paths';
 import { projectSession } from './project-session';
 import type { Session } from '../platform/session-storage';
 import { messages, setLanguage, isLanguage } from '../i18n/messages';
 import { ko } from '../i18n/ko';
-import { readSeparator, saveSeparator } from '../domain/id-display';
 import { readDetailMode, saveDetailMode } from '../domain/detail-settings';
-import { parseWorkspaceWbs as parseWbs } from '../domain/wbs-migration';
 import { describeDocumentErrors } from '../domain/document-errors';
 import { createSettingsStorage } from '../platform/settings-storage';
 import {
@@ -41,14 +49,16 @@ export class WorkspaceStore {
     query: '',
     owner: 'all',
     status: 'all',
+    taskType: 'all',
+    priority: 'all',
     selectedId: null,
     settingsOpen: false,
     problemsOpen: false,
     operationProblems: [],
     settings: {
       language: 'ko',
-      separator: 'none',
-      detailMode: 'sidebar',
+      displayName: '',
+      detailMode: 'tabs',
       ready: false,
       error: '',
       saving: false,
@@ -78,11 +88,57 @@ export class WorkspaceStore {
     };
   };
   private patch(change: Partial<WorkspaceSnapshot>) {
+    const previousState = this.state;
+    const previousDocument = previousState.documents.find(
+      (doc) => doc.path === previousState.activePath,
+    );
+    const previousMode =
+      previousDocument?.forceTaskTabs || previousDocument?.creationTabs?.length
+        ? 'tabs'
+        : previousState.settings.detailMode;
     this.state = { ...this.state, ...change };
+    if (
+      this.detailMode === 'tabs' &&
+      ('selectedId' in change || (previousMode !== 'tabs' && previousState.settings.ready))
+    ) {
+      const id = this.state.selectedId;
+      this.state = {
+        ...this.state,
+        documents: this.state.documents.map((doc) => {
+          if (doc.path !== this.state.activePath) return doc;
+          const tabs = doc.taskTabs ?? [];
+          return {
+            ...doc,
+            activeTaskTab: id,
+            taskTabs: id && !tabs.includes(id) ? [...tabs, id] : tabs,
+          };
+        }),
+      };
+    }
     for (const listener of this.listeners) listener();
+    if (
+      previousState.ready &&
+      this.state.ready &&
+      this.state.documents.some((doc) => {
+        const previous = previousState.documents.find((item) => item.path === doc.path);
+        const ids = doc.taskTabs ?? [],
+          oldIds = previous?.taskTabs ?? [];
+        return (
+          (doc.activeTaskTab ?? null) !== (previous?.activeTaskTab ?? null) ||
+          ids.length !== oldIds.length ||
+          ids.some((id, index) => id !== oldIds[index])
+        );
+      })
+    )
+      this.saveSession();
   }
   get active() {
     return this.state.documents.find((doc) => doc.path === this.state.activePath) ?? null;
+  }
+  get detailMode() {
+    return this.active?.forceTaskTabs || this.active?.creationTabs?.length
+      ? 'tabs'
+      : this.state.settings.detailMode;
   }
   get activeProject() {
     return (
@@ -98,6 +154,8 @@ export class WorkspaceStore {
   initialize() {
     return (this.initialized ??= (async () => {
       await Promise.all([this.initializeSettings(), this.restoreSession()]);
+      if (this.state.settings.detailMode === 'tabs' && this.active?.activeTaskTab)
+        this.selectWork(this.active.activeTaskTab);
     })());
   }
   private async initializeSettings() {
@@ -109,7 +167,7 @@ export class WorkspaceStore {
       this.patch({
         settings: {
           language,
-          separator: readSeparator(this.storage),
+          displayName: this.storage.getItem('worktree.display-name') ?? '',
           detailMode: readDetailMode(this.storage),
           ready: true,
           error: this.storage.warning,
@@ -127,12 +185,26 @@ export class WorkspaceStore {
   }
   private document(path: string, text: string, previous?: OpenDocument): OpenDocument {
     try {
-      const model = parseWbs(text);
+      text = serializeSource(readSource(text));
+      const model = parseProject(text);
       return {
         path,
         text,
         model,
         problems: [],
+        creationTabs: previous?.creationTabs?.map((tab) => ({ ...tab, text })),
+        forceTaskTabs: previous?.forceTaskTabs,
+        taskTabs:
+          previous?.taskTabs?.filter(
+            (id) =>
+              model.rows.some((row) => row.id === id) ||
+              previous.creationTabs?.some((tab) => tab.id === id),
+          ) ?? [],
+        activeTaskTab:
+          model.rows.some((row) => row.id === previous?.activeTaskTab) ||
+          previous?.creationTabs?.some((tab) => tab.id === previous.activeTaskTab)
+            ? previous!.activeTaskTab
+            : null,
         view: previous?.view ?? 'tree',
         ganttUnit: previous?.ganttUnit ?? 'day',
         graphFocus: model.rows.some((row) => row.id === previous?.graphFocus)
@@ -144,6 +216,10 @@ export class WorkspaceStore {
         path,
         text,
         model: null,
+        creationTabs: previous?.creationTabs,
+        forceTaskTabs: previous?.forceTaskTabs,
+        taskTabs: previous?.taskTabs ?? [],
+        activeTaskTab: previous?.activeTaskTab ?? null,
         problems: describeDocumentErrors(error, text, path) as Problem[],
         view: previous?.view ?? 'tree',
         ganttUnit: previous?.ganttUnit ?? 'day',
@@ -166,23 +242,20 @@ export class WorkspaceStore {
         const scanned = await this.platform.invoke<ScannedProject>('scan_project', {
           path: savedProject.path,
         });
-        for (const tab of saved.tabs) {
-          if (
-            /\.(md|markdown)$/i.test(tab.path) &&
-            withinProject(tab.path, scanned.path) &&
-            !scanned.files.some((file) => pathKey(file) === pathKey(tab.path))
-          )
-            scanned.files.push(tab.path);
-        }
         if (projects.some((project) => pathKey(project.path) === pathKey(scanned.path))) continue;
-        const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
+        const project: OpenProject = {
+          path: scanned.path,
+          files: scanned.files,
+          activePath: null,
+          page: 'board',
+        };
         for (const tab of saved.tabs.filter((tab) =>
           scanned.files.some((file) => pathKey(file) === pathKey(tab.path)),
         )) {
           if (documents.some((doc) => pathKey(doc.path) === pathKey(tab.path))) continue;
           try {
             const path = scanned.files.find((file) => pathKey(file) === pathKey(tab.path))!;
-            const text = await this.platform.invoke<string>('read_document', { path });
+            const text = await this.platform.invoke<string>('read_project', { path });
             documents.push(this.document(path, text, { ...tab } as OpenDocument));
           } catch (error) {
             failures.push(...describeDocumentErrors(error, '', tab.path, ko.fileReadError));
@@ -197,7 +270,7 @@ export class WorkspaceStore {
             try {
               document = this.document(
                 selected,
-                await this.platform.invoke<string>('read_document', { path: selected }),
+                await this.platform.invoke<string>('read_project', { path: selected }),
               );
               documents.push(document);
             } catch (error) {
@@ -220,6 +293,10 @@ export class WorkspaceStore {
       documents,
       activeProjectPath: project?.path ?? null,
       activePath: project?.activePath ?? null,
+      selectedId:
+        this.state.settings.detailMode === 'tabs'
+          ? (documents.find((doc) => doc.path === project?.activePath)?.activeTaskTab ?? null)
+          : null,
       recent: saved.recentProjects,
       ready: true,
       operationProblems: failures,
@@ -228,7 +305,11 @@ export class WorkspaceStore {
     await this.poll();
   }
   private title() {
-    this.platform.setTitle(this.activeProject ? folderName(this.activeProject.path) : 'Worktree');
+    this.platform.setTitle(
+      this.activeProject
+        ? (this.active?.model?.title ?? folderName(this.activeProject.path))
+        : 'Worktree',
+    );
   }
   private saveSession() {
     if (!this.state.ready) return;
@@ -244,10 +325,6 @@ export class WorkspaceStore {
       const previous = this.state.projects.find(
         (project) => pathKey(project.path) === pathKey(scanned.path),
       );
-      for (const file of previous?.files ?? []) {
-        if (/\.(md|markdown)$/i.test(file) && !scanned.files.includes(file))
-          scanned.files.push(file);
-      }
       if (!previous && this.state.projects.length >= MAX_SESSION_TABS)
         throw Error(messages.projectTabLimit);
       const selected =
@@ -255,14 +332,19 @@ export class WorkspaceStore {
         scanned.files.find((file) => pathKey(file) === pathKey(previous?.activePath ?? '')) ??
         scanned.files[0] ??
         null;
-      const project: OpenProject = { path: scanned.path, files: scanned.files, activePath: null };
+      const project: OpenProject = {
+        path: scanned.path,
+        files: scanned.files,
+        activePath: null,
+        page: 'board',
+      };
       let document: OpenDocument | undefined;
       let errors: Problem[] = [];
       if (selected) {
         try {
           document = this.document(
             selected,
-            await this.platform.invoke<string>('read_document', { path: selected }),
+            await this.platform.invoke<string>('read_project', { path: selected }),
             this.state.documents.find((doc) => doc.path === selected),
           );
         } catch (error) {
@@ -271,18 +353,32 @@ export class WorkspaceStore {
       }
       if (revision !== this.openRevision) return;
       project.activePath = document?.path ?? null;
+      project.page =
+        this.state.projects.find((item) => pathKey(item.path) === pathKey(project.path))?.page ??
+        'board';
       const same = project.activePath === this.state.activePath;
       this.patch({
         projects: previous
-          ? this.state.projects.map((item) => (item === previous ? project : item))
+          ? this.state.projects.map((item) =>
+              pathKey(item.path) === pathKey(project.path) ? project : item,
+            )
           : [...this.state.projects, project],
         documents: document
           ? [...this.state.documents.filter((doc) => doc.path !== document.path), document]
           : this.state.documents,
         activeProjectPath: project.path,
+        page: project.page,
         activePath: project.activePath,
-        selectedId: same ? this.validSelection(document?.model ?? null) : null,
+        selectedId: same
+          ? this.validSelection(document?.model ?? null)
+          : document?.forceTaskTabs ||
+              document?.creationTabs?.length ||
+              this.state.settings.detailMode === 'tabs'
+            ? (document?.activeTaskTab ?? null)
+            : null,
         owner: same ? this.state.owner : 'all',
+        taskType: same ? this.state.taskType : 'all',
+        priority: same ? this.state.priority : 'all',
         recent: [
           project.path,
           ...this.state.recent.filter((item) => pathKey(item) !== pathKey(project.path)),
@@ -304,41 +400,76 @@ export class WorkspaceStore {
       this.report(error);
     }
   }
-  async selectDocument(path: string) {
+  async initializeProject(draft: ProjectInitializationDraft) {
     const project = this.activeProject;
-    if (!project?.files.includes(path)) return;
-    const revision = ++this.openRevision;
-    try {
-      const next = this.document(
-        path,
-        await this.platform.invoke<string>('read_document', { path }),
-        this.state.documents.find((doc) => doc.path === path),
-      );
-      if (revision !== this.openRevision || this.state.activeProjectPath !== project.path) return;
-      this.patch({
-        documents: [...this.state.documents.filter((doc) => doc.path !== path), next],
-        projects: this.state.projects.map((item) =>
-          item.path === project.path ? { ...item, activePath: path } : item,
-        ),
-        activePath: path,
-        selectedId: null,
-        owner: 'all',
-        operationProblems: [],
-        problemsOpen: false,
-      });
-      this.saveSession();
-    } catch (error) {
-      if (revision === this.openRevision) this.report(error, path, ko.fileReadError);
-    }
+    if (!project) return;
+    await this.platform.invoke('initialize_project', {
+      path: project.path,
+      name: draft.name,
+      dataDirectory: draft.directory,
+      taskPrefix: draft.prefix,
+      useEffort: draft.useEffort,
+      idSeparator: draft.idSeparator,
+      rules: {
+        dateFormat: draft.dateFormat,
+        timeFormat: draft.timeFormat,
+        taskTypes: projectRuleValues(draft.taskTypes),
+        taskTypeColors: draft.taskTypeColors,
+        priorities: draft.priorities,
+        assignees: projectRuleValues(draft.assignees),
+        labels: projectRuleValues(draft.labels),
+      },
+    });
+    if (this.state.activeProjectPath === project.path) await this.open(project.path);
+  }
+  async resetProject(path: string, expected: string, confirmation: string) {
+    const project = this.state.projects.find((item) => item.path === path);
+    if (!project) throw Error(messages.documentUnavailable);
+    const result = await this.platform.invoke<'reset' | 'conflict'>('reset_project', {
+      path,
+      expected,
+      confirmation,
+    });
+    if (result === 'conflict') throw Error(messages.projectResetConflict);
+    if (result !== 'reset') throw Error(messages.invalidUpdateResponse);
+    ++this.openRevision;
+    const active = this.state.activeProjectPath === path;
+    this.patch({
+      projects: this.state.projects.map((item) =>
+        item.path === path ? { ...item, files: [], activePath: null, page: 'initialize' } : item,
+      ),
+      documents: this.state.documents.filter((doc) => !project.files.includes(doc.path)),
+      ...(active
+        ? {
+            activePath: null,
+            page: 'initialize',
+            selectedId: null,
+            owner: 'all',
+            taskType: 'all',
+            priority: 'all',
+            query: '',
+            status: 'all',
+            operationProblems: [],
+            problemsOpen: false,
+          }
+        : {}),
+    });
+    this.title();
+    this.saveSession();
   }
   selectProject(path: string) {
     return this.open(path);
+  }
+  removeRecentProject(path: string) {
+    this.patch({ recent: this.state.recent.filter((item) => pathKey(item) !== pathKey(path)) });
+    this.saveSession();
   }
   closeProject(path: string) {
     ++this.openRevision;
     const projects = this.state.projects.filter((project) => project.path !== path);
     const changed = path === this.state.activeProjectPath;
     const selected = changed ? projects.at(-1) : this.activeProject;
+    const selectedDocument = this.state.documents.find((doc) => doc.path === selected?.activePath);
     this.patch({
       projects,
       documents: this.state.documents.filter((doc) =>
@@ -348,8 +479,16 @@ export class WorkspaceStore {
         ? {
             activeProjectPath: selected?.path ?? null,
             activePath: selected?.activePath ?? null,
-            selectedId: null,
+            page: selected?.page ?? 'board',
+            selectedId:
+              selectedDocument?.forceTaskTabs ||
+              selectedDocument?.creationTabs?.length ||
+              this.state.settings.detailMode === 'tabs'
+                ? (selectedDocument?.activeTaskTab ?? null)
+                : null,
             owner: 'all',
+            taskType: 'all',
+            priority: 'all',
             operationProblems: [],
             problemsOpen: false,
           }
@@ -397,14 +536,96 @@ export class WorkspaceStore {
     this.saveSession();
   }
   setPage(page: Page) {
-    this.patch({ page, selectedId: null });
+    this.patch({
+      page,
+      selectedId: null,
+      projects: this.state.projects.map((project) =>
+        project.path === this.state.activeProjectPath ? { ...project, page } : project,
+      ),
+    });
   }
-  setFilters(filters: Partial<Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status'>>) {
-    this.patch(filters);
+  setFilters(
+    filters: Partial<
+      Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status' | 'taskType' | 'priority'>
+    >,
+  ) {
+    if ('query' in filters && this.detailMode === 'tabs' && this.state.selectedId) {
+      const page = this.state.page === 'tasks' ? 'tasks' : 'board';
+      this.patch({
+        ...filters,
+        selectedId: null,
+        page,
+        projects: this.state.projects.map((project) =>
+          project.path === this.state.activeProjectPath ? { ...project, page } : project,
+        ),
+      });
+    } else this.patch(filters);
   }
   selectWork(selectedId: string | null) {
-    if (selectedId && !this.active?.model?.rows.some((row) => row.id === selectedId)) return;
+    if (
+      selectedId &&
+      !this.active?.model?.rows.some((row) => row.id === selectedId) &&
+      !this.active?.creationTabs?.some((tab) => tab.id === selectedId)
+    )
+      return;
     this.patch({ selectedId });
+  }
+  openCreationTab(kind: 'task' | 'milestone') {
+    const doc = this.active;
+    if (!doc?.model) return;
+    const tabs = doc.creationTabs ?? [];
+    const id = 'new:' + crypto.randomUUID();
+    const number =
+      Math.max(0, ...tabs.filter((tab) => tab.kind === kind).map((tab) => tab.number)) + 1;
+    this.patch({
+      documents: this.state.documents.map((item) =>
+        item.path === doc.path
+          ? {
+              ...item,
+              forceTaskTabs: true,
+              creationTabs: [...tabs, { id, kind, number, text: doc.text }],
+            }
+          : item,
+      ),
+      selectedId: id,
+    });
+    return id;
+  }
+  reorderTaskTabs(source: string, target: string, after: boolean) {
+    const doc = this.active;
+    if (!doc) return;
+    const taskTabs = reorderDocumentTabs(doc.taskTabs ?? [], source, target, after);
+    this.patch({
+      documents: this.state.documents.map((item) =>
+        item.path === doc.path ? { ...item, taskTabs } : item,
+      ),
+    });
+  }
+  closeTaskTab(id: string) {
+    const doc = this.active;
+    if (!doc) return;
+    if (doc.creationTabs?.some((tab) => tab.id === id && tab.saving)) return;
+    const tabs = doc.taskTabs ?? [],
+      index = tabs.indexOf(id);
+    if (index < 0) return;
+    const next = tabs.filter((item) => item !== id);
+    const selectedId =
+      this.state.selectedId === id
+        ? (next[Math.min(index, next.length - 1)] ?? null)
+        : this.state.selectedId;
+    this.patch({
+      selectedId,
+      documents: this.state.documents.map((item) =>
+        item.path === doc.path
+          ? {
+              ...item,
+              taskTabs: next,
+              creationTabs: item.creationTabs?.filter((tab) => tab.id !== id),
+              forceTaskTabs: next.length ? item.forceTaskTabs : false,
+            }
+          : item,
+      ),
+    });
   }
   toggleSettings() {
     this.patch({ settingsOpen: !this.state.settingsOpen });
@@ -419,32 +640,126 @@ export class WorkspaceStore {
     this.patch({ problemsOpen: false });
   }
   private validSelection(model: WorkModel | null) {
-    return model?.rows.some((row) => row.id === this.state.selectedId)
+    return model?.rows.some((row) => row.id === this.state.selectedId) ||
+      this.active?.creationTabs?.some((tab) => tab.id === this.state.selectedId)
       ? this.state.selectedId
       : null;
   }
-  async saveTask(path: string, expected: string, draft: TaskDraft, id?: string) {
-    const update = updateTaskSource(expected, draft, id);
-    const result = await this.platform.invoke<'saved' | 'conflict'>('save_document', {
+  async saveProjectSettings(path: string, expected: string, draft: ProjectSettingsDraft) {
+    const text = updateProjectSettings(expected, draft);
+    await this.saveProjectSource(path, expected, text, null, messages.projectSettingsConflict);
+    this.title();
+    return text;
+  }
+  async saveTask(path: string, expected: string, draft: ProjectTaskDraft, id?: string) {
+    const update = updateProjectTask(expected, draft, id);
+    await this.saveProjectSource(path, expected, update.text, update.id);
+    return update.id;
+  }
+  async saveCreationTab(path: string, tabId: string, expected: string, draft: ProjectTaskDraft) {
+    const tab = this.state.documents
+      .find((doc) => doc.path === path)
+      ?.creationTabs?.find((tab) => tab.id === tabId);
+    if (!tab) throw Error(messages.editTaskMissing);
+    if (tab.kind !== draft.type) throw Error(messages.taskTypeLocked);
+    const update = updateProjectTask(expected, draft);
+    await this.saveProjectSource(
       path,
       expected,
-      text: update.text,
+      update.text,
+      update.id,
+      messages.taskSaveConflict,
+      tabId,
+    );
+  }
+  setCreationSaving(path: string, id: string, saving: boolean) {
+    if (
+      !this.state.documents.some(
+        (doc) => doc.path === path && doc.creationTabs?.some((tab) => tab.id === id),
+      )
+    )
+      return;
+    this.patch({
+      documents: this.state.documents.map((doc) =>
+        doc.path === path
+          ? {
+              ...doc,
+              creationTabs: doc.creationTabs?.map((tab) =>
+                tab.id === id ? { ...tab, saving } : tab,
+              ),
+            }
+          : doc,
+      ),
     });
-    if (result === 'conflict') throw Error(messages.taskSaveConflict);
+  }
+  async saveComment(
+    path: string,
+    expected: string,
+    taskId: string,
+    content: string,
+    id?: string,
+    replyTo?: string,
+  ) {
+    const text = saveProjectComment(
+      expected,
+      taskId,
+      this.state.settings.displayName,
+      content,
+      id,
+      undefined,
+      replyTo,
+    );
+    await this.saveProjectSource(path, expected, text, taskId, messages.commentConflict);
+  }
+  async deleteComment(path: string, expected: string, taskId: string, id: string) {
+    const text = deleteProjectComment(expected, taskId, id);
+    await this.saveProjectSource(path, expected, text, taskId, messages.commentConflict);
+  }
+  async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
+    const text = deleteProjectTask(expected, id, options);
+    await this.saveProjectSource(path, expected, text, null, messages.deleteConflict);
+  }
+  private async saveProjectSource(
+    path: string,
+    expected: string,
+    text: string,
+    selectedId: string | null,
+    conflictMessage = messages.taskSaveConflict,
+    creationId?: string,
+  ) {
+    const result = await this.platform.invoke<'saved' | 'conflict'>('save_project', {
+      path,
+      expected,
+      text,
+    });
+    if (result === 'conflict') throw Error(conflictMessage);
     if (result !== 'saved') throw Error(messages.invalidUpdateResponse);
     const previous = this.state.documents.find((doc) => doc.path === path);
     if (previous) {
-      const next = this.document(path, update.text, previous);
+      const next = this.document(path, text, previous);
+      if (creationId && selectedId) {
+        next.creationTabs = next.creationTabs?.filter((tab) => tab.id !== creationId);
+        next.taskTabs = [
+          ...new Set(next.taskTabs?.map((id) => (id === creationId ? selectedId : id))),
+        ];
+        if (next.activeTaskTab === creationId) next.activeTaskTab = selectedId;
+      }
       this.patch({
         documents: this.state.documents.map((doc) => (doc.path === path ? next : doc)),
         ...(this.state.activePath === path
-          ? { selectedId: update.id, operationProblems: [], problemsOpen: false }
+          ? {
+              selectedId:
+                creationId && this.state.selectedId !== creationId
+                  ? this.state.selectedId
+                  : selectedId,
+              operationProblems: [],
+              problemsOpen: false,
+            }
           : {}),
       });
     }
-    return update.id;
   }
-  async saveSetting(key: 'separator' | 'detailMode' | 'language', value: string) {
+  async saveSetting(key: 'detailMode' | 'language' | 'displayName', value: string) {
     if (this.state.settings.saving) return;
     this.patch({ settings: { ...this.state.settings, saving: true, error: '' } });
     try {
@@ -452,9 +767,15 @@ export class WorkspaceStore {
         if (!isLanguage(value)) throw Error(messages.invalidSetting);
         await this.storage.setItem('worktree.language', value);
         setLanguage(value);
-      } else if (key === 'separator') await saveSeparator(this.storage, value);
+      } else if (key === 'displayName') await this.storage.setItem('worktree.display-name', value);
       else await saveDetailMode(this.storage, value);
-      this.patch({ settings: { ...this.state.settings, [key]: value, saving: false } });
+      this.patch({
+        settings: { ...this.state.settings, [key]: value, saving: false },
+        ...(key === 'detailMode'
+          ? { documents: this.state.documents.map((doc) => ({ ...doc, forceTaskTabs: false })) }
+          : {}),
+      });
+      return true;
     } catch (error) {
       this.patch({
         settings: {
@@ -474,8 +795,11 @@ export class WorkspaceStore {
       const path = this.state.activePath;
       if (!path) return;
       try {
-        const text = await this.platform.invoke<string>('read_document', { path });
-        if (this.state.activePath !== path) return;
+        const startedText = this.active?.text;
+        const text = serializeSource(
+          readSource(await this.platform.invoke<string>('read_project', { path })),
+        );
+        if (this.state.activePath !== path || this.active?.text !== startedText) return;
         const previous = this.active;
         if (previous && text !== previous.text) {
           const next = this.document(path, text, previous);
@@ -488,6 +812,19 @@ export class WorkspaceStore {
             documents: this.state.documents.map((doc) => (doc.path === path ? next : doc)),
             selectedId: this.validSelection(next.model),
             owner,
+            priority:
+              !next.model ||
+              this.state.priority === 'priority:-' ||
+              next.model.priorities?.some(
+                (priority) => 'priority:' + priority.id === this.state.priority,
+              )
+                ? this.state.priority
+                : 'all',
+            taskType:
+              !next.model ||
+              next.model.taskTypes?.some((type) => 'type:' + type === this.state.taskType)
+                ? this.state.taskType
+                : 'all',
             operationProblems: [],
             problemsOpen: next.problems.length ? this.state.problemsOpen : false,
           });

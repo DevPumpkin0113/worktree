@@ -148,6 +148,18 @@ export function bindDocumentTabs(
     move(paths[index], target, after);
   };
   return {
+    dispose() {
+      finish();
+      for (const key of [
+        'onpointerdown',
+        'onpointermove',
+        'onpointerup',
+        'onpointercancel',
+        'onlostpointercapture',
+        'onkeydown',
+      ] as const)
+        root[key] = null;
+    },
     consumeClick() {
       if (Date.now() < suppressUntil) {
         suppressUntil = 0;

@@ -36,14 +36,12 @@
   transform: rotate(-90deg);
 }
 .filter-options {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  min-width: 100%;
-  width: max-content;
-  max-width: min(300px, calc(100vw - 48px));
+  position: fixed;
+  inset: auto;
+  margin: 0;
   max-height: 240px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 5px;
   background: var(--color-surface);
   border: 1px solid var(--color-filter-options-border);
@@ -83,15 +81,6 @@
 .search-multi-select {
   min-width: 0;
 }
-.search-multi-options {
-  margin-top: 6px;
-  max-height: 180px;
-  overflow-y: auto;
-  padding: 5px;
-  border: 1px solid var(--color-filter-options-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-}
 .search-multi-selected {
   display: flex;
   flex-wrap: wrap;
@@ -116,6 +105,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.search-multi-creatable .search-multi-selected li {
+  padding: 0;
+  background: transparent;
+}
+.search-multi-creatable .search-multi-selected li > .value-badge {
+  white-space: normal;
+}
+.search-multi-creatable .value-badge-label {
+  overflow-wrap: anywhere;
+}
 .search-multi-selected button {
   display: flex;
   align-items: center;
@@ -135,4 +134,29 @@
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+
+.workspace-filter-actions .filter-dropdown {
+  width: 120px;
+  min-width: 0;
+}
+.workspace-filter-actions .filter-trigger {
+  gap: 8px;
+  padding-inline: 8px;
+  font-size: 12px;
+}
+.workspace-filter-actions .filter-trigger > span {
+  flex: 1;
+  min-width: 0;
+}
+.filter-options-content {
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  min-width: min(142px, calc(100vw - 16px));
+}
+.filter-options-content .filter-option > span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
 }

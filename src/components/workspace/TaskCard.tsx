@@ -1,19 +1,25 @@
+import { usePriorityStyle } from '../../app/project-priority-context';
+import { TaskTypeBadge } from '../shared/TaskTypeBadge';
 import { messages } from '../../i18n/messages';
-import { STATUS_NAMES, TYPE_NAMES, type WorkRow } from '../../app/types';
+import { STATUS_NAMES, type WorkRow } from '../../app/types';
 export function TaskCard({
   row,
   label,
   onSelect,
   selected,
+  kanban = false,
 }: {
   row: WorkRow;
   label: (id: string) => string;
   onSelect: (id: string) => void;
   selected: boolean;
+  kanban?: boolean;
 }) {
+  const priorityStyle = usePriorityStyle(row.priority ?? '-');
   return (
     <div
       className={'task' + (selected ? ' detail-selected' : '')}
+      style={priorityStyle}
       tabIndex={0}
       role="button"
       data-id={row.id}
@@ -26,18 +32,32 @@ export function TaskCard({
         }
       }}
     >
-      <span className="id">{label(row.id)}</span>
+      {kanban ? (
+        <div className="task-card-heading">
+          <span className="task-card-identity">
+            <span className="id">{label(row.id)}</span>
+            <span className="task-priority-mark" aria-hidden="true" />
+          </span>
+          <TaskTypeBadge type={row.taskType ?? 'task'} />
+        </div>
+      ) : (
+        <span className="task-tree-identity">
+          <span className="id">{label(row.id)}</span>
+          <span className="task-priority-mark" aria-hidden="true" />
+        </span>
+      )}
       <div>
-        {row.type === 'milestone' ? <span aria-hidden="true">◇ </span> : null}
         {row.name}
         <div className="sub">
-          <span className={'work-type-badge work-type-' + row.type}>
-            {TYPE_NAMES[row.type] === messages.workGroup ? messages.group : TYPE_NAMES[row.type]}
-          </span>{' '}
-          · {row.owner === '-' ? messages.unassigned : row.owner}
+          {!kanban ? (
+            <>
+              <TaskTypeBadge type={row.taskType ?? 'task'} /> ·{' '}
+            </>
+          ) : null}
+          {row.owner === '-' ? messages.unassigned : row.owner}
         </div>
       </div>
-      <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>
+      {!kanban ? <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span> : null}
     </div>
   );
 }

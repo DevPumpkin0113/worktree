@@ -6,9 +6,7 @@ interface GroupTotals {
   effort: number;
   missingEfforts: number;
   taskCount: number;
-  milestoneCount: number;
   completedTasks: number;
-  completedMilestones: number;
   completedEffort: number;
 }
 export interface GroupSummary extends GroupTotals {
@@ -23,24 +21,21 @@ export function summarizeGroups(rows: WorkRow[]) {
   }
   function aggregate(row: WorkRow): GroupTotals {
     if (row.type !== 'group') {
-      const task = row.type === 'task',
-        known =
-          typeof row.start === 'string' &&
-          row.start !== '-' &&
-          typeof row.end === 'string' &&
-          row.end !== '-';
-      const effort = task && row.effort !== '-' ? Number(row.effort) || 0 : 0;
+      const known =
+        typeof row.start === 'string' &&
+        row.start !== '-' &&
+        typeof row.end === 'string' &&
+        row.end !== '-';
+      const effort = row.effort !== '-' ? Number(row.effort) || 0 : 0;
       return {
         start: known ? row.start : null,
         end: known ? row.end : null,
         missingDates: known ? 0 : 1,
         effort,
-        missingEfforts: task && (row.effort === '-' || row.effort === undefined) ? 1 : 0,
-        taskCount: task ? 1 : 0,
-        milestoneCount: task ? 0 : 1,
-        completedTasks: task && row.status === 'done' ? 1 : 0,
-        completedMilestones: !task && row.status === 'done' ? 1 : 0,
-        completedEffort: task && row.status === 'done' ? effort : 0,
+        missingEfforts: row.effort === '-' || row.effort === undefined ? 1 : 0,
+        taskCount: 1,
+        completedTasks: row.status === 'done' ? 1 : 0,
+        completedEffort: row.status === 'done' ? effort : 0,
       };
     }
     if (summaries.has(row.id)) return summaries.get(row.id)!;
@@ -52,9 +47,7 @@ export function summarizeGroups(rows: WorkRow[]) {
       effort: 0,
       missingEfforts: 0,
       taskCount: 0,
-      milestoneCount: 0,
       completedTasks: 0,
-      completedMilestones: 0,
       completedEffort: 0,
     };
     for (const child of children.get(row.id) || []) {
@@ -67,9 +60,7 @@ export function summarizeGroups(rows: WorkRow[]) {
         'effort',
         'missingEfforts',
         'taskCount',
-        'milestoneCount',
         'completedTasks',
-        'completedMilestones',
         'completedEffort',
       ] as const)
         result[key] += summary[key];

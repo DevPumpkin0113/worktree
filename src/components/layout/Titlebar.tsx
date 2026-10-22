@@ -1,13 +1,24 @@
+import { SettingsButton } from './SettingsButton';
+import type { useUpdateNotice } from '../../hooks/use-update-notice';
 import { messages } from '../../i18n/messages';
 import { useEffect, useState } from 'react';
 import { Icon } from '../shared/Icon';
+import { TitlebarSearch } from './TitlebarSearch';
 import type { WorkspaceStore } from '../../app/workspace-store';
 export function Titlebar({
   store,
   settingsOpen,
+  collapsed,
+  query,
+  searchEnabled,
+  updateNotice,
 }: {
   store: WorkspaceStore;
+  updateNotice: ReturnType<typeof useUpdateNotice>;
   settingsOpen: boolean;
+  collapsed: boolean;
+  query: string;
+  searchEnabled: boolean;
 }) {
   const [maximized, setMaximized] = useState(false);
   useEffect(() => {
@@ -33,26 +44,37 @@ export function Titlebar({
       .catch((error) => store.report(error, '', messages.windowControlError));
   return (
     <header className="titlebar">
-      <img className="app-mark" src="/worktree-icon.png" alt="" width={20} height={20} />
-      <div className="header-actions header-actions-left">
-        <button
-          id="reload"
-          aria-label={messages.reloadSource}
-          title={messages.reloadSource}
-          disabled={!store.activeProject}
-          onClick={() => {
-            void store.refreshProject();
-          }}
-        >
-          <Icon name="reload" />
-        </button>
+      <div
+        className="titlebar-workspace"
+        onMouseDown={(event) => {
+          if (event.button !== 0 || (event.target as Element).closest('button')) return;
+          event.preventDefault();
+          control(event.detail === 2 ? 'maximize' : 'drag');
+        }}
+      >
+        {!collapsed ? (
+          <img className="app-mark" src="/worktree-icon.png" alt="" width={20} height={20} />
+        ) : null}
+        <div className="header-actions header-actions-left">
+          <button
+            id="reload"
+            aria-label={messages.reloadSource}
+            title={messages.reloadSource}
+            disabled={!store.activeProject}
+            onClick={() => {
+              void store.refreshProject();
+            }}
+          >
+            <Icon name="reload" />
+          </button>
+        </div>
       </div>
       <div
         id="titleDrag"
         className="title-drag"
         aria-label={messages.dragWindow}
         onMouseDown={(event) => {
-          if (event.button !== 0) return;
+          if (event.button !== 0 || (event.target as Element).closest('input, label')) return;
           event.preventDefault();
           control(event.detail === 2 ? 'maximize' : 'drag');
         }}
@@ -60,21 +82,18 @@ export function Titlebar({
         <h1 id="title" hidden>
           {store.active?.model?.title ?? 'Worktree'}
         </h1>
+        <TitlebarSearch
+          query={query}
+          disabled={settingsOpen || !searchEnabled}
+          onChange={(query) => store.setFilters({ query })}
+        />
       </div>
       <div className="header-actions" role="group" aria-label={messages.documentTools}>
-        <button
-          id="settingsOpen"
-          className={settingsOpen ? 'active' : ''}
-          aria-haspopup="dialog"
-          aria-expanded={settingsOpen}
-          aria-pressed={settingsOpen}
-          aria-controls="settings"
-          aria-label={messages.appSettings}
-          title={messages.appSettings}
+        <SettingsButton
+          settingsOpen={settingsOpen}
           onClick={() => store.toggleSettings()}
-        >
-          <Icon name="settings" />
-        </button>
+          notice={updateNotice}
+        />
       </div>
       <div className="window-controls">
         {(['minimize', 'maximize', 'close'] as const).map((action, index) => (

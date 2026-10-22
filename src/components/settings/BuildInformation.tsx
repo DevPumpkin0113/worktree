@@ -1,3 +1,4 @@
+import { worktreeReleaseName } from '../../domain/release-name';
 import { messages } from '../../i18n/messages';
 import type { useAppInfo } from '../../hooks/use-app-info';
 export function BuildInformation({
@@ -16,7 +17,7 @@ export function BuildInformation({
           <h4>Worktree</h4>
           <p className="about-description">{messages.appDescription}</p>
           <p id="appVersion" className="app-version" aria-live="polite">
-            {build ? messages.versionPrefix + build.version : messages.loadingVersion}
+            {build ? worktreeReleaseName(build.version) : messages.loadingVersion}
           </p>
         </div>
       </div>

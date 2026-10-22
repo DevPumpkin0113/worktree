@@ -36,7 +36,8 @@ header p {
 }
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   border: 1px solid var(--color-border-control);
   border-radius: 8px;
@@ -47,7 +48,7 @@ select {
 button {
   cursor: pointer;
 }
-button:hover,
+:where(button):hover:not(:disabled),
 button.active {
   background: var(--color-primary);
   color: var(--color-text-inverse);
@@ -178,6 +179,9 @@ summary {
   margin: 10px 0;
   padding: 14px;
 }
+.task:hover {
+  background: var(--color-task-card-hover-background);
+}
 .lane-heading {
   display: flex;
   align-items: center;
@@ -273,7 +277,7 @@ header.titlebar {
   color: var(--color-text);
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--color-header-titlebar-border-bottom);
+  border-bottom: 0;
   user-select: none;
 }
 header .app-mark {
@@ -282,7 +286,7 @@ header .app-mark {
   font-weight: 800;
   color: var(--color-primary);
   letter-spacing: 0.5px;
-  margin: 0 12px 0 16px;
+  margin: 0;
   pointer-events: none;
   border: 0;
   border-radius: 4px;
@@ -310,7 +314,7 @@ header h1 {
   flex-shrink: 0;
 }
 .window-controls button {
-  width: 46px;
+  width: var(--titlebar-control-width, 48px);
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -335,9 +339,7 @@ header h1 {
   stroke: currentColor;
   stroke-width: 1;
 }
-.window-controls button:focus-visible {
-  outline-offset: -3px;
-}
+
 main {
   flex: 1;
   width: 100%;
@@ -471,7 +473,7 @@ main {
   gap: 2px;
   padding: 0 9px;
   margin-right: 4px;
-  border-right: 1px solid var(--color-header-titlebar-border-bottom);
+  border-right: 0;
   flex-shrink: 0;
 }
 .header-actions button {
@@ -494,9 +496,7 @@ main {
   cursor: default;
   background: transparent;
 }
-.header-actions button:focus-visible {
-  outline-offset: -2px;
-}
+
 .header-actions svg {
   width: 16px;
   height: 16px;
@@ -554,15 +554,12 @@ main {
 .view-button:hover {
   background: var(--color-view-button-hover-background);
   border-color: var(--color-view-button-hover-border-color);
-}
-.view-button.active {
-  background: var(--color-view-button-active-background);
-  border-color: var(--color-view-button-active-border-color);
-  box-shadow: inset 0 0 0 1px var(--color-view-button-active-border-color);
-}
-.view-button:hover,
-.view-button.active {
   color: var(--color-view-button-hover-color);
+}
+.view-button.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
 }
 .view-icon {
   display: block;
@@ -609,7 +606,6 @@ summary.detail-selected {
 .gantt-label.detail-selected,
 .unscheduled-list button.detail-selected {
   background: var(--color-selection);
-  box-shadow: inset 3px 0 var(--color-task-detail-selected-box-shadow);
   color: var(--color-gantt-label-detail-selected-color);
 }
 .timeline-row.detail-selected {
@@ -620,8 +616,6 @@ summary.detail-selected {
 }
 .graph-node.detail-selected rect {
   fill: var(--color-chart-node-selected);
-  stroke: var(--color-primary);
-  stroke-width: 3;
 }
 
 /* Keep document controls fixed; scroll only the working surface. */
@@ -761,10 +755,7 @@ main > .tools {
   background: var(--color-statusbar-error-hover-background);
   color: var(--color-statusbar-error-hover-color);
 }
-.statusbar-error:focus-visible {
-  outline: 2px solid var(--color-error-focus);
-  outline-offset: -2px;
-}
+
 .document-unavailable {
   display: flex;
   flex-direction: column;
@@ -1004,6 +995,7 @@ body:has(#documentProblems:not([hidden])) {
 }
 .recent-files button:hover {
   background: var(--color-recent-files-button-hover-background);
+  color: var(--color-primary);
 }
 .recent-files button span {
   display: block;
@@ -1059,13 +1051,16 @@ body:has(#documentProblems:not([hidden])) {
   touch-action: none;
   user-select: none;
 }
-.document-tab.tab-dragging {
+.document-tab.tab-dragging,
+.task-tab.tab-dragging {
   opacity: 0.5;
 }
-.document-tab.tab-drop-before {
+.document-tab.tab-drop-before,
+.task-tabs .task-tab.tab-drop-before {
   box-shadow: inset 3px 0 var(--color-primary);
 }
-.document-tab.tab-drop-after {
+.document-tab.tab-drop-after,
+.task-tabs .task-tab.tab-drop-after {
   box-shadow: inset -3px 0 var(--color-primary);
 }
 
@@ -1154,7 +1149,99 @@ body:has(#documentProblems:not([hidden])) {
   flex-direction: column;
   height: 100%;
 }
-#content:has(> .chart-adapter:has(.diagram-scroll)) {
+
+.task-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.all-tasks .all-task-id,
+.gantt-label[data-id],
+.unscheduled .unscheduled-list button {
+  position: relative;
+  padding-left: 22px;
+}
+.all-task-id::before,
+.gantt-label::before,
+.unscheduled-list button::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--task-priority-color, transparent);
+  pointer-events: none;
+}
+
+.chart-adapter:has(.diagram-scroll) > .chart-scroll-frame {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.chart-adapter > :is(.notice, .dependency-focus, .sub) {
+  flex-shrink: 0;
+}
+
+#content:has(> .gantt-view .gantt-frame) {
   display: flex;
   flex-direction: column;
+}
+
+.recent-project-row {
+  display: flex;
+  align-items: center;
+}
+.recent-project-row > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.recent-project-row > .recent-project-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  padding: 6px;
+  border-radius: 4px;
+}
+.recent-project-remove svg {
+  width: 14px;
+  height: 14px;
+}
+
+.task-tree-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.task-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.task-priority-mark {
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--task-priority-color, transparent);
+}
+.task-tree-identity > .task-priority-mark {
+  flex: 1;
+  width: 48px;
+  height: auto;
+  min-height: 4px;
 }

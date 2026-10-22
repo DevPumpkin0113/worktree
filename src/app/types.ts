@@ -3,9 +3,20 @@ import { messages } from '../i18n/messages';
 import type { Status, WorkModel, Problem } from '../domain/types';
 export type { Status, WorkRow, WorkModel, Problem } from '../domain/types';
 export type View = 'tree' | 'board' | 'flow' | 'gantt';
-export type Page = 'board' | 'tasks' | 'analytics' | 'project';
-export type DetailMode = 'sidebar' | 'modal';
+export type Page = 'board' | 'tasks' | 'analytics' | 'project' | 'initialize';
+export type DetailMode = 'sidebar' | 'tabs';
+export interface TaskCreationTab {
+  id: string;
+  kind: 'task' | 'milestone';
+  number: number;
+  text: string;
+  saving?: boolean;
+}
 export interface OpenDocument {
+  creationTabs?: TaskCreationTab[];
+  forceTaskTabs?: boolean;
+  taskTabs?: string[];
+  activeTaskTab?: string | null;
   path: string;
   text: string;
   model: WorkModel | null;
@@ -33,14 +44,15 @@ export interface DownloadEvent {
   total?: number;
 }
 export interface Settings {
+  displayName: string;
   language: Language;
-  separator: 'none' | 'hyphen';
   detailMode: DetailMode;
   ready: boolean;
   error: string;
   saving: boolean;
 }
 export interface OpenProject {
+  page: Page;
   path: string;
   files: string[];
   activePath: string | null;
@@ -61,6 +73,8 @@ export interface WorkspaceSnapshot {
   query: string;
   owner: string;
   status: string;
+  taskType: string;
+  priority: string;
   selectedId: string | null;
   settingsOpen: boolean;
   problemsOpen: boolean;
@@ -83,7 +97,7 @@ export const STATUS_NAMES: Record<Status, string> = {
 };
 export const TYPE_NAMES = {
   get group() {
-    return messages.workGroup;
+    return messages.milestone;
   },
   get task() {
     return messages.task;

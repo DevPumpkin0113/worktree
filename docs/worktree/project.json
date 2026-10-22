@@ -1,0 +1,54 @@
+{
+  "assignees": [
+    "박대호",
+    "CODEX"
+  ],
+  "dateFormat": "yyyy.MM.dd",
+  "idSeparator": "hyphen",
+  "labels": [
+    "API",
+    "Back-End",
+    "Front-End",
+    "etc",
+    "Database"
+  ],
+  "name": "worktree",
+  "nextMilestoneNumber": 5,
+  "nextTaskNumber": 17,
+  "priorities": [
+    {
+      "id": "high",
+      "name": "상"
+    },
+    {
+      "id": "normal",
+      "name": "중"
+    },
+    {
+      "id": "low",
+      "name": "하"
+    }
+  ],
+  "schemaVersion": 1,
+  "taskPrefix": "TASK",
+  "taskTypeColors": {
+    "bug": "#d73a4a",
+    "chore": "#6c757d",
+    "docs": "#1d76db",
+    "feature": "#a2eeef",
+    "improvement": "#f29a4e",
+    "spike": "#d4c5f9",
+    "task": "#e3dede"
+  },
+  "taskTypes": [
+    "feature",
+    "bug",
+    "improvement",
+    "task",
+    "docs",
+    "spike",
+    "chore"
+  ],
+  "timeFormat": "24h",
+  "useEffort": false
+}

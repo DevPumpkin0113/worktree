@@ -1,3 +1,4 @@
+import type { useAppInfo } from '../../hooks/use-app-info';
 import { messages } from '../../i18n/messages';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AboutSettings } from './AboutSettings';
@@ -5,7 +6,15 @@ import { GeneralSettings } from './GeneralSettings';
 import { Icon } from '../shared/Icon';
 import type { WorkspaceStore } from '../../app/workspace-store';
 import type { WorkspaceSnapshot } from '../../app/types';
-export function Settings({ store, state }: { store: WorkspaceStore; state: WorkspaceSnapshot }) {
+export function Settings({
+  store,
+  state,
+  app,
+}: {
+  store: WorkspaceStore;
+  state: WorkspaceSnapshot;
+  app: ReturnType<typeof useAppInfo>;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [page, setPage] = useState<'general' | 'about'>('general');
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -100,7 +109,7 @@ export function Settings({ store, state }: { store: WorkspaceStore; state: Works
             aria-labelledby="settingsAboutTab"
             hidden={page !== 'about'}
           >
-            <AboutSettings store={store} />
+            <AboutSettings app={app} settingsReady={state.settings.ready} />
           </section>
           <p id="settingsError" role="alert">
             {state.settings.error}

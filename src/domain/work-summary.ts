@@ -3,7 +3,7 @@ import type { WorkRow } from './types';
 export function summarizeWork(rows: WorkRow[]) {
   const leaves = rows.filter((row) => row.type !== 'group');
   const tasks = leaves.filter((row) => row.type === 'task');
-  const milestones = rows.filter((row) => row.milestone || row.type === 'milestone');
+  const milestones = rows.filter((row) => row.milestone);
   const missingEfforts = tasks.filter((row) => row.effort === '-').length;
   const totalEffort = tasks.reduce((total, row) => total + (Number(row.effort) || 0), 0);
   const completedEffort = tasks

@@ -1,3 +1,7 @@
+import { useContext, type CSSProperties } from 'react';
+import { ProjectPriorityContext } from '../../app/project-priority-context';
+import { legacyPriorities } from '../../domain/project-priorities';
+import { priorityColor } from '../../views/priority-color';
 import { useMemo, useRef } from 'react';
 import { messages } from '../../i18n/messages';
 import { FilterDropdown } from '../shared/FilterDropdown';
@@ -31,6 +35,7 @@ export function GanttView({
   onScroll: () => void;
   today?: string;
 }) {
+  const priorities = useContext(ProjectPriorityContext) ?? legacyPriorities();
   const root = useRef<HTMLDivElement>(null);
   const consumeClick = useChartPan(root);
   const known = useMemo(() => rows.filter((row) => row.start !== '-'), [rows]);
@@ -39,7 +44,11 @@ export function GanttView({
     () => (known.length ? timelineRange(rangeRows, unit, today) : null),
     [known.length, rangeRows, unit, today],
   );
-  const { scroller, geometry, start, updateScroll } = useGanttViewport(range, unit, today);
+  const { scroller, geometry, start, updateScroll, scrollbarWidth } = useGanttViewport(
+    range,
+    unit,
+    today,
+  );
   const ticks = geometry ? ganttTicks(start, unit, geometry) : [];
   const todayX = geometry
     ? ((Date.parse(today) - start) / DAY_MS) * geometry.dayWidth + geometry.dayWidth / 2
@@ -77,24 +86,9 @@ export function GanttView({
             {messages.ganttRangeHint}
           </p>
           <div className="chart-scroll-frame gantt-frame">
-            <div
-              className="gantt-scroll"
-              ref={scroller}
-              tabIndex={0}
-              aria-label={messages.ganttScrollLabel}
-              data-visible-days={geometry.windowDays}
-              data-window-start={start}
-              data-initial-scroll-left={geometry.initialScroll}
-              onScroll={() => {
-                updateScroll();
-                onScroll();
-              }}
-            >
-              <div className="gantt-canvas" style={{ width: geometry.canvasWidth }}>
-                <table
-                  className="gantt-table gantt-viewport-table"
-                  style={{ width: geometry.viewportWidth }}
-                >
+            <div className="gantt-fixed-heading">
+              <div className="gantt-heading-viewport" style={{ marginRight: scrollbarWidth }}>
+                <table className="gantt-table" style={{ width: geometry.viewportWidth }}>
                   <colgroup>
                     <col style={{ width: geometry.labelWidth }} />
                     <col style={{ width: geometry.timelineWidth }} />
@@ -122,6 +116,33 @@ export function GanttView({
                       </th>
                     </tr>
                   </thead>
+                </table>
+              </div>
+            </div>
+            <div
+              className="gantt-scroll"
+              ref={scroller}
+              tabIndex={0}
+              aria-label={messages.ganttScrollLabel}
+              data-visible-days={geometry.windowDays}
+              data-window-start={start}
+              data-initial-scroll-left={geometry.initialScroll}
+              onScroll={() => {
+                updateScroll();
+                onScroll();
+              }}
+            >
+              <div className="gantt-canvas" style={{ width: geometry.canvasWidth }}>
+                <table
+                  className="gantt-table gantt-viewport-table"
+                  aria-label={messages.workList}
+                  style={{ width: geometry.viewportWidth }}
+                >
+                  <colgroup>
+                    <col style={{ width: geometry.labelWidth }} />
+                    <col style={{ width: geometry.timelineWidth }} />
+                  </colgroup>
+
                   <tbody>
                     {known.map((row) => (
                       <GanttTaskRow
@@ -158,6 +179,15 @@ export function GanttView({
               <button
                 type="button"
                 key={row.id}
+                style={
+                  {
+                    '--task-priority-color':
+                      priorityColor(
+                        priorities.findIndex((p) => p.id === row.priority),
+                        priorities.length,
+                      ) ?? 'transparent',
+                  } as CSSProperties
+                }
                 data-id={row.id}
                 className={selectedId === row.id ? 'detail-selected' : undefined}
                 aria-current={selectedId === row.id ? 'true' : undefined}

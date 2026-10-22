@@ -1,3 +1,5 @@
+import { legacyPriorities, type ProjectPriority } from '../domain/project-priorities';
+import { priorityColor } from './priority-color';
 import { messages } from '../i18n/messages';
 import type { WorkRow } from '../domain/types';
 import { escapeHtml as escape } from './html';
@@ -59,6 +61,7 @@ export function renderDependencies(
   matched: WorkRow[],
   selected: string | null,
   label: (id: string) => string,
+  priorities: ProjectPriority[] = legacyPriorities(),
 ) {
   if (!matched.length) return `<div class="empty">${escape(messages.noMatchingTasks)}</div>`;
   const visible = new Set<string>();
@@ -92,7 +95,12 @@ export function renderDependencies(
       const p = layout.positions.get(r.id)!,
         dim = related ? !related.has(r.id) : !matchedIds.has(r.id);
       const name = r.name.length > 19 ? r.name.slice(0, 18) + '…' : r.name;
-      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><text x="${p.x + 28}" y="${p.y + 23}" class="graph-id">${escape(label(r.id))}</text><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape(name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
+      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><path class="graph-priority" d="M${p.x + 8} ${p.y + 29}v20" style="stroke:${
+        priorityColor(
+          priorities.findIndex((priority) => priority.id === r.priority),
+          priorities.length,
+        ) ?? 'transparent'
+      };stroke-width:3;stroke-linecap:round"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><text x="${p.x + 28}" y="${p.y + 23}" class="graph-id">${escape(label(r.id))}</text><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape(name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
     })
     .join('');
   const current = focus ? byId.get(focus) : undefined;
@@ -108,6 +116,6 @@ export function renderDependencies(
     : `<div class="notice">${escape(messages.networkHint)}</div>`;
   return (
     info +
-    `<div class="chart-scroll-frame"><div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${titles}${edges}${cards}</svg></div></div><p class="sub">${escape(messages.networkFilterHint)}</p>`
+    `<div class="chart-scroll-frame"><div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><div class="dependency-stage-header" style="width:${layout.width}px"><svg width="${layout.width}" height="40" aria-hidden="true">${titles}</svg></div><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${edges}${cards}</svg></div></div><p class="sub">${escape(messages.networkFilterHint)}</p>`
   );
 }

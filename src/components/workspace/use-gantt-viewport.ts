@@ -4,6 +4,7 @@ const FALLBACK_WIDTH = 960;
 export function useGanttViewport(range: TimelineRange | null, unit: GanttUnit, today: string) {
   const scroller = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(FALLBACK_WIDTH);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const [scroll, setScroll] = useState<number | null>(null);
   const anchor = useRef<{ unit: GanttUnit; start: number } | null>(null);
   const geometry = useMemo(
@@ -14,7 +15,10 @@ export function useGanttViewport(range: TimelineRange | null, unit: GanttUnit, t
   useLayoutEffect(() => {
     const node = scroller.current;
     if (!node) return;
-    const measure = () => setWidth(node.clientWidth || FALLBACK_WIDTH);
+    const measure = () => {
+      setWidth(node.clientWidth || FALLBACK_WIDTH);
+      setScrollbarWidth(Math.max(0, node.offsetWidth - node.clientWidth));
+    };
     measure();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
     observer?.observe(node);
@@ -48,5 +52,5 @@ export function useGanttViewport(range: TimelineRange | null, unit: GanttUnit, t
     setScroll(node.scrollLeft);
   }
   const start = geometry?.dateForScroll(scroll ?? geometry.initialScroll) ?? 0;
-  return { scroller, geometry, start, updateScroll };
+  return { scroller, geometry, start, updateScroll, scrollbarWidth };
 }

@@ -43,6 +43,8 @@ test('초장기 일정은 스크롤과 그리는 눈금 수를 제한하고 날�
 test('간트 React 출력은 5주 표기·안전한 제목·일정 미정 분리를 유지한다',()=>{
  const row={...task('2026-10-20','2026-10-23'),name:'<script>제목</script>'};
  const html=renderToStaticMarkup(createElement(GanttView,props([row],'week')));
+ assert.match(html, /gantt-fixed-heading[\s\S]*<thead>[\s\S]*<\/thead>[\s\S]*class="gantt-scroll"/);
+ assert.doesNotMatch(html.slice(html.indexOf('class="gantt-scroll"')), /<thead>/);
  assert.match(html,/data-visible-days="35"/);assert.match(html,/43주차/);assert.match(html,/gantt-frame/);assert.match(html,/today-line/);assert.doesNotMatch(html,/<script>/);assert.match(html,/&lt;script&gt;/);
  const unknown=renderToStaticMarkup(createElement(GanttView,props([task()])));assert.match(unknown,/일정이 아직 입력되지/);assert.doesNotMatch(unknown,/gantt-table/);assert.equal(timelineRange([task()]),null);
 });

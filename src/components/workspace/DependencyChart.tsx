@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { ProjectPriorityContext } from '../../app/project-priority-context';
 import { getLanguage } from '../../i18n/messages';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { renderDependencies } from '../../views/schedule-views';
@@ -23,13 +25,14 @@ export function DependencyChart({
   onSelect: (id: string) => void;
   onScroll: () => void;
 }) {
+  const priorities = useContext(ProjectPriorityContext);
   const root = useRef<HTMLDivElement>(null);
   const consumeClick = useChartPan(root);
   const validFocus = rows.some((row) => row.id === focus) ? focus : null;
   const language = getLanguage();
   const html = useMemo(
-    () => renderDependencies(rows, filtered, validFocus, label),
-    [rows, filtered, validFocus, label, language],
+    () => renderDependencies(rows, filtered, validFocus, label, priorities),
+    [rows, filtered, validFocus, label, language, priorities],
   );
   useLayoutEffect(() => {
     markSelectedWork(root.current, selectedId);

@@ -272,3 +272,58 @@
 .schedule-toolbar .filter-dropdown {
   min-width: 150px;
 }
+
+.dependency-stage-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 40px;
+  margin-bottom: -40px;
+  background: var(--color-gantt-scroll-background);
+  border-bottom: 1px solid var(--color-recent-files-border);
+  box-sizing: border-box;
+}
+.dependency-stage-header svg {
+  display: block;
+}
+
+.gantt-view:has(.gantt-frame) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.gantt-view > :is(.schedule-toolbar, .sub) {
+  flex-shrink: 0;
+}
+.gantt-view > .gantt-frame {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.gantt-frame > .gantt-scroll {
+  flex: 1;
+  min-height: 0;
+}
+.gantt-view:has(.gantt-frame) > .unscheduled {
+  flex-shrink: 0;
+  max-height: 30%;
+  overflow: auto;
+}
+
+.gantt-fixed-heading {
+  flex-shrink: 0;
+  margin-inline: calc(-1 * var(--chart-scroll-inset));
+  padding-inline: var(--chart-scroll-inset);
+  background: var(--color-documentproblems-problems-heading-background);
+  border-bottom: 1px solid var(--color-gantt-table-th-border-bottom);
+}
+.gantt-heading-viewport {
+  overflow: hidden;
+}
+.gantt-fixed-heading thead th {
+  position: static;
+  height: 48px;
+  border-bottom: 0;
+}

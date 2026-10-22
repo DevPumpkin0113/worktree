@@ -16,7 +16,7 @@ function cli(root,...args){return run(repository,...args,'--project',root);}
 function fixture(t){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'worktree-cli-'));
  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
- const source=JSON.parse(saveProjectComment(projectFixture(),'W001','박대호','CLI 조회 예시')); 
+ const source=JSON.parse(saveProjectComment(projectFixture(),'W001','박대호','CLI 조회 예시'));
  fs.writeFileSync(path.join(root,'worktree.json'),JSON.stringify({dataDirectory:source.dataDirectory}));
  for(const [key,value] of Object.entries(source.files)){const file=path.join(root,source.dataDirectory,key);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,value);}
  return root;

@@ -10,9 +10,12 @@
     "tauri": "npm run tauri --workspace @worktree/desktop --",
     "version:set": "node scripts/version.mjs",
     "version:check": "node scripts/version.mjs --check",
-    "check:types": "tsc -p apps/desktop/tsconfig.json && tsc -p packages/core/tsconfig.json",
-    "format": "prettier --write \"apps/desktop/src/**/*.{ts,tsx,css}\" \"packages/core/src/**/*.ts\" \"tests/**/*.{ts,tsx}\" apps/desktop/vite.config.ts apps/desktop/tsconfig.json packages/core/tsconfig.json tsconfig.json",
-    "format:check": "prettier --check \"apps/desktop/src/**/*.{ts,tsx,css}\" \"packages/core/src/**/*.ts\" \"tests/**/*.{ts,tsx}\" apps/desktop/vite.config.ts apps/desktop/tsconfig.json packages/core/tsconfig.json tsconfig.json"
+    "check:types": "tsc -p apps/desktop/tsconfig.json && tsc -p packages/core/tsconfig.json && tsc -p apps/cli/tsconfig.json",
+    "format": "prettier --write \"apps/desktop/src/**/*.{ts,tsx,css}\" \"packages/core/src/**/*.ts\" \"tests/**/*.{ts,tsx}\" apps/desktop/vite.config.ts apps/desktop/tsconfig.json packages/core/tsconfig.json tsconfig.json \"apps/cli/src/**/*.ts\" apps/cli/tsconfig.json \"apps/cli/scripts/**/*.ts\"",
+    "format:check": "prettier --check \"apps/desktop/src/**/*.{ts,tsx,css}\" \"packages/core/src/**/*.ts\" \"tests/**/*.{ts,tsx}\" apps/desktop/vite.config.ts apps/desktop/tsconfig.json packages/core/tsconfig.json tsconfig.json \"apps/cli/src/**/*.ts\" apps/cli/tsconfig.json \"apps/cli/scripts/**/*.ts\"",
+    "cli": "node --import tsx apps/cli/src/main.ts",
+    "build:cli": "npm run build --workspace @worktree/cli",
+    "pretest": "npm run build:cli"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

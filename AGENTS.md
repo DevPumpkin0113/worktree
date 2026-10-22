@@ -111,9 +111,9 @@
 
 - 박대호가 완성도를 승인하기 전에는 `Beta Worktree 0.x.x`를 유지한다. 명시적인 정식 전환 승인 후 `Release Worktree 1.x.x`로 관리한다. 숫자 버전은 SemVer를 유지하고 Beta/Release는 앱 표시와 GitHub 릴리즈 제목에 적용한다. 빌드의 development/release 구분은 배포 빌드 여부이며 제품의 Beta/Release 완성도와 구분한다. 앱 식별자·실행 파일·설치/업데이트 경로는 유지한다.
 
-- package.json을 기준으로 MAJOR.MINOR.PATCH를 사용한다. 0.x의 새 기능·사용 흐름 변경은 MINOR, 기존 동작을 유지하는 오류 수정·작은 시각 조정은 PATCH다. 개발 버전도 갱신하며 공개 배포 여부와 구분한다.
-- npm run version:set -- X.Y.Z로만 버전을 동기화하고 version:check로 확인한다. package·lock·Tauri·Cargo 버전을 개별 수정하지 않는다.
-- 개발 변경은 CHANGELOG Unreleased에 개발 버전으로 적고 릴리즈 시 버전·날짜 아래로 옮긴다. 문서만 정리하는 경우 앱 버전은 올리지 않는다. 저장 schemaVersion과 앱 버전은 별개이며 호환성 변경과 이전 여부를 명시한다.
+- 앱은 apps/desktop/package.json, CLI는 apps/cli/package.json을 기준으로 각각 MAJOR.MINOR.PATCH를 사용한다. 0.x의 새 기능·사용 흐름 변경은 MINOR, 기존 동작을 유지하는 오류 수정·작은 시각 조정은 PATCH다. 개발 버전도 갱신하며 공개 배포 여부와 구분한다.
+- npm run version:set -- app|cli X.Y.Z로 대상 제품 버전만 동기화하고 version:check로 확인한다. package·lock·Tauri·Cargo 버전을 개별 수정하지 않는다.
+- 개발 변경은 CHANGELOG의 App Unreleased 또는 CLI Unreleased에 제품별 개발 버전으로 적고 릴리즈 시 버전·날짜 아래로 옮긴다. 문서만 정리하는 경우 앱 버전은 올리지 않는다. 저장 schemaVersion과 앱 버전은 별개이며 호환성 변경과 이전 여부를 명시한다.
 - main 갱신 CI가 미배포 버전의 검사·Windows 빌드·서명·v태그·Release를 생성한다. 이미 배포된 버전은 건너뛴다. develop·수동 태그로 정식 게시하지 않는다. 게시한 태그·설치 파일은 덮어쓰지 않는다. release 브랜치를 기본으로 만들지 않는다.
 - 업데이트는 Tauri 서명 검증을 필수로 하고 시작 시 1회 자동 확인(설정 가능)·수동 확인을 지원한다. 다운로드·설치는 사용자 클릭·확인 후에만 수행한다. 공개 키를 임의로 재생성하지 않는다. 문제 제보는 문서 내용·경로 없이 앱 정보가 담긴 작성 화면만 열며 자동 제출하지 않는다.
 
@@ -122,7 +122,7 @@
 - index.html은 root와 main.tsx 진입점만 둔다. App.tsx는 화면 조합, components는 React UI, hooks는 생명주기, app은 상태·타입, styles는 CSS다. components는 layout·workspace·task-detail·project·documents·settings·problems·shared의 역할에 따라 둔다.
 - domain은 문서 규격·작업 편집·ID·집계, views는 SVG 계산·표시 문자열, platform은 Tauri·저장소, interactions는 독립 입력·스크롤 로직이다. 테스트는 tests/domain·platform·interactions·visualizations·integration·scripts와 helpers로 구분한다.
 - 하나의 컴포넌트 파일은 하나의 화면/UI 책임을 갖는다. 독립 폼·표시·생명주기를 분리한다. React 소유 DOM은 상태·이벤트·ref로 관리하며 문자열 HTML 삽입은 DependencyChart의 SVG 어댑터에만 허용한다.
-- project-source.ts는 스냅샷·설정, task-file.ts는 Markdown codec, project-document.ts는 집합 검증·모델 조합, task-editing.ts·task-deletion.ts·project-settings.ts는 순수 변환이다. 향후 CLI도 사용할 수 있도록 파일 I/O와 분리한다. CLI 자체는 이번 범위 밖이다.
+- project-source.ts는 스냅샷·설정, task-file.ts는 Markdown codec, project-document.ts는 집합 검증·모델 조합, task-editing.ts·task-deletion.ts·project-settings.ts는 순수 변환이다. 향후 CLI도 사용할 수 있도록 파일 I/O와 분리한다. CLI는 apps/cli에서 공용 core·storage를 사용한다.
 - projects.rs는 검색·초기화·명령, project_files.rs는 경로·읽기, project_write.rs는 스냅샷 비교·교체·복구를 담당한다. 다른 프로젝트 파일이나 템플릿을 전역 검색하지 않는다.
 - 한국어·영어 표시는 apps/desktop/src/i18n/ko.ts·en.ts와 messages.ts를 사용한다. Rust 문구는 apps/desktop/src-tauri/apps/desktop/src/i18n에 둔다. 문서 속성 키는 번역하지 않는다. 오류 판단에 번역 문자열을 파싱하지 않는다.
 - 색상·SVG는 테마 CSS 변수를 사용하고 공용 포커스 색상을 따른다. 재사용 입력은 shared 컴포넌트로 둔다.
@@ -223,5 +223,49 @@
 - npm workspaces 단일 저장소이며 `apps/desktop`은 기존 데스크톱, `apps/cli`는 독립 CLI 준비 패키지, `packages/core`는 공통 문서 규칙·검증·순수 변환이다. 루트 `npm run dev`, `npm run build`, `npm run tauri dev` 명령은 데스크톱으로 전달한다.
 - 앞선 화면 책임 설명의 `src`, `index.html`, `vite.config.ts`는 `apps/desktop` 내부 경로다. 공통 도메인은 `packages/core/src`에 두며 소비자는 `@worktree/core/<모듈명>`으로 접근한다. 데스크톱 전용 상세 설정·오류 표시 어댑터는 `apps/desktop/src/domain`에 유지한다.
 - core는 데스크톱·React·Tauri·파일 I/O를 참조하지 않는다. 공통 오류·규칙 문구는 core의 i18n에 두고 앱 번역에 합성한다. 앱 언어 변경은 core에도 전달한다. CLI의 독립 프로세스는 core 언어를 직접 지정할 수 있다.
-- 루트 package.json이 제품 버전 기준이며 workspace 패키지·npm lock·Tauri·Cargo 버전을 `npm run version:set -- X.Y.Z`로 함께 갱신한다. 테스트는 당분간 루트 tests에서 통합 실행한다.
+- 앱과 CLI는 독립 버전이다. `npm run version:set -- app X.Y.Z`는 desktop npm·Tauri·앱 Cargo를, `npm run version:set -- cli X.Y.Z`는 CLI npm·보조 실행 파일 Cargo를 갱신한다. root/core/storage는 비배포 내부 0.0.0이며 제품 버전에 동기화하지 않는다. 테스트는 당분간 루트 tests에서 통합 실행한다.
 - CLI 명령·별도 실행 파일·배포·쓰기 I/O는 이번 구조 분리에 포함하지 않는다. 쓰기 명령 추가 전 Rust의 안전한 저장과 공유할 경계를 확정한다. CLI가 자체 덮어쓰기 구현으로 우회하면 안 된다.
+
+
+### 초기 읽기 전용 CLI 기록 (CLI 0.1.0, 아래 후속 정책으로 확장)
+
+- `apps/cli/src`는 인수 해석(arguments)·파일 읽기(project-reader)·명령(commands)·출력(output)·진입점(main)을 분리한다. 순수 문서 처리와 번역은 core를 재사용한다.
+- 루트 `npm run cli -- <명령>`으로 개발 실행, `npm run build:cli`로 Node.js 24용 단일 `apps/cli/dist/main.js`를 생성한다. npm 공개 배포와 단독 EXE는 아직 없다.
+- 최초 구현 당시에는 status·task list/show·validate만 제공했다. --project는 폴더 또는 worktree.json, --json은 성공 stdout/실패 stderr, 종료 코드는 0/1/2다. 이 시점에는 생성·수정·삭제·댓글 작성을 제공하지 않았으며 아래 후속 CLI 정책에서 확장했다.
+- 읽기 명령은 미완료 트랜잭션·초기화 기록을 발견하면 중단하며 변경하지 않는다. 명시적 recover 지원은 아래 0.3.0 정책을 따른다. Rust 저장 구현을 TypeScript 덮어쓰기로 대체하면 안 된다. 단일 파일 조회가 외부 동시 변경까지 원자적으로 보장하지 않는다.
+- `tests/cli`는 임시 프로젝트를 생성한 뒤 실제 CLI 프로세스로 검증한다. Windows junction 검증에는 샌드박스 밖 실행이 필요할 수 있다. 루트 타입/포맷 검사에 CLI도 포함한다.
+
+
+### CLI 쓰기·shell·공용 저장 (CLI 0.1.0)
+
+- CLI는 작업/마일스톤 add·edit·delete와 comment list·add·edit·delete를 제공한다. 쓰기는 task-write/comment-write의 변환 계획과 write-commands의 검증·저장 호출로 분리한다. 삭제에는 --yes, 마일스톤 하위 정책에는 --children, 외부 참조 해제에는 --detach를 사용한다. --dry-run은 파일을 바꾸지 않는다.
+- 읽기 결과 revision과 쓰기의 --expect로 에이전트의 이전 조회 이후 변경을 거부한다. 생성의 무조건 재시도는 중복 항목을 만들 수 있으므로 --expect를 권장한다. 저장 직전 공용 Rust 전체 스냅샷 비교도 유지한다.
+- `packages/storage`는 Rust 파일 읽기·검사·저장·복구의 공용 구현이며 데스크톱의 project_files/project_write 모듈은 이를 재노출한다. apps/cli/native는 JSON stdin 요청을 받아 저장하는 Windows 보조 실행 파일이다. 프로젝트 의미 검증·ID·변환은 TypeScript core에 유지한다.
+- 공용 LOCK은 프로세스 내 Mutex와 OS 파일 잠금을 함께 사용한다. 같은 사용자 임시 폴더의 worktree-storage-v1.lock은 프로젝트 내용 없이 잠금 식별에만 사용하며 파일은 남긴다. 잠금을 얻지 못하면 오류로 반환한다. 외부 편집기의 파일 쓰기까지 차단하는 CAS는 아니다.
+- npm run build:cli는 JS 번들과 저장 보조 실행 파일을 dist에 생성한다. 배포 런타임에는 Node.js 24가 필요하고 개발 빌드에는 Rust가 필요하다. npm prepack은 빌드를 실행한다. 실제 배포 이름·npm 게시는 별도 승인 대상이다.
+- shell은 프로젝트·언어·출력·작성자·명령 이력을 현재 프로세스 메모리에서만 유지한다. 명령을 OS 셸로 실행하지 않고 독립 토크나이저로 해석하며, use·language·format·author·exit를 제공한다. 표 렌더링은 독립 파일에 둔다. 전체 화면 방향키 UI는 제외한다.
+- root npm test는 pretest로 CLI/저장 보조 실행 파일을 빌드한다. Rust 검증은 desktop, packages/storage, apps/cli/native의 Cargo manifest별로 수행한다. 보조 실행 파일은 CLI 버전을 따르고 공용 Rust crate는 별도 내부 버전을 유지한다. version:check는 각 Cargo.lock의 공용 의존 버전도 검사한다.
+
+
+### CLI 초기화 (CLI 0.1.0)
+
+- init은 신규/빈 프로젝트 폴더 생성과 문서 집합 생성을 지원한다. 기본값은 폴더명·W 접두어·docs/worktree이며 옵션·입력 JSON으로 설정한다. 기본 규칙은 core의 유형·팔레트·우선순위를 사용한다. 미초기화 shell에서도 init을 실행할 수 있다.
+- packages/storage/project_init가 데스크톱과 CLI의 설정 검증·스테이징·마커 게시를 공유한다. 호출자는 공용 LOCK을 유지한다. 기존 마커·데이터 폴더·미완료 초기화 기록은 덮어쓰지 않는다. dry-run은 대상 폴더도 생성하지 않는다.
+- 사용자가 지정한 실제 수동 테스트 폴더는 별도 실행 지시 없이 자동 초기화하지 않는다. 통합 테스트는 별도 임시 폴더에서 신규 생성→작업/마일스톤/댓글→검증을 실행한다.
+
+### CLI 설정·탐색 (CLI 0.1.0)
+
+- project show/edit은 프로젝트 설정을 조회·부분 JSON으로 수정한다. core 설정 변환과 공용 저장/충돌 방지를 재사용한다. schema는 JSON Schema 표준이 아닌 CLI 계약·프로젝트별 허용값 안내다.
+- 목록 검색은 원본 ID·제목의 대소문자 무시 부분 일치이고 추가 필터는 정확한 일치 AND다. 일반 명령과 shell은 같은 실행 경로를 사용한다.
+
+### CLI 본문·batch·복구 (0.3.0)
+
+- --description-file/--text-file은 UTF-8 본문이며 -는 표준입력이다. --input -도 지원한다. shell에서는 stdin을 파일 입력으로 사용할 수 없다. 파일·stdin은 최대 16MiB이며 최종 문서 제한을 별도 검증한다.
+- batch --input은 commands 문자열 배열 목록(최대 100)을 받아 작업·마일스톤·댓글 쓰기를 순서대로 계획한 뒤 기존 전체 스냅샷 저장을 한 번 호출한다. 계획 중 오류는 저장하지 않으며 외부 변경은 전체 revision/스냅샷으로 검사한다. 내부 명령은 파일·프로젝트·언어·도움말·입력·미리보기 덮어쓰기를 허용하지 않는다.
+- recover --dry-run은 기록 유무 검사, --yes는 공용 저장/초기화 복구를 실행한다. deleting 초기화 복구는 이미 확정된 잔여 삭제를 완료하며 되살리기가 아니다. 프로젝트 초기화 삭제 기능 자체를 CLI에 추가한 것은 아니다.
+- apps/cli/src/i18n은 오류 ko/en 리소스를 제공한다. JSON 키·코드는 고정이고 OS/파서 원인 상세는 번역하지 않는다. Ctrl+C는 readline 입력을 비우고 프롬프트로 돌아온다.
+
+### CLI 대화형 초기화 (0.4.0)
+
+- TTY init은 init-wizard에서 입력·숫자 선택·기본값·최종 확인을 제공한다. 실제 변환·검사·저장은 기존 init-command를 재사용하며 확인 전에는 dry-run만 호출한다.
+- init --yes/--no-interactive, JSON·입력파일·비TTY 실행은 질문하지 않는다. shell은 별도 readline을 만들지 않고 기존 인터페이스에서 질문하며 SIGINT를 질문 중/명령 입력 중으로 분리한다. 질문의 SIGINT·close 리스너와 AbortController는 매번 정리한다.

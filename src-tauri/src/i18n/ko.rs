@@ -106,3 +106,15 @@ pub const PROJECT_RECOVERY_CONFLICT: &str = "중단된 저장 이후 외부 변�
 pub const SELECT_PROJECT_PARENT: &str = "프로젝트 내부의 상위 폴더를 선택하세요.";
 
 pub const RESET_NAME_MISMATCH: &str = "프로젝트 이름이 일치하지 않습니다.";
+
+pub const RESET_OPERATIONS: [&str; 9] = [
+    "초기화 파일 읽기 실패",
+    "초기화 대상 검사 실패",
+    "초기화 임시 폴더 생성 실패",
+    "초기화 데이터 폴더 이동 실패",
+    "초기화 파일 삭제 실패",
+    "초기화 폴더 삭제 실패",
+    "초기화 복구 기록 저장 실패",
+    "초기화 데이터 복구 실패",
+    "초기화 프로젝트 스냅샷 확인 실패",
+];

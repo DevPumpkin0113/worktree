@@ -1,3 +1,4 @@
+use crate::i18n::ResetOperation as Op;
 use crate::{project_files as files, project_files::ProjectSource, project_write};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -5,6 +6,23 @@ use std::{
     path::{Path, PathBuf},
 };
 
+fn context<T, E: std::fmt::Display>(
+    result: Result<T, E>,
+    operation: Op,
+    path: &Path,
+) -> Result<T, String> {
+    result.map_err(|error| crate::i18n::reset_failure(operation, path, error))
+}
+fn read_marker(path: &Path) -> Result<String, String> {
+    context(files::read_text(path), Op::Read, path)
+}
+fn snapshot(root: &Path) -> Result<ProjectSource, String> {
+    context(files::read(root), Op::Snapshot, root)
+}
+fn remove_journal(root: &Path) -> Result<(), String> {
+    let path = files::safe_join(root, JOURNAL)?;
+    context(fs::remove_file(&path), Op::DeleteFile, &path)
+}
 const JOURNAL: &str = ".worktree-reset.json";
 const STAGE_PREFIX: &str = ".worktree-reset-data-";
 #[derive(Serialize, Deserialize)]
@@ -25,10 +43,8 @@ fn load(root: &Path) -> Result<Option<Journal>, String> {
     if !path.exists() {
         return Ok(None);
     }
-    let text = files::read_text(&path)?;
-    serde_json::from_str(&text)
-        .map(Some)
-        .map_err(|e| e.to_string())
+    let text = read_marker(&path)?;
+    context(serde_json::from_str(&text).map(Some), Op::Read, &path)
 }
 fn conflict() -> String {
     crate::i18n::project_recovery_conflict().into()
@@ -44,23 +60,23 @@ fn stage_path(root: &Path, stage: &str) -> Result<PathBuf, String> {
 }
 // Inspect each entry without following links; deletion is restricted to the staged data tree.
 fn data_tree(path: &Path, remove: bool) -> Result<(), String> {
-    let meta = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
+    let meta = context(fs::symlink_metadata(path), Op::Inspect, path)?;
     if files::is_link(&meta) {
-        return Err(files::invalid());
+        return context(Err(files::invalid()), Op::Inspect, path);
     }
     if meta.is_dir() {
-        for entry in fs::read_dir(path).map_err(|e| e.to_string())? {
-            data_tree(&entry.map_err(|e| e.to_string())?.path(), remove)?;
+        for entry in context(fs::read_dir(path), Op::Inspect, path)? {
+            data_tree(&context(entry, Op::Inspect, path)?.path(), remove)?;
         }
         if remove {
-            fs::remove_dir(path).map_err(|e| e.to_string())?;
+            context(fs::remove_dir(path), Op::DeleteDirectory, path)?;
         }
     } else if meta.is_file() && !meta.permissions().readonly() {
         if remove {
-            fs::remove_file(path).map_err(|e| e.to_string())?;
+            context(fs::remove_file(path), Op::DeleteFile, path)?;
         }
     } else {
-        return Err(files::invalid());
+        return context(Err(files::invalid()), Op::Inspect, path);
     }
     Ok(())
 }
@@ -71,9 +87,9 @@ fn finish_deletion(root: &Path, stage: &str) -> Result<(), String> {
         data_tree(&data, true)?;
     }
     if container.exists() {
-        fs::remove_dir(container).map_err(|e| e.to_string())?;
+        context(fs::remove_dir(&container), Op::DeleteDirectory, &container)?;
     }
-    fs::remove_file(files::safe_join(root, JOURNAL)?).map_err(|e| e.to_string())
+    remove_journal(root)
 }
 pub fn recover(root: &Path) -> Result<(), String> {
     match load(root)? {
@@ -96,26 +112,33 @@ pub fn recover(root: &Path) -> Result<(), String> {
             if value["dataDirectory"].as_str() != Some(&directory) {
                 return Err(files::invalid());
             }
-            if marker_path.exists() && files::read_text(&marker_path)? != marker {
+            if marker_path.exists() && read_marker(&marker_path)? != marker {
                 return Err(conflict());
             }
             if staged.exists() {
                 if data.exists() {
                     return Err(conflict());
                 }
-                fs::create_dir_all(data.parent().ok_or_else(files::invalid)?)
-                    .map_err(|e| e.to_string())?;
-                fs::rename(staged, &data).map_err(|e| e.to_string())?;
+                context(
+                    fs::create_dir_all(data.parent().ok_or_else(files::invalid)?),
+                    Op::Restore,
+                    &data,
+                )?;
+                context(fs::rename(&staged, &data), Op::Restore, &data)?;
             } else if !data.is_dir() {
                 return Err(conflict());
             }
             if !marker_path.exists() {
-                project_write::atomic(&marker_path, &marker, true)?;
+                context(
+                    project_write::atomic(&marker_path, &marker, true),
+                    Op::Restore,
+                    &marker_path,
+                )?;
             }
             if container.exists() {
-                fs::remove_dir(container).map_err(|e| e.to_string())?;
+                context(fs::remove_dir(&container), Op::DeleteDirectory, &container)?;
             }
-            fs::remove_file(files::safe_join(root, JOURNAL)?).map_err(|e| e.to_string())
+            remove_journal(root)
         }
     }
 }
@@ -138,31 +161,40 @@ pub fn reset(root: &Path, expected: &str, confirmation: &str) -> Result<&'static
             "reset"
         });
     }
-    project_write::recover(root, &files::data_directory(root)?)?;
-    if files::read(root)? != before {
+    context(
+        project_write::recover(
+            root,
+            &context(files::data_directory(root), Op::Read, &marker_path)?,
+        ),
+        Op::Restore,
+        root,
+    )?;
+    if snapshot(root)? != before {
         return Ok("conflict");
     }
     let data = files::safe_join(root, &before.data_directory)?;
-    let marker = files::read_text(&marker_path)?;
+    let marker = read_marker(&marker_path)?;
     let value: serde_json::Value = serde_json::from_str(&marker).map_err(|e| e.to_string())?;
     if value["dataDirectory"].as_str() != Some(&before.data_directory) {
         return Ok("conflict");
     }
-    if fs::metadata(&marker_path)
-        .map_err(|e| e.to_string())?
+    if context(fs::metadata(&marker_path), Op::Inspect, &marker_path)?
         .permissions()
         .readonly()
     {
-        return Err(files::invalid());
+        return context(Err(files::invalid()), Op::Inspect, &marker_path);
     }
     data_tree(&data, false)?;
-    if files::read(root)? != before || files::read_text(&marker_path)? != marker {
+    if snapshot(root)? != before || read_marker(&marker_path)? != marker {
         return Ok("conflict");
     }
-    let temporary = tempfile::Builder::new()
-        .prefix(STAGE_PREFIX)
-        .tempdir_in(root)
-        .map_err(|e| e.to_string())?;
+    let temporary = context(
+        tempfile::Builder::new()
+            .prefix(STAGE_PREFIX)
+            .tempdir_in(root),
+        Op::Create,
+        root,
+    )?;
     let stage = temporary
         .path()
         .file_name()
@@ -176,37 +208,42 @@ pub fn reset(root: &Path, expected: &str, confirmation: &str) -> Result<&'static
         stage: stage.clone(),
         marker: marker.clone(),
     };
-    project_write::atomic(
+    context(
+        project_write::atomic(
+            &journal_path,
+            &serde_json::to_string(&pending).map_err(|e| e.to_string())?,
+            true,
+        ),
+        Op::SaveJournal,
         &journal_path,
-        &serde_json::to_string(&pending).map_err(|e| e.to_string())?,
-        true,
     )?;
     let _container = temporary.keep();
     let result = (|| {
-        if files::read(root)? != before || files::read_text(&marker_path)? != marker {
+        if snapshot(root)? != before || read_marker(&marker_path)? != marker {
             return Err(conflict());
         }
-        fs::rename(
-            files::safe_join(root, &before.data_directory)?,
-            files::safe_join(&container, "data")?,
-        )
-        .map_err(|e| e.to_string())?;
-        if files::read_text(&marker_path)? != marker {
+        let staged_data = files::safe_join(&container, "data")?;
+        context(fs::rename(&data, &staged_data), Op::Move, &data)?;
+        if read_marker(&marker_path)? != marker {
             return Err(conflict());
         }
-        fs::remove_file(&marker_path).map_err(|e| e.to_string())?;
+        context(fs::remove_file(&marker_path), Op::DeleteFile, &marker_path)?;
         let deleting = Journal::Deleting {
             directory: before.data_directory.clone(),
             stage: stage.clone(),
         };
-        project_write::atomic(
+        context(
+            project_write::atomic(
+                &journal_path,
+                &serde_json::to_string(&deleting).map_err(|e| e.to_string())?,
+                false,
+            ),
+            Op::SaveJournal,
             &journal_path,
-            &serde_json::to_string(&deleting).map_err(|e| e.to_string())?,
-            false,
         )
     })();
     if let Err(error) = result {
-        recover(root).map_err(|recovery| format!("{error}; {recovery}"))?;
+        recover(root).map_err(|recovery| crate::i18n::reset_recovery_failure(&error, &recovery))?;
         return Err(error);
     }
     finish_deletion(root, &stage)?;
@@ -220,8 +257,76 @@ pub async fn reset_project(
 ) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = project_write::LOCK.lock().map_err(|e| e.to_string())?;
-        reset(&files::root(Path::new(&path))?, &expected, &confirmation).map(String::from)
+        let root = context(files::root(Path::new(&path)), Op::Inspect, Path::new(&path))?;
+        reset(&root, &expected, &confirmation).map(String::from)
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn inspection_failure_identifies_the_target_and_original_error() {
+        let temporary = tempfile::tempdir().unwrap();
+        let missing = temporary.path().join("missing.md");
+        let cause = fs::symlink_metadata(&missing).unwrap_err().to_string();
+        let error = data_tree(&missing, false).unwrap_err();
+        assert_eq!(
+            error,
+            crate::i18n::reset_failure(Op::Inspect, &missing, cause)
+        );
+    }
+
+    #[test]
+    fn invalid_journal_identifies_its_path_and_preserves_content() {
+        let temporary = tempfile::tempdir().unwrap();
+        let path = temporary.path().join(JOURNAL);
+        fs::write(&path, "invalid json").unwrap();
+        let error = recover(temporary.path()).unwrap_err();
+        assert!(error.contains(&path.display().to_string()));
+        assert!(error.contains("expected value"));
+        assert_eq!(fs::read_to_string(path).unwrap(), "invalid json");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn locked_file_reports_deletion_path_and_keeps_journal_for_retry() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let temporary = tempfile::tempdir().unwrap();
+        let root = temporary.path();
+        let stage = ".worktree-reset-data-test";
+        let data = root.join(stage).join("data");
+        fs::create_dir_all(&data).unwrap();
+        let path = data.join("locked.md");
+        fs::write(&path, "preserve until unlocked").unwrap();
+        let journal = Journal::Deleting {
+            directory: "docs/worktree".into(),
+            stage: stage.into(),
+        };
+        fs::write(root.join(JOURNAL), serde_json::to_string(&journal).unwrap()).unwrap();
+        let held = fs::OpenOptions::new()
+            .read(true)
+            .share_mode(0)
+            .open(&path)
+            .unwrap();
+        let error = recover(root).unwrap_err();
+        let cause = fs::remove_file(&path).unwrap_err().to_string();
+        assert_eq!(
+            error,
+            crate::i18n::reset_failure(Op::DeleteFile, &path, cause)
+        );
+        assert!(root.join(JOURNAL).exists());
+        assert!(path.exists());
+        drop(held);
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "preserve until unlocked"
+        );
+        recover(root).unwrap();
+        assert!(!root.join(stage).exists());
+        assert!(!root.join(JOURNAL).exists());
+    }
 }

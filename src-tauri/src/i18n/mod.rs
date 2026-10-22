@@ -391,3 +391,43 @@ pub fn reset_name_mismatch() -> &'static str {
         ko::RESET_NAME_MISMATCH
     }
 }
+
+#[derive(Clone, Copy)]
+pub enum ResetOperation {
+    Read,
+    Inspect,
+    Create,
+    Move,
+    DeleteFile,
+    DeleteDirectory,
+    SaveJournal,
+    Restore,
+    Snapshot,
+}
+pub fn reset_failure(
+    operation: ResetOperation,
+    path: &std::path::Path,
+    error: impl std::fmt::Display,
+) -> String {
+    let index = operation as usize;
+    if ENGLISH.load(Ordering::Relaxed) {
+        format!(
+            "{}\nPath: {}\nCause: {error}",
+            en::RESET_OPERATIONS[index],
+            path.display()
+        )
+    } else {
+        format!(
+            "{}\n경로: {}\n원인: {error}",
+            ko::RESET_OPERATIONS[index],
+            path.display()
+        )
+    }
+}
+pub fn reset_recovery_failure(error: &str, recovery: &str) -> String {
+    if ENGLISH.load(Ordering::Relaxed) {
+        format!("{error}\n\nRecovery also failed:\n{recovery}")
+    } else {
+        format!("{error}\n\n복구 중에도 오류가 발생했습니다:\n{recovery}")
+    }
+}

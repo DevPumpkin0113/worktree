@@ -74,3 +74,15 @@ pub const PROJECT_RECOVERY_CONFLICT: &str = "Recovery stopped because files were
 pub const SELECT_PROJECT_PARENT: &str = "Select a parent folder inside the project.";
 
 pub const RESET_NAME_MISMATCH: &str = "The project name does not match.";
+
+pub const RESET_OPERATIONS: [&str; 9] = [
+    "Failed to read reset file",
+    "Failed to inspect reset target",
+    "Failed to create reset staging directory",
+    "Failed to move reset data directory",
+    "Failed to delete reset file",
+    "Failed to delete reset directory",
+    "Failed to save reset journal",
+    "Failed to restore reset data",
+    "Failed to check reset project snapshot",
+];

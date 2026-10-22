@@ -1735,3 +1735,320 @@ test('답글 대상 번호를 표시하고 답글의 답글도 한 단계로 유
     await f.close();
   }
 });
+
+test('탭 상세는 홈 화면을 유지하고 여러 작업의 탭·초안을 프로젝트별로 기억한다', async () => {
+  const f = await fixture({ displayName: '박대호' });
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    assert.equal(f.element('#task-home-tab').getAttribute('aria-selected'), 'true');
+    assert.ok(
+      f.element('.workspace-page-heading').compareDocumentPosition(f.element('.task-tabs')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    const home = f.element('#workspaceHome'),
+      content = f.element('#content');
+    content.scrollTop = 135;
+    await act(() => {
+      content.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+    await act(() => f.store.selectWork('W001'));
+    assert.equal(f.element('#detail').tagName, 'SECTION');
+    assert.equal(f.element('#detail').hasAttribute('open'), false);
+    assert.equal(home.hasAttribute('hidden'), true);
+    await f.click('#previewCommentsTab');
+    await f.value('#commentContent', 'W001 초안');
+    await act(() => f.store.selectWork('W002'));
+    await act(() => f.store.selectWork('W001'));
+    assert.deepEqual(f.store.active?.taskTabs, ['W001', 'W002']);
+    assert.equal(f.element<HTMLTextAreaElement>('#commentContent').value, 'W001 초안');
+    await f.click('#task-home-tab');
+    assert.equal(home, f.element('#workspaceHome'));
+    assert.equal(content, f.element('#content'));
+    assert.equal(home.hasAttribute('hidden'), false);
+    assert.equal(content.scrollTop, 135);
+    await f.click('#task-tab-W002');
+    assert.match(f.element('#detailTitle').textContent ?? '', /W002/);
+    await act(() => f.store.selectProject('C:/QB'));
+    assert.equal(f.host.querySelector('#task-tab-W002'), null);
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectProject('C:/QA'));
+    assert.deepEqual(f.store.active?.taskTabs, ['W001', 'W002']);
+    assert.equal(f.store.getSnapshot().selectedId, 'W002');
+    await f.click('.task-tab[data-active="true"] .task-tab-close');
+    assert.equal(f.store.getSnapshot().selectedId, 'W001');
+    await f.click('.task-tab[data-active="true"] .task-tab-close');
+    assert.equal(f.store.getSnapshot().selectedId, null);
+    assert.equal(f.element('#task-home-tab').getAttribute('aria-selected'), 'true');
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업 탭은 키보드 전환·외부 작업 삭제·설정 전환·프로젝트 닫기를 처리한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectWork('W002'));
+    await act(() => {
+      f.element('#task-tab-W002').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true }),
+      );
+    });
+    assert.equal(f.store.getSnapshot().selectedId, null);
+    await act(() => {
+      f.element('#task-home-tab').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }),
+      );
+    });
+    assert.equal(f.store.getSnapshot().selectedId, 'W002');
+    const changed = deleteProjectTask(f.files.get(first)!, 'W002', {
+      children: 'keep',
+      detachPredecessors: true,
+    });
+    f.files.set(first, changed);
+    await act(() => f.store.poll());
+    assert.deepEqual(f.store.active?.taskTabs, ['W001']);
+    assert.equal(f.store.getSnapshot().selectedId, null);
+    await f.click('#task-tab-W001');
+    await act(() => f.store.saveSetting('detailMode', 'sidebar'));
+    assert.equal(f.element<HTMLDialogElement>('#detail').open, true);
+    assert.ok(f.element('#detail').classList.contains('sidebar'));
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    assert.equal(f.element('#detail').tagName, 'SECTION');
+    await act(() => f.store.closeProject('C:/QA'));
+    await act(() => f.store.open('C:/QA'));
+    assert.deepEqual(f.store.active?.taskTabs, []);
+    assert.equal(f.store.getSnapshot().selectedId, null);
+  } finally {
+    await f.close();
+  }
+});
+
+test('상세 탭에서 검색하면 열린 작업 탭을 유지하며 홈의 필터 결과로 이동한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    await act(() => f.store.setPage('tasks'));
+    const firstName = f.store.active!.model!.rows.find((row) => row.id === 'W001')!.name;
+    const secondName = f.store.active!.model!.rows.find((row) => row.id === 'W002')!.name;
+    await act(() => f.store.selectWork('W002'));
+    assert.equal(f.element<HTMLInputElement>('#search').disabled, false);
+    await f.value('#search', firstName);
+    assert.equal(f.store.getSnapshot().selectedId, null);
+    assert.equal(f.store.getSnapshot().page, 'tasks');
+    assert.equal(f.element('#task-home-tab').getAttribute('aria-selected'), 'true');
+    assert.ok(f.element('#content').textContent?.includes(firstName));
+    assert.ok(!f.element('#content').textContent?.includes(secondName));
+    assert.deepEqual(f.store.active!.taskTabs, ['W002']);
+    for (const page of ['analytics', 'project'] as const) {
+      await act(() => f.store.setPage(page));
+      assert.equal(f.host.querySelector('.task-tabs'), null);
+      assert.equal(f.element('#detail').hasAttribute('hidden'), true);
+      assert.equal(f.element('#workspaceHome').hasAttribute('hidden'), false);
+      assert.equal(f.element<HTMLInputElement>('#search').disabled, true);
+      assert.deepEqual(f.store.active!.taskTabs, ['W002']);
+    }
+    await act(() => f.store.setPage('board'));
+    await f.click('#task-tab-W002');
+    assert.equal(f.element<HTMLInputElement>('#search').disabled, false);
+    await f.value('#search', secondName);
+    assert.equal(f.store.getSnapshot().page, 'board');
+    assert.equal(f.store.getSnapshot().selectedId, null);
+    assert.equal(f.store.getSnapshot().query, secondName);
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업 탭의 휠 클릭은 비활성 탭을 선택하지 않고 닫으며 홈 탭은 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectWork('W002'));
+    await act(() => {
+      f.element('#task-tab-W001').dispatchEvent(
+        new MouseEvent('auxclick', { button: 1, bubbles: true, cancelable: true }),
+      );
+    });
+    assert.deepEqual(f.store.active!.taskTabs, ['W002']);
+    assert.equal(f.store.getSnapshot().selectedId, 'W002');
+    await act(() => {
+      f.element('#task-tab-W002').dispatchEvent(
+        new MouseEvent('auxclick', { button: 2, bubbles: true, cancelable: true }),
+      );
+    });
+    assert.deepEqual(f.store.active!.taskTabs, ['W002']);
+    await act(() => {
+      f.element('#task-tab-W002').dispatchEvent(
+        new MouseEvent('auxclick', { button: 1, bubbles: true, cancelable: true }),
+      );
+    });
+    assert.equal(f.store.getSnapshot().selectedId, null);
+    assert.deepEqual(f.store.active!.taskTabs, []);
+    await act(() => {
+      f.element('#task-home-tab').dispatchEvent(
+        new MouseEvent('auxclick', { button: 1, bubbles: true, cancelable: true }),
+      );
+    });
+    assert.ok(f.element('#task-home-tab'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('작업·프로젝트 탭은 공용 재정렬과 휠 가로 스크롤을 사용하고 홈은 고정한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectWork('W002'));
+    const strip = f.element('.task-tabs');
+    strip.getBoundingClientRect = () => ({
+      left: 0,
+      right: 300,
+      top: 0,
+      bottom: 30,
+      width: 300,
+      height: 30,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+    f.host.querySelectorAll<HTMLElement>('.task-tab').forEach((tab, index) => {
+      tab.getBoundingClientRect = () => ({
+        left: 40 + index * 100,
+        right: 140 + index * 100,
+        top: 0,
+        bottom: 30,
+        width: 100,
+        height: 30,
+        x: 40 + index * 100,
+        y: 0,
+        toJSON() {},
+      });
+    });
+    await act(() => {
+      f.element('#task-tab-W002').dispatchEvent(
+        new MouseEvent('pointerdown', { button: 0, clientX: 180, clientY: 15, bubbles: true }),
+      );
+      strip.dispatchEvent(
+        new MouseEvent('pointermove', {
+          button: 0,
+          clientX: 60,
+          clientY: 15,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      strip.dispatchEvent(
+        new MouseEvent('pointerup', { button: 0, clientX: 60, clientY: 15, bubbles: true }),
+      );
+    });
+    assert.deepEqual(f.store.active!.taskTabs, ['W002', 'W001']);
+    await f.click('#task-tab-W001');
+    assert.equal(f.store.getSnapshot().selectedId, 'W002');
+    assert.equal(f.element('.task-tabs').firstElementChild?.id, 'task-home-tab');
+    await act(() =>
+      f.element('#task-tab-W002').dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'ArrowRight',
+          altKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+    );
+    assert.deepEqual(f.store.active!.taskTabs, ['W001', 'W002']);
+    await act(() =>
+      f.element('#tabs [data-tab="1"]').dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'ArrowLeft',
+          altKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+    );
+    assert.deepEqual(
+      f.store.getSnapshot().projects.map((project) => project.path),
+      ['C:/QB', 'C:/QA'],
+    );
+    for (const selector of ['.task-tabs', '#tabs']) {
+      const root = f.element(selector);
+      Object.defineProperty(root, 'scrollWidth', { configurable: true, value: 600 });
+      Object.defineProperty(root, 'clientWidth', { configurable: true, value: 120 });
+      const wheel = new window.WheelEvent('wheel', { deltaY: 80, bubbles: true, cancelable: true });
+      root.dispatchEvent(wheel);
+      assert.equal(wheel.defaultPrevented, true);
+      assert.equal(root.scrollLeft, 80);
+    }
+  } finally {
+    await f.close();
+  }
+});
+
+test('앱 재시작 후 작업 탭 순서·활성 작업을 프로젝트별로 복원하고 삭제된 작업을 제외한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.saveSetting('detailMode', 'tabs'));
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectWork('W002'));
+    await act(() => f.store.reorderTaskTabs('W002', 'W001', false));
+    await act(() => f.store.selectProject('C:/QB'));
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectProject('C:/QA'));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const saved = structuredClone(
+      f.calls.filter((call) => call.command === 'save_session').at(-1)!.args!.session,
+    );
+    const restart = (delayedSettings = false) =>
+      new WorkspaceStore({
+        ...f.platform,
+        invoke: async <T,>(command: string, args?: Record<string, unknown>) => {
+          if (command === 'load_session') return structuredClone(saved) as T;
+          if (command === 'load_settings') {
+            if (delayedSettings) await new Promise((resolve) => setTimeout(resolve, 20));
+            return {
+              settings: {
+                schemaVersion: 2,
+                language: 'ko',
+                detailMode: 'tabs',
+                idSeparator: 'none',
+                autoCheckUpdates: false,
+                displayName: '',
+              },
+            } as T;
+          }
+          return f.platform.invoke<T>(command, args);
+        },
+      });
+    for (const delayed of [false, true]) {
+      const restored = restart(delayed);
+      await restored.initialize();
+      assert.deepEqual(restored.active!.taskTabs, ['W002', 'W001']);
+      assert.equal(restored.getSnapshot().selectedId, 'W002');
+      await restored.selectProject('C:/QB');
+      assert.deepEqual(restored.active!.taskTabs, ['W001']);
+      assert.equal(restored.getSnapshot().selectedId, 'W001');
+    }
+    f.files.set(
+      first,
+      deleteProjectTask(f.files.get(first)!, 'W002', {
+        children: 'keep',
+        detachPredecessors: true,
+      }),
+    );
+    const restored = restart();
+    await restored.initialize();
+    assert.deepEqual(restored.active!.taskTabs, ['W001']);
+    assert.equal(restored.getSnapshot().selectedId, null);
+  } finally {
+    await f.close();
+  }
+});

@@ -36,7 +36,7 @@ impl Settings {
         }
         if !["ko", "en"].contains(&self.language.as_str())
             || !["none", "hyphen"].contains(&self.id_separator.as_str())
-            || !["modal", "sidebar"].contains(&self.detail_mode.as_str())
+            || !["modal", "tabs", "sidebar"].contains(&self.detail_mode.as_str())
             || self.display_name.trim() != self.display_name
             || self.display_name.encode_utf16().count() > 40
             || self.display_name.contains(['\r', '\n', '\0'])
@@ -206,6 +206,18 @@ pub fn save_settings(settings: Settings, state: State<SettingsStore>) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn tab_detail_mode_round_trips_and_legacy_modal_remains_readable() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = SettingsStore::at(dir.path());
+        let mut settings = Settings::default();
+        settings.detail_mode = "tabs".into();
+        store.write(&settings).unwrap();
+        assert_eq!(store.read().unwrap().settings.unwrap(), settings);
+        settings.detail_mode = "modal".into();
+        assert!(settings.validate().is_ok());
+    }
+
     #[test]
     fn display_name_defaults_and_round_trip_preserve_old_settings() {
         let root = tempfile::tempdir().unwrap();

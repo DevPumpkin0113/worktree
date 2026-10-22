@@ -17,6 +17,10 @@ pub struct DocumentTab {
     path: String,
     view: String,
     gantt_unit: String,
+    #[serde(default)]
+    task_tabs: Vec<String>,
+    #[serde(default)]
+    active_task_tab: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -85,6 +89,30 @@ fn valid_path(value: &str) -> bool {
             })
 }
 
+fn valid_task_id(id: &str) -> bool {
+    let prefix = id
+        .bytes()
+        .take_while(|byte| byte.is_ascii_uppercase())
+        .count();
+    (1..=20).contains(&prefix)
+        && id.len() >= prefix + 3
+        && id[prefix..].bytes().all(|byte| byte.is_ascii_digit())
+}
+fn valid_task_tabs(tab: &DocumentTab) -> bool {
+    tab.task_tabs.len() <= 2000
+        && tab.task_tabs.iter().all(|id| valid_task_id(id))
+        && tab
+            .task_tabs
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            == tab.task_tabs.len()
+        && tab
+            .active_task_tab
+            .as_ref()
+            .is_none_or(|id| tab.task_tabs.contains(id))
+}
+
 impl Session {
     fn validate(&self) -> Result<(), String> {
         if ![1, 2].contains(&self.schema_version) {
@@ -110,6 +138,7 @@ impl Session {
                 !valid_path(&tab.path)
                     || !["tree", "board", "flow", "gantt"].contains(&tab.view.as_str())
                     || !["day", "week"].contains(&tab.gantt_unit.as_str())
+                    || !valid_task_tabs(tab)
             })
             || self
                 .active_path
@@ -254,6 +283,8 @@ mod tests {
                 path: path.clone(),
                 view: "gantt".into(),
                 gantt_unit: "week".into(),
+                task_tabs: vec![],
+                active_task_tab: None,
             }],
             projects: vec![ProjectTab {
                 path: std::env::temp_dir().to_string_lossy().into_owned(),
@@ -264,6 +295,33 @@ mod tests {
             ..Session::default()
         }
     }
+    #[test]
+    fn task_tabs_round_trip_and_invalid_ids_are_rejected() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = store(directory.path());
+        let mut session = sample();
+        session.tabs[0].task_tabs = vec!["W002".into(), "W001".into()];
+        session.tabs[0].active_task_tab = Some("W001".into());
+        store.write(&session).unwrap();
+        assert_eq!(store.read().unwrap(), session);
+        session.tabs[0].active_task_tab = Some("W999".into());
+        assert!(session.validate().is_err());
+        session.tabs[0].active_task_tab = None;
+        session.tabs[0].task_tabs = vec!["W001".into(), "W001".into()];
+        assert!(session.validate().is_err());
+        session.tabs[0].task_tabs = vec!["../W001".into()];
+        assert!(session.validate().is_err());
+        let mut old = serde_json::to_value(sample()).unwrap();
+        old["tabs"][0].as_object_mut().unwrap().remove("taskTabs");
+        old["tabs"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("activeTaskTab");
+        let loaded: Session = serde_json::from_value(old).unwrap();
+        assert!(loaded.tabs[0].task_tabs.is_empty());
+        assert!(loaded.validate().is_ok());
+    }
+
     #[test]
     fn session_roundtrip_and_replace() {
         let directory = tempfile::tempdir().unwrap();

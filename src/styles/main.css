@@ -336,9 +336,7 @@ header h1 {
   stroke: currentColor;
   stroke-width: 1;
 }
-.window-controls button:focus-visible {
-  outline-offset: -3px;
-}
+
 main {
   flex: 1;
   width: 100%;
@@ -495,9 +493,7 @@ main {
   cursor: default;
   background: transparent;
 }
-.header-actions button:focus-visible {
-  outline-offset: -2px;
-}
+
 .header-actions svg {
   width: 16px;
   height: 16px;
@@ -759,10 +755,7 @@ main > .tools {
   background: var(--color-statusbar-error-hover-background);
   color: var(--color-statusbar-error-hover-color);
 }
-.statusbar-error:focus-visible {
-  outline: 2px solid var(--color-error-focus);
-  outline-offset: -2px;
-}
+
 .document-unavailable {
   display: flex;
   flex-direction: column;
@@ -1057,13 +1050,16 @@ body:has(#documentProblems:not([hidden])) {
   touch-action: none;
   user-select: none;
 }
-.document-tab.tab-dragging {
+.document-tab.tab-dragging,
+.task-tab.tab-dragging {
   opacity: 0.5;
 }
-.document-tab.tab-drop-before {
+.document-tab.tab-drop-before,
+.task-tabs .task-tab.tab-drop-before {
   box-shadow: inset 3px 0 var(--color-primary);
 }
-.document-tab.tab-drop-after {
+.document-tab.tab-drop-after,
+.task-tabs .task-tab.tab-drop-after {
   box-shadow: inset -3px 0 var(--color-primary);
 }
 

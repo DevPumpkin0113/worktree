@@ -60,8 +60,6 @@ export function App({ store }: { store: WorkspaceStore }) {
       if (state.settingsOpen) {
         event.preventDefault();
         store.closeSettings();
-      } else if (state.selectedId && state.settings.detailMode === 'modal') {
-        return;
       } else if (state.problemsOpen) {
         event.preventDefault();
         store.closeProblems();
@@ -74,6 +72,43 @@ export function App({ store }: { store: WorkspaceStore }) {
     document.addEventListener('keydown', keydown);
     return () => document.removeEventListener('keydown', keydown);
   }, [store, state.settingsOpen, state.selectedId, state.problemsOpen, state.settings.detailMode]);
+  const detail = (
+    <TaskDetail
+      documents={state.documents}
+      source={store.active?.text ?? ''}
+      displayName={state.settings.displayName}
+      onSaveComment={(expected, text, id, replyTo) =>
+        store.saveComment(state.activePath!, expected, state.selectedId!, text, id, replyTo)
+      }
+      onDeleteComment={(expected, id) =>
+        store.deleteComment(state.activePath!, expected, state.selectedId!, id)
+      }
+      onOpenSettings={() => store.toggleSettings()}
+      model={model}
+      path={state.activePath}
+      id={state.selectedId}
+      mode={state.settings.detailMode}
+      settingsOpen={
+        state.settingsOpen ||
+        !!editor ||
+        !!deletion ||
+        (state.settings.detailMode === 'tabs' && page !== 'board' && page !== 'tasks')
+      }
+      collapsed={collapsed}
+      label={label}
+      onSelect={(id) => store.selectWork(id)}
+      onEdit={(id) => openEditor(id)}
+      onDelete={(id) => {
+        const doc = store.active;
+        if (doc?.model) setDeletion({ path: doc.path, text: doc.text, id });
+      }}
+      onClose={() =>
+        state.settings.detailMode === 'tabs' && state.selectedId
+          ? store.closeTaskTab(state.selectedId)
+          : store.selectWork(null)
+      }
+    />
+  );
   return (
     <ProjectTaskTypeContext.Provider value={model?.taskTypeColors ?? EMPTY_TASK_TYPE_COLORS}>
       <ProjectDateFormatProvider dateFormat={model?.dateFormat} timeFormat={model?.timeFormat}>
@@ -99,6 +134,7 @@ export function App({ store }: { store: WorkspaceStore }) {
           inert={state.settingsOpen}
         />
         <Content
+          detail={detail}
           initializationStep={initializationStep}
           onInitializationStep={setInitializationStep}
           store={store}
@@ -157,32 +193,6 @@ export function App({ store }: { store: WorkspaceStore }) {
           </span>
           <span className="statusbar-mode">{messages.localDocument}</span>
         </footer>
-        <TaskDetail
-          documents={state.documents}
-          source={store.active?.text ?? ''}
-          displayName={state.settings.displayName}
-          onSaveComment={(expected, text, id, replyTo) =>
-            store.saveComment(state.activePath!, expected, state.selectedId!, text, id, replyTo)
-          }
-          onDeleteComment={(expected, id) =>
-            store.deleteComment(state.activePath!, expected, state.selectedId!, id)
-          }
-          onOpenSettings={() => store.toggleSettings()}
-          model={model}
-          path={state.activePath}
-          id={state.selectedId}
-          mode={state.settings.detailMode}
-          settingsOpen={state.settingsOpen || !!editor || !!deletion}
-          collapsed={collapsed}
-          label={label}
-          onSelect={(id) => store.selectWork(id)}
-          onEdit={(id) => openEditor(id)}
-          onDelete={(id) => {
-            const doc = store.active;
-            if (doc?.model) setDeletion({ path: doc.path, text: doc.text, id });
-          }}
-          onClose={() => store.selectWork(null)}
-        />
         <Settings store={store} state={state} />
         {deletion ? (
           <TaskDeleteDialog

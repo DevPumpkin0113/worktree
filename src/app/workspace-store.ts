@@ -86,8 +86,43 @@ export class WorkspaceStore {
     };
   };
   private patch(change: Partial<WorkspaceSnapshot>) {
+    const previousState = this.state;
+    const previousMode = previousState.settings.detailMode;
     this.state = { ...this.state, ...change };
+    if (
+      this.state.settings.detailMode === 'tabs' &&
+      ('selectedId' in change || (previousMode !== 'tabs' && previousState.settings.ready))
+    ) {
+      const id = this.state.selectedId;
+      this.state = {
+        ...this.state,
+        documents: this.state.documents.map((doc) => {
+          if (doc.path !== this.state.activePath) return doc;
+          const tabs = doc.taskTabs ?? [];
+          return {
+            ...doc,
+            activeTaskTab: id,
+            taskTabs: id && !tabs.includes(id) ? [...tabs, id] : tabs,
+          };
+        }),
+      };
+    }
     for (const listener of this.listeners) listener();
+    if (
+      previousState.ready &&
+      this.state.ready &&
+      this.state.documents.some((doc) => {
+        const previous = previousState.documents.find((item) => item.path === doc.path);
+        const ids = doc.taskTabs ?? [],
+          oldIds = previous?.taskTabs ?? [];
+        return (
+          (doc.activeTaskTab ?? null) !== (previous?.activeTaskTab ?? null) ||
+          ids.length !== oldIds.length ||
+          ids.some((id, index) => id !== oldIds[index])
+        );
+      })
+    )
+      this.saveSession();
   }
   get active() {
     return this.state.documents.find((doc) => doc.path === this.state.activePath) ?? null;
@@ -106,6 +141,8 @@ export class WorkspaceStore {
   initialize() {
     return (this.initialized ??= (async () => {
       await Promise.all([this.initializeSettings(), this.restoreSession()]);
+      if (this.state.settings.detailMode === 'tabs' && this.active?.activeTaskTab)
+        this.selectWork(this.active.activeTaskTab);
     })());
   }
   private async initializeSettings() {
@@ -142,6 +179,10 @@ export class WorkspaceStore {
         text,
         model,
         problems: [],
+        taskTabs: previous?.taskTabs?.filter((id) => model.rows.some((row) => row.id === id)) ?? [],
+        activeTaskTab: model.rows.some((row) => row.id === previous?.activeTaskTab)
+          ? previous!.activeTaskTab
+          : null,
         view: previous?.view ?? 'tree',
         ganttUnit: previous?.ganttUnit ?? 'day',
         graphFocus: model.rows.some((row) => row.id === previous?.graphFocus)
@@ -153,6 +194,8 @@ export class WorkspaceStore {
         path,
         text,
         model: null,
+        taskTabs: previous?.taskTabs ?? [],
+        activeTaskTab: previous?.activeTaskTab ?? null,
         problems: describeDocumentErrors(error, text, path) as Problem[],
         view: previous?.view ?? 'tree',
         ganttUnit: previous?.ganttUnit ?? 'day',
@@ -226,6 +269,10 @@ export class WorkspaceStore {
       documents,
       activeProjectPath: project?.path ?? null,
       activePath: project?.activePath ?? null,
+      selectedId:
+        this.state.settings.detailMode === 'tabs'
+          ? (documents.find((doc) => doc.path === project?.activePath)?.activeTaskTab ?? null)
+          : null,
       recent: saved.recentProjects,
       ready: true,
       operationProblems: failures,
@@ -298,7 +345,11 @@ export class WorkspaceStore {
         activeProjectPath: project.path,
         page: project.page,
         activePath: project.activePath,
-        selectedId: same ? this.validSelection(document?.model ?? null) : null,
+        selectedId: same
+          ? this.validSelection(document?.model ?? null)
+          : this.state.settings.detailMode === 'tabs'
+            ? (document?.activeTaskTab ?? null)
+            : null,
         owner: same ? this.state.owner : 'all',
         recent: [
           project.path,
@@ -394,7 +445,11 @@ export class WorkspaceStore {
             activeProjectPath: selected?.path ?? null,
             activePath: selected?.activePath ?? null,
             page: selected?.page ?? 'board',
-            selectedId: null,
+            selectedId:
+              this.state.settings.detailMode === 'tabs'
+                ? (this.state.documents.find((doc) => doc.path === selected?.activePath)
+                    ?.activeTaskTab ?? null)
+                : null,
             owner: 'all',
             operationProblems: [],
             problemsOpen: false,
@@ -452,11 +507,49 @@ export class WorkspaceStore {
     });
   }
   setFilters(filters: Partial<Pick<WorkspaceSnapshot, 'query' | 'owner' | 'status'>>) {
-    this.patch(filters);
+    if ('query' in filters && this.state.settings.detailMode === 'tabs' && this.state.selectedId) {
+      const page = this.state.page === 'tasks' ? 'tasks' : 'board';
+      this.patch({
+        ...filters,
+        selectedId: null,
+        page,
+        projects: this.state.projects.map((project) =>
+          project.path === this.state.activeProjectPath ? { ...project, page } : project,
+        ),
+      });
+    } else this.patch(filters);
   }
   selectWork(selectedId: string | null) {
     if (selectedId && !this.active?.model?.rows.some((row) => row.id === selectedId)) return;
     this.patch({ selectedId });
+  }
+  reorderTaskTabs(source: string, target: string, after: boolean) {
+    const doc = this.active;
+    if (!doc) return;
+    const taskTabs = reorderDocumentTabs(doc.taskTabs ?? [], source, target, after);
+    this.patch({
+      documents: this.state.documents.map((item) =>
+        item.path === doc.path ? { ...item, taskTabs } : item,
+      ),
+    });
+  }
+  closeTaskTab(id: string) {
+    const doc = this.active;
+    if (!doc) return;
+    const tabs = doc.taskTabs ?? [],
+      index = tabs.indexOf(id);
+    if (index < 0) return;
+    const next = tabs.filter((item) => item !== id);
+    const selectedId =
+      this.state.selectedId === id
+        ? (next[Math.min(index, next.length - 1)] ?? null)
+        : this.state.selectedId;
+    this.patch({
+      selectedId,
+      documents: this.state.documents.map((item) =>
+        item.path === doc.path ? { ...item, taskTabs: next } : item,
+      ),
+    });
   }
   toggleSettings() {
     this.patch({ settingsOpen: !this.state.settingsOpen });

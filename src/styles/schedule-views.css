@@ -114,10 +114,7 @@
 .timeline-row:hover {
   background: var(--color-timeline-row-hover-background);
 }
-.timeline-row:focus-visible,
-.graph-node:focus-visible {
-  outline-offset: -2px;
-}
+
 .unscheduled {
   margin-top: 18px;
   border: 1px solid var(--color-group-border);

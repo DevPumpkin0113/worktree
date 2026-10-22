@@ -54,7 +54,7 @@ export function GeneralSettings({
             disabled={!state.settings.ready || state.settings.saving}
             onChange={(event) => void store.saveSetting('detailMode', event.target.value)}
           >
-            <option value="modal">{messages.modal}</option>
+            <option value="tabs">{messages.tabView}</option>
             <option value="sidebar">{messages.rightSidebar}</option>
           </select>
         </div>

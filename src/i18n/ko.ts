@@ -296,7 +296,10 @@ export const ko = {
   minimizeWindow: '최소화',
   missingEffortNotice: (missingEfforts: string | number) => ` · 예상 시간 미정 ${missingEfforts}개`,
   missingEffortPrefix: ' + 미정 ',
-  modal: '모달',
+  homeTab: '홈',
+  tabView: '탭 보기',
+  taskTabs: '작업 탭',
+  closeTaskTab: '작업 탭 닫기',
   networkDetails: '작업 상세',
   networkFilterHint:
     '필터와 일치하는 작업 외에도 연결 확인에 필요한 선행·후속 작업을 함께 표시합니다. 빈 공간을 드래그하면 화면이 이동합니다. 노드를 두 번 클릭하면 상세를 엽니다.',

@@ -550,3 +550,16 @@ body:has(#detail.sidebar[open]) main#workspace {
   width: calc(var(--titlebar-control-width) - 8px);
   height: 30px;
 }
+
+.workspace-home {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.workspace-home[hidden] {
+  display: none;
+}
+.workspace-home > .tools {
+  flex-shrink: 0;
+}

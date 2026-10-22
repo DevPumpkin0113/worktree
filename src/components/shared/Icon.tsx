@@ -7,6 +7,11 @@ const icons: Record<string, ReactNode> = {
       strokeLinecap="round"
     />
   ),
+  home: (
+    <>
+      <path d="m3 10 9-7 9 7v11H3zM9 21v-8h6v8" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   search: (
     <>

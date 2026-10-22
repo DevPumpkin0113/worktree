@@ -4,8 +4,10 @@ import type { Status, WorkModel, Problem } from '../domain/types';
 export type { Status, WorkRow, WorkModel, Problem } from '../domain/types';
 export type View = 'tree' | 'board' | 'flow' | 'gantt';
 export type Page = 'board' | 'tasks' | 'analytics' | 'project' | 'initialize';
-export type DetailMode = 'sidebar' | 'modal';
+export type DetailMode = 'sidebar' | 'tabs';
 export interface OpenDocument {
+  taskTabs?: string[];
+  activeTaskTab?: string | null;
   path: string;
   text: string;
   model: WorkModel | null;

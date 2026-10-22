@@ -86,9 +86,7 @@
   font-weight: 600;
   box-shadow: inset 3px 0 var(--color-settings-settings-menu-item-active-box-shadow);
 }
-#settings .settings-menu-item:focus-visible {
-  outline-offset: -2px;
-}
+
 .settings-brand {
   display: flex;
   align-items: center;

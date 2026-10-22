@@ -6,7 +6,7 @@ interface SavedSettings {
   language: Language;
   schemaVersion: number;
   idSeparator: 'none' | 'hyphen';
-  detailMode: 'sidebar' | 'modal';
+  detailMode: 'sidebar' | 'tabs';
   autoCheckUpdates: boolean;
 }
 type Field = Exclude<keyof SavedSettings, 'schemaVersion'>;
@@ -30,7 +30,8 @@ function valueFor(field: Field, value: string) {
   if (field === 'language' && isLanguage(value)) return value;
   if (field === 'idSeparator' && ['none', 'hyphen'].includes(value))
     return value as SavedSettings[Field];
-  if (field === 'detailMode' && ['modal', 'sidebar'].includes(value))
+  if (field === 'detailMode' && value === 'modal') return 'tabs';
+  if (field === 'detailMode' && ['tabs', 'sidebar'].includes(value))
     return value as SavedSettings[Field];
   if (field === 'autoCheckUpdates' && ['true', 'false'].includes(value)) return value === 'true';
   throw Error(messages.invalidSetting);
@@ -72,7 +73,15 @@ export function createSettingsStorage({
       );
       storage.warning = result.warning || '';
       if (result.settings) {
-        settings = { ...defaults(), ...result.settings, schemaVersion: 2 };
+        settings = {
+          ...defaults(),
+          ...result.settings,
+          schemaVersion: 2,
+          detailMode: valueFor(
+            'detailMode',
+            result.settings.detailMode ?? 'sidebar',
+          ) as SavedSettings['detailMode'],
+        };
         return;
       }
       const migrated = defaults();

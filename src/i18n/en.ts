@@ -303,7 +303,10 @@ export const en = {
   missingEffortNotice: (missingEfforts: string | number) =>
     ` · Unknown estimated time: ${missingEfforts}`,
   missingEffortPrefix: ' + unknown: ',
-  modal: 'Modal',
+  homeTab: 'Home',
+  tabView: 'Tab view',
+  taskTabs: 'Task tabs',
+  closeTaskTab: 'Close task tab',
   networkDetails: 'Task details',
   networkFilterHint:
     'Predecessors and successors needed to understand relationships are shown alongside matching tasks. Drag empty space to pan. Double-click a node to open its details.',

@@ -4,9 +4,9 @@ import { WorkspaceStore } from './app/workspace-store';
 import { createNativePlatform } from './platform/native';
 import './styles/theme.css';
 import './styles/main.css';
-import './styles/focus.css';
 import './styles/schedule-views.css';
 import './styles/task-detail.css';
+import './styles/task-tabs.css';
 import './styles/settings.css';
 import './styles/workspace.css';
 const store = new WorkspaceStore(createNativePlatform());
@@ -17,3 +17,5 @@ import './styles/filters.css';
 import './styles/project.css';
 
 import './styles/task-editor.css';
+
+import './styles/focus.css';

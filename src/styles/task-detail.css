@@ -659,18 +659,18 @@ body:has(#settings[open]) #detailResize {
   text-underline-offset: 3px;
 }
 
-#detail[open]:has(#previewCommentsPanel:not([hidden])) {
+#detail:is([open], .task-detail-tab:not([hidden])):has(#previewCommentsPanel:not([hidden])) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-#detail[open]:not(.sidebar):has(#previewCommentsPanel:not([hidden])) {
-  height: calc(100dvh - 48px);
-}
-#detail[open]:has(#previewCommentsPanel:not([hidden])) .detail-header {
+
+#detail:is([open], .task-detail-tab:not([hidden])):has(#previewCommentsPanel:not([hidden]))
+  .detail-header {
   flex-shrink: 0;
 }
-#detail[open]:has(#previewCommentsPanel:not([hidden])) #detailBody {
+#detail:is([open], .task-detail-tab:not([hidden])):has(#previewCommentsPanel:not([hidden]))
+  #detailBody {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -678,7 +678,8 @@ body:has(#settings[open]) #detailResize {
   overflow: hidden;
   padding-bottom: 0;
 }
-#detail[open]:has(#previewCommentsPanel:not([hidden])) .detail-preview-tabs {
+#detail:is([open], .task-detail-tab:not([hidden])):has(#previewCommentsPanel:not([hidden]))
+  .detail-preview-tabs {
   position: static;
   flex-shrink: 0;
   margin-bottom: 0;
@@ -739,4 +740,35 @@ body:has(#settings[open]) #detailResize {
 }
 .comment-edit-control:hover .comment-edit-tooltip {
   display: block;
+}
+
+#detail.task-detail-tab {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+#detail.task-detail-tab[hidden] {
+  display: none;
+}
+#detail.task-detail-tab .detail-header {
+  position: static;
+  flex-shrink: 0;
+  padding: 20px 24px;
+}
+#detail.task-detail-tab #detailBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+#detail.task-detail-tab .detail-preview-tabs {
+  top: 0;
 }

@@ -57,10 +57,12 @@ export function TaskDetail({
     collapsed,
     onClose,
   });
+  const Frame = mode === 'tabs' ? 'section' : 'dialog';
   return (
     <>
       <div
         ref={handle}
+        hidden={mode !== 'sidebar'}
         id="detailResize"
         role="separator"
         aria-label={messages.resizeDetail}
@@ -69,11 +71,13 @@ export function TaskDetail({
         tabIndex={0}
         title={messages.resizeDetailHint}
       />
-      <dialog
-        ref={dialog}
+      <Frame
+        ref={mode === 'sidebar' ? dialog : undefined}
+        hidden={mode === 'tabs' && !visible}
+        role={mode === 'tabs' ? 'tabpanel' : undefined}
         id="detail"
-        className={mode === 'sidebar' ? 'sidebar' : ''}
-        aria-labelledby="detailTitle"
+        className={mode === 'sidebar' ? 'sidebar' : 'task-detail-tab'}
+        aria-labelledby={mode === 'tabs' && id ? 'task-tab-' + id : 'detailTitle'}
         onCancel={(event) => {
           event.preventDefault();
           onClose();
@@ -190,7 +194,7 @@ export function TaskDetail({
             </>
           ) : null}
         </div>
-      </dialog>
+      </Frame>
     </>
   );
 }

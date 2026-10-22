@@ -1,45 +1,24 @@
 import { folderName } from '../../domain/project-paths';
 import { messages } from '../../i18n/messages';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { bindDocumentTabs } from '../../interactions/document-tabs';
+import { useEffect, useRef, useState } from 'react';
+import { useTabStrip } from '../../hooks/use-tab-strip';
 import type { WorkspaceStore } from '../../app/workspace-store';
 import type { WorkspaceSnapshot } from '../../app/types';
 export function ProjectDock({ store, state }: { store: WorkspaceStore; state: WorkspaceSnapshot }) {
   const tabs = useRef<HTMLDivElement>(null),
     dock = useRef<HTMLElement>(null);
   const [recentOpen, setRecentOpen] = useState(false);
-  const drag = useRef<ReturnType<typeof bindDocumentTabs> | null>(null);
-  const latest = useRef(state);
-  latest.current = state;
-  useLayoutEffect(() => {
-    const root = tabs.current!;
-    drag.current = bindDocumentTabs(root, {
-      getPaths: () => store.getSnapshot().projects.map((doc) => doc.path),
-      isEnabled: () => latest.current.ready && !latest.current.settingsOpen,
-      move(source: string, target: string, after: boolean) {
-        const scroll = root.scrollLeft;
-        store.reorder(source, target, after);
-        requestAnimationFrame(() => {
-          root.scrollLeft = scroll;
-          const index = store.getSnapshot().projects.findIndex((doc) => doc.path === source);
-          root
-            .querySelector<HTMLButtonElement>(`[data-tab="${index}"]`)
-            ?.focus({ preventScroll: true });
-        });
-      },
-    });
-    return () => {
-      for (const key of [
-        'onpointerdown',
-        'onpointermove',
-        'onpointerup',
-        'onpointercancel',
-        'onlostpointercapture',
-        'onkeydown',
-      ] as const)
-        root[key] = null;
-    };
-  }, [store]);
+  const drag = useTabStrip(tabs, {
+    getPaths: () => store.getSnapshot().projects.map((project) => project.path),
+    isEnabled: () => state.ready && !state.settingsOpen,
+    move: (source, target, after) => store.reorder(source, target, after),
+    focus: (source) => {
+      const index = store.getSnapshot().projects.findIndex((project) => project.path === source);
+      tabs.current
+        ?.querySelector<HTMLButtonElement>(`[data-tab="${index}"]`)
+        ?.focus({ preventScroll: true });
+    },
+  });
   useEffect(() => {
     if (!recentOpen) return;
     const outside = (event: PointerEvent) => {
@@ -72,7 +51,7 @@ export function ProjectDock({ store, state }: { store: WorkspaceStore; state: Wo
         ref={tabs}
         id="tabs"
         onClick={(event) => {
-          if (drag.current?.consumeClick()) {
+          if (drag.consumeClick()) {
             event.preventDefault();
             event.stopPropagation();
           }
@@ -96,7 +75,7 @@ export function ProjectDock({ store, state }: { store: WorkspaceStore; state: Wo
                   aria-keyshortcuts="Alt+Shift+ArrowLeft Alt+Shift+ArrowRight"
                   aria-pressed={doc.path === state.activeProjectPath}
                   onClick={(event) => {
-                    if (drag.current?.consumeClick()) {
+                    if (drag.consumeClick()) {
                       event.stopPropagation();
                       return;
                     }

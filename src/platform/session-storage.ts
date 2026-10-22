@@ -4,11 +4,32 @@ import { parentFolder, pathKey, withinProject } from '../domain/project-paths';
 export interface Session {
   schemaVersion: 2;
   recentFiles: string[];
-  tabs: { path: string; view: View; ganttUnit: 'day' | 'week' }[];
+  tabs: {
+    path: string;
+    view: View;
+    ganttUnit: 'day' | 'week';
+    taskTabs?: string[];
+    activeTaskTab?: string | null;
+  }[];
   activePath: string | null;
   projects: { path: string; activePath: string | null }[];
   activeProjectPath: string | null;
   recentProjects: string[];
+}
+export const MAX_TASK_TABS = 2000;
+const validTaskId = (id: unknown): id is string =>
+  typeof id === 'string' && /^[A-Z]{1,20}\d{3,}$/.test(id);
+function validTaskTabs(tab: Session['tabs'][number]) {
+  const ids = tab.taskTabs ?? [];
+  return (
+    (tab.taskTabs === undefined || Array.isArray(tab.taskTabs)) &&
+    ids.length <= MAX_TASK_TABS &&
+    ids.every(validTaskId) &&
+    new Set(ids).size === ids.length &&
+    (tab.activeTaskTab === undefined ||
+      tab.activeTaskTab === null ||
+      ids.includes(tab.activeTaskTab))
+  );
 }
 export const MAX_RECENT_FILES = 12;
 export const MAX_SESSION_TABS = 40;
@@ -47,7 +68,8 @@ export function validateSession(input: unknown): Session {
         tab &&
         validPath(tab.path) &&
         ['tree', 'board', 'flow', 'gantt'].includes(tab.view) &&
-        ['day', 'week'].includes(tab.ganttUnit),
+        ['day', 'week'].includes(tab.ganttUnit) &&
+        validTaskTabs(tab),
     ) ||
     !unique(value.recentFiles) ||
     !unique(value.tabs.map((tab) => tab.path)) ||
@@ -109,7 +131,10 @@ export function validateSession(input: unknown): Session {
   return {
     schemaVersion: 2,
     recentFiles: [...value.recentFiles],
-    tabs: value.tabs.map((tab) => ({ ...tab })),
+    tabs: value.tabs.map((tab) => ({
+      ...tab,
+      ...(tab.taskTabs ? { taskTabs: [...tab.taskTabs] } : {}),
+    })),
     activePath: value.activePath,
     projects: projects.map((project) => ({ ...project })),
     recentProjects: [...recentProjects],

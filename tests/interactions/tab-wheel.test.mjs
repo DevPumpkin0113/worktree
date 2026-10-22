@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bindTabWheel } from '../../src/interactions/tab-wheel.ts';
+import { bindTabWheel } from '../../apps/desktop/src/interactions/tab-wheel.ts';
 function fixture() {
  let listener, removed=false, enabled=true;
  const root={scrollWidth:500,clientWidth:100,scrollLeft:0,

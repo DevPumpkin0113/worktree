@@ -1,0 +1,44 @@
+{
+  "name": "@devpumpkin0113/worktree-cli",
+  "version": "0.4.1",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "build": "tsx scripts/build.ts",
+    "prepack": "npm run build"
+  },
+  "bin": {
+    "worktree": "dist/main.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "@worktree/core": "*"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.ko.md"
+  ],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Local-first project and task management CLI for Windows",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevPumpkin0113/worktree.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/DevPumpkin0113/worktree/issues"
+  }
+}

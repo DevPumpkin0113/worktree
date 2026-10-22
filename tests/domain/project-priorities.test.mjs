@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultPriorities, validPriorities, movePriority } from '../../src/domain/project-priorities.ts';
+import { defaultPriorities, validPriorities, movePriority } from '@worktree/core/project-priorities';
 import { projectFixture } from '../helpers/project-fixture.ts';
-import { projectSettingsDraft, updateProjectSettings } from '../../src/domain/project-settings.ts';
-import { projectTaskDraft, updateProjectTask } from '../../src/domain/task-editing.ts';
-import { parseProject } from '../../src/domain/project-document.ts';
-import { readSource, serializeSource } from '../../src/domain/project-source.ts';
+import { projectSettingsDraft, updateProjectSettings } from '@worktree/core/project-settings';
+import { projectTaskDraft, updateProjectTask } from '@worktree/core/task-editing';
+import { parseProject } from '@worktree/core/project-document';
+import { readSource, serializeSource } from '@worktree/core/project-source';
 test('우선순위는 중복·빈 이름·예약 ID를 거부하고 순서만 바꾼다',()=>{
  const values=defaultPriorities();assert.equal(validPriorities(values),true);
  for(const invalid of [[...values,values[0]],[{id:'-',name:'미지정'}],[{id:'x',name:''}],[{id:'x',name:' 이름 '}],[{id:'a',name:'같음'},{id:'b',name:'같음'}]])assert.equal(validPriorities(invalid),false);

@@ -1,9 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {ko} from '../../src/i18n/ko.ts';
-import {en} from '../../src/i18n/en.ts';
-import {messages} from '../../src/i18n/messages.ts';
+import {ko} from '../../apps/desktop/src/i18n/ko.ts';
+import {en} from '../../apps/desktop/src/i18n/en.ts';
+import {messages} from '../../apps/desktop/src/i18n/messages.ts';
 
 test('영어 리소스는 한국어 키와 포맷 인자를 보존하고 기본 언어를 변경하지 않는다',()=>{
  assert.deepEqual(Object.keys(en).sort(),Object.keys(ko).sort());
@@ -25,6 +25,6 @@ test('영어 리소스는 한국어 키와 포맷 인자를 보존하고 기본 
 });
 
 test('Rust 영어 리소스도 한국어 상수·포맷 함수 목록과 일치한다',()=>{
- const entries=locale=>[...fs.readFileSync(new URL(`../../src-tauri/src/i18n/${locale}.rs`,import.meta.url),'utf8').matchAll(/pub (const|fn) (\w+)/g)].map(match=>`${match[1]}:${match[2]}`).sort();
+ const entries=locale=>[...fs.readFileSync(new URL(`../../apps/desktop/src-tauri/src/i18n/${locale}.rs`,import.meta.url),'utf8').matchAll(/pub (const|fn) (\w+)/g)].map(match=>`${match[1]}:${match[2]}`).sort();
  assert.deepEqual(entries('en'),entries('ko'));
 });

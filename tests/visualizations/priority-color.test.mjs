@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {priorityColor,priorityColorFor} from '../../src/views/priority-color.ts';
+import {priorityColor,priorityColorFor} from '../../apps/desktop/src/views/priority-color.ts';
 test('우선순위 5단계는 빨강·주황·노랑·연두·초록 순서로 색상을 나눈다',()=>{
  assert.equal(priorityColor(0,5),'var(--color-priority-high)');
  assert.equal(priorityColor(1,5),'color-mix(in srgb, var(--color-priority-high) 50%, var(--color-priority-middle))');

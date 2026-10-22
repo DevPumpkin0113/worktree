@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {summarizeGroups} from '../../src/domain/group-summary.ts';
-import {groupSchedule,groupEffort,groupProgress} from '../../src/views/group-summary.ts';
+import {summarizeGroups} from '@worktree/core/group-summary';
+import {groupSchedule,groupEffort,groupProgress} from '../../apps/desktop/src/views/group-summary.ts';
 import {renderTaskDetail} from '../helpers/render-helpers.tsx';
 import {renderTree} from '../helpers/render-helpers.tsx';
 const row=(id,parent,type,effort='-',start='-',end='-',status='todo')=>({id,parent,type,effort,start,end,status,name:id,owner:'-',description:'확인',deps:[]});

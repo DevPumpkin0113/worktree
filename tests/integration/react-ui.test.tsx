@@ -3,15 +3,15 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { App } from '../../src/App';
-import { WorkspaceStore } from '../../src/app/workspace-store';
-import { emptySession } from '../../src/platform/session-storage';
-import { pathKey, parentFolder } from '../../src/domain/project-paths';
+import { App } from '../../apps/desktop/src/App';
+import { WorkspaceStore } from '../../apps/desktop/src/app/workspace-store';
+import { emptySession } from '../../apps/desktop/src/platform/session-storage';
+import { pathKey, parentFolder } from '@worktree/core/project-paths';
 import { projectFixture } from '../helpers/project-fixture';
-import { parseProject } from '../../src/domain/project-document';
-import { readSource, serializeSource } from '../../src/domain/project-source';
-import { deleteProjectTask } from '../../src/domain/task-deletion';
-import type { Platform } from '../../src/app/types';
+import { parseProject } from '@worktree/core/project-document';
+import { readSource, serializeSource } from '@worktree/core/project-source';
+import { deleteProjectTask } from '@worktree/core/task-deletion';
+import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
 async function fixture(

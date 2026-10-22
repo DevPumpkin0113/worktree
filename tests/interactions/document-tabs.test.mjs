@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {bindDocumentTabs,reorderDocumentTabs} from '../../src/interactions/document-tabs.ts';
+import {bindDocumentTabs,reorderDocumentTabs} from '../../apps/desktop/src/interactions/document-tabs.ts';
 
 function harness(){
  let paths=['a','b','c'],enabled=true;const moves=[];

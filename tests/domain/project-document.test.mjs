@@ -1,17 +1,17 @@
-import { saveProjectComment } from '../../src/domain/comment-editing.ts';
-import { deleteProjectTask } from '../../src/domain/task-deletion.ts';
+import { saveProjectComment } from '@worktree/core/comment-editing';
+import { deleteProjectTask } from '@worktree/core/task-deletion';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { projectFixture, timestamp } from '../helpers/project-fixture.ts';
-import { parseProject } from '../../src/domain/project-document.ts';
-import { readSource, serializeSource } from '../../src/domain/project-source.ts';
-import { readTaskFile, writeTaskFile } from '../../src/domain/task-file.ts';
-import { projectTaskDraft, updateProjectTask, nextProjectId } from '../../src/domain/task-editing.ts';
-import { describeDocumentErrors, formatDocumentProblem } from '../../src/domain/document-errors.ts';
-import { createIdLabels } from '../../src/domain/id-display.ts';
-import { setLanguage } from '../../src/i18n/messages.ts';
+import { parseProject } from '@worktree/core/project-document';
+import { readSource, serializeSource } from '@worktree/core/project-source';
+import { readTaskFile, writeTaskFile } from '@worktree/core/task-file';
+import { projectTaskDraft, updateProjectTask, nextProjectId } from '@worktree/core/task-editing';
+import { describeDocumentErrors, formatDocumentProblem } from '../../apps/desktop/src/domain/document-errors.ts';
+import { createIdLabels } from '@worktree/core/id-display';
+import { setLanguage } from '../../apps/desktop/src/i18n/messages.ts';
 const source = projectFixture();
 function changeFile(file, edit) { const value=readSource(source);value.files[file]=edit(value.files[file]);return serializeSource(value); }
 test('프로젝트 문서 집합을 읽고 마일스톤 상태와 고정 프리픽스를 적용한다',()=>{

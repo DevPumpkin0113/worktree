@@ -1,7 +1,7 @@
 node_modules/
 dist/
-src-tauri/target/
-src-tauri/gen/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
 *.log
 .env
 .env.*
@@ -21,3 +21,10 @@ src-tauri/gen/
 /docs/DEVELOPMENT.md
 /docs/PROJECT_FORMAT.md
 /docs/PROJECT_RESET_NOTES.md
+
+# Retained local build cache from the pre-workspace layout.
+/src-tauri/target/
+/src-tauri/gen/
+
+/apps/cli/native/target/
+/packages/storage/target/

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createSessionStorage,emptySession,validateSession} from '../../src/platform/session-storage.ts';
+import {createSessionStorage,emptySession,validateSession} from '../../apps/desktop/src/platform/session-storage.ts';
 const path='C:\\documents\\일정.wbs';
 const sample=()=>({...emptySession(),recentFiles:[path],tabs:[{path,view:'gantt',ganttUnit:'week'}],activePath:path,projects:[{path:'C:\\documents',activePath:path}],activeProjectPath:'C:\\documents',recentProjects:['C:\\documents']});
 

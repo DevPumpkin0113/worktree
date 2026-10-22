@@ -2,8 +2,8 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {timelineRange,ganttGeometry,ganttTicks,ganttBar,isoWeek,initialWindowStart,dateString,DAY_MS,MAX_GANTT_SCROLL} from '../../src/views/gantt-timeline.ts';
-import {GanttView} from '../../src/components/workspace/GanttView.tsx';
+import {timelineRange,ganttGeometry,ganttTicks,ganttBar,isoWeek,initialWindowStart,dateString,DAY_MS,MAX_GANTT_SCROLL} from '../../apps/desktop/src/views/gantt-timeline.ts';
+import {GanttView} from '../../apps/desktop/src/components/workspace/GanttView.tsx';
 const task=(start='-',end='-')=>({id:'W001',name:'작업',parent:'-',type:'task',status:'todo',deps:[],start,end});
 const props=(rows,unit='day',today='2026-10-21')=>({rows,rangeRows:rows,label:id=>id,selectedId:null,onSelect(){},unit,onUnit(){},onScroll(){},today});
 test('일 단위는 폭과 일정 범위에 관계없이 7일이며 오늘이 가운데다',()=>{

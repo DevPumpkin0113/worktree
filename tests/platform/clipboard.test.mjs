@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {copyText} from '../../src/platform/clipboard.ts';
+import {copyText} from '../../apps/desktop/src/platform/clipboard.ts';
 
 test('클립보드 API에 여러 줄 오류 원문을 그대로 전달한다',async()=>{
  let copied;

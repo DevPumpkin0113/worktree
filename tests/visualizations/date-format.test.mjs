@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatProjectDate, formatProjectTimestamp } from '../../src/views/date-format.ts';
+import { formatProjectDate, formatProjectTimestamp } from '../../apps/desktop/src/views/date-format.ts';
 test('프로젝트 날짜는 저장된 달력 날짜를 시간대 변환 없이 표시한다', () => {
  assert.equal(formatProjectDate('2026-10-21','yyyy.MM.dd'),'2026.10.21');
  assert.equal(formatProjectDate('2026-10-21','dd/MM/yyyy'),'21/10/2026');
@@ -14,7 +14,7 @@ test('프로젝트 시각은 로컬 날짜와 12·24시간제를 사용하고 �
  assert.equal(formatProjectTimestamp('bad'),'—');assert.equal(formatProjectTimestamp(undefined),'—');
 });
 
-import { DATE_ORDERS, DATE_SEPARATORS, DATE_FORMATS, composeDateFormat, dateFormatParts } from '../../src/domain/project-display.ts';
+import { DATE_ORDERS, DATE_SEPARATORS, DATE_FORMATS, composeDateFormat, dateFormatParts } from '@worktree/core/project-display';
 test('날짜 순서와 구분기호의 9가지 조합은 분리·조합 및 날짜 표시를 보존한다', () => {
  assert.equal(new Set(DATE_FORMATS).size,9);
  for (const order of DATE_ORDERS) for (const separator of DATE_SEPARATORS) {

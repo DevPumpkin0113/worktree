@@ -277,3 +277,9 @@
 - 최초 계정 로그인·게시·Trusted Publisher 연결은 사용자 수행/승인 대상이며 코드 준비를 게시 허가로 간주하지 않는다. 저장소 npm 빌드는 이름이 아닌 apps/cli workspace 경로로 호출한다.
 
 - npm 패키지에는 영문 README.md와 한국어 README.ko.md를 함께 포함한다. 루트/CLI 양쪽 언어 링크·실제 참고 프로젝트 링크·예시 JSON과 이미지 경로를 함께 검증한다.
+
+### CLI 프로젝트 재초기화 (0.5.0)
+
+- project reset은 앱과 같은 데이터 폴더 전체 및 worktree.json 삭제다. 공용 Rust project_reset::inspect로 dry-run의 전체 트리·읽기 전용·링크를 검사하고 project_reset::reset으로 삭제한다. native helper의 OS 잠금과 원본 스냅샷 비교를 유지한다.
+- TTY는 삭제 범위를 안내하고 정확한 프로젝트명을 직접 입력받는다. 비TTY/JSON은 --confirm-name과 --yes 모두 필요하고 --expect로 이전 조회 이후 변경을 거부한다. shell에서도 같은 확인을 사용하며 처리 후 미초기화 프로젝트로 유지한다.
+- 삭제 후 init으로 새 설정을 받는다. 삭제/재생성은 별도 명령이며 새 생성 취소·실패가 삭제된 데이터를 복원하지 않는다. 미완료 기록은 기존 recover로 처리한다. 자동 설치·Git 게시·실제 사용자 프로젝트 초기화를 허용하는 지침이 아니다.

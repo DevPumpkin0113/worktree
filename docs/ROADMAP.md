@@ -345,7 +345,7 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 
 - [x] 사용자 계정 scope로 이름·메타데이터 확정.
 - [x] cli-publish.yml 수동 검증/게시, 버전·branch·아카이브 구성·무결성·설치 검증·중복 게시 차단.
-- [x] CLI 0.4.1 최초 npm 게시·Trusted Publisher 연결·main 반영·원격 Actions 검증 모드 통과. 실제 OIDC 게시 실행은 다음 버전 배포 시 확인.
+- [x] CLI 0.4.1 최초 npm 게시·Trusted Publisher 연결·main 반영·원격 Actions 검증 모드 통과. 후속 0.5.0에서 실제 OIDC 게시 성공 확인.
 - 검증: Node 246개·타입·포맷·버전 검사, workflow YAML 파싱, 로컬 npm pack/설치 후 CLI init·validate 통과. 실제 npm 게시 미수행.
 
 ## 영문 기본 README와 참고 프로젝트
@@ -391,4 +391,11 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 - [x] 일반 터미널·shell의 프로젝트명 입력과 취소. 삭제 후 미초기화 상태에서 init으로 새 설정 생성.
 - [x] 영문/한국어 help·README·스킬 및 reference에 명령과 두 단계 삭제/생성의 복구 한계 안내.
 - 검증: 전체 Node 254개(재초기화 8개 포함), 공용 Rust 14개, desktop Rust 37개(조건부 2개 제외), CLI native Rust 빌드/테스트, 타입·포맷·버전 검사·CLI 빌드·스킬 형식 검사 통과.
-- 실제 PTY: .local/reset-tty-050의 0개 작업 프로젝트에 정확한 프로젝트명을 입력해 삭제 확인. 실제 사용자 프로젝트는 초기화하지 않았고 사용자 인수·커밋·npm 배포는 미수행.
+- 실제 PTY: .local/reset-tty-050의 0개 작업 프로젝트에 정확한 프로젝트명을 입력해 삭제 확인. 실제 사용자 프로젝트는 초기화하지 않았고 사용자 인수는 별도 확인 대상.
+
+### CLI 0.5.0 배포 완료 (2026-10-23)
+
+- 기능 87a1081·문서 f53f679 커밋 및 main 병합 후 CLI npm Publish 실행 39906539500 성공.
+- Trusted Publisher OIDC 게시와 provenance 생성 확인. 공개 npm latest=0.5.0, CI 아카이브와 registry SHA512 일치.
+- 공개 패키지 별도 설치 후 작업·마일스톤·댓글 생성→reset 미리보기→정확한 프로젝트명/동의/revision 삭제→외부 작업물 유지→새 접두어로 init→validate 통과.
+- 앱은 0.33.2 유지, CLI만 게시. 로컬 사용자의 기존 전역 CLI·스킬은 자동 갱신하지 않음.

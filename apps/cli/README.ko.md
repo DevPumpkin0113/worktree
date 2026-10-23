@@ -1,6 +1,6 @@
 # Worktree CLI
 
-[English](README.md) | [한국어](README.ko.md)
+[EN](https://github.com/DevPumpkin0113/worktree/blob/main/apps/cli/README.md) | [KO](https://github.com/DevPumpkin0113/worktree/blob/main/apps/cli/README.ko.md)
 
 프로젝트의 작업과 일정을 관리하는 명령줄 도구입니다.
 

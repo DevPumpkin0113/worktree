@@ -38,6 +38,16 @@ worktree shell
 
 작업·마일스톤·댓글, 검색·필터, 일괄 변경·충돌 검사·복구를 지원합니다. 이미 앱에서 초기화한 폴더는 init을 생략하고 그대로 열면 됩니다. [한국어 CLI 안내](apps/cli/README.ko.md) · [English CLI guide](apps/cli/README.md)
 
+## 에이전트 스킬
+
+AI 에이전트가 CLI로 작업을 관리하도록 [Worktree CLI 스킬](skills/worktree-cli/SKILL.md)을 제공합니다. CLI는 위 명령으로 별도 설치합니다.
+
+```powershell
+npx skills add DevPumpkin0113/worktree --skill worktree-cli -g
+```
+
+안내에 따라 사용할 에이전트를 선택합니다. `-g`는 모든 프로젝트에서 사용할 수 있도록 사용자 단위로 설치합니다.
+
 ## 프로젝트에 저장되는 파일
 
 프로젝트를 초기화하면 루트에 `worktree.json`과 지정한 위치에 데이터 폴더를 생성합니다. 기본 저장 위치는 `docs/worktree`이며 초기화할 때 변경할 수 있습니다.

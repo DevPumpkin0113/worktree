@@ -38,6 +38,16 @@ worktree shell
 
 The CLI supports tasks, milestones, comments, filters, batch changes, conflict checks, and recovery. Skip init for an existing desktop project. [English CLI guide](apps/cli/README.md) · [한국어 CLI 안내](apps/cli/README.ko.md)
 
+## Agent skill
+
+Use the [Worktree CLI skill](skills/worktree-cli/SKILL.md) to let an AI agent manage tasks through the CLI. Install the CLI separately as shown above.
+
+```powershell
+npx skills add DevPumpkin0113/worktree --skill worktree-cli -g
+```
+
+Select your coding agent when prompted. `-g` installs for your user across projects.
+
 ## Files in your project
 
 Initialization creates a root `worktree.json` and a data directory. The default is `docs/worktree`; you can choose a different relative directory during setup.

@@ -40,7 +40,7 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
         ),
       ),
     );
-  if (options.json) return formatResult(result, options);
+  if (options.json || 'reset' in result) return formatResult(result, options);
   if ('tasks' in result && result.tasks)
     return translatedTable(
       ['ID', 'Title', 'Status', 'Owner'],

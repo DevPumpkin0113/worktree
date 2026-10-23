@@ -60,6 +60,9 @@ Comments use `--author`, session author, or app display name, never Git identity
 
 ## Deletion and recovery
 
+For an explicitly requested fresh start of an existing project, check `project reset --help` (CLI 0.5.0+). Inspect `--dry-run --json`, explain that the entire data folder and root marker are deleted, and obtain the exact current project name from the user before using `--confirm-name NAME --yes --expect HASH`. Do not infer deletion consent from an empty task list or a request to edit settings. After deletion, follow First-time initialization to gather new settings before `init`; cancellation leaves the project uninitialized. Reset and recreation are separate operations, not one rollback transaction. On older CLI versions, report the missing capability instead of deleting project files manually.
+
+
 Within an authorized deletion request, inspect `--dry-run --json` before executing with `--yes`. Milestone deletion requires `--children keep` or `--children delete`; `--detach` consents to removing predecessor references from surviving tasks. Include these effects in the user's requested scope; ask only if that scope is unresolved. Task deletion also removes its comments. There is no undo.
 
 `RECOVERY_REQUIRED` stops normal operations. Inspect with `recover --dry-run --json`; inspection does not repair anything. Explain the pending operation before `recover --yes` if recovery is not already authorized. Interrupted reset recovery in the deleting stage finishes deletion; it does not restore deleted data. Preserve external edits and report recovery conflicts rather than deleting journals or bypassing validation.

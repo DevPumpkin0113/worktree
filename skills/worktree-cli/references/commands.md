@@ -1,6 +1,6 @@
 # Command workflows
 
-Examples target Worktree CLI 0.4.1. Check installed `--help` for current options and `schema --json` for project choices. Replace paths, IDs, authors, and file contents with real values. These examples illustrate operations within the user's request; they are not instructions to run every command.
+Examples target Worktree CLI 0.5.0. Check installed `--help` for current options and `schema --json` for project choices. Replace paths, IDs, authors, and file contents with real values. These examples illustrate operations within the user's request; they are not instructions to run every command.
 
 ## Discover and select
 
@@ -127,6 +127,17 @@ worktree milestone delete MS001 --children keep --yes --expect "<same revision i
 ```
 
 `--children keep` leaves tasks unassigned; `--children delete` also deletes them and their comments. `--detach` additionally removes predecessor references from surviving tasks; add it only when that effect is authorized. Ordinary task deletion uses `task delete ID --yes`. There is no undo.
+
+## Reset an existing project (CLI 0.5.0+)
+
+Only for a user-authorized fresh start. The preview includes the entire data folder, including files not counted as tasks/comments. Read its project name and revision, explain the scope, and have the user supply the exact name before deletion.
+
+```powershell
+worktree project reset --dry-run --project "C:\projects\example" --json
+worktree project reset --confirm-name "User-confirmed project name" --yes --expect "<preview revision>" --project "C:\projects\example" --json
+```
+
+Parent folders and files outside the data folder remain. After successful deletion, collect new settings using the SKILL.md initialization flow before running `init`. Reset does not automatically recreate the project. If recreation fails or is cancelled, the old data is not restored. Never replace a missing reset command with manual recursive deletion.
 
 ## Diagnose failures
 

@@ -147,6 +147,26 @@ worktree project edit --input settings.json
 
 저장 위치·접두어·ID 순번은 변경할 수 없습니다.
 
+## 재초기화 — `project reset`
+
+CLI 0.5.0부터 지원합니다. 프로젝트 설정과 일정 관리 데이터를 삭제한 뒤 새로 생성합니다.
+
+```powershell
+worktree project reset
+worktree init
+```
+
+삭제 범위를 확인하고 기존 프로젝트명을 정확히 입력합니다. 취소하면 삭제하지 않습니다. 데이터 저장 폴더 전체와 `worktree.json`을 삭제하며, 상위 폴더와 저장 위치 밖의 작업물은 유지합니다. 되돌릴 수 없습니다.
+
+자동화에서는 미리 확인한 프로젝트명과 revision을 지정합니다.
+
+```powershell
+worktree project reset --dry-run --json
+worktree project reset --confirm-name "프로젝트명" --yes --expect "<revision>" --json
+```
+
+삭제 후 새 설정 입력은 `init`으로 진행합니다. 기존 `init`은 덮어쓰지 않습니다.
+
 ## 확인 — `status`, `validate`, `schema`
 
 ```powershell

@@ -15,6 +15,7 @@ export interface Options {
     | 'recover'
     | 'project-show'
     | 'project-edit'
+    | 'project-reset'
     | 'schema'
     | 'add'
     | 'edit'
@@ -67,6 +68,7 @@ const valued = [
   'reply-to',
   'children',
   'expect',
+  'confirm-name',
   'name',
   'prefix',
   'directory',
@@ -160,8 +162,8 @@ export function parseArguments(args: string[], cwd: string): Options {
     words.length === 1
   )
     result.command = first as Options['command'];
-  else if (first === 'project' && ['show', 'edit'].includes(verb) && words.length === 2) {
-    result.command = verb === 'show' ? 'project-show' : 'project-edit';
+  else if (first === 'project' && ['show', 'edit', 'reset'].includes(verb) && words.length === 2) {
+    result.command = ('project-' + verb) as Options['command'];
   } else if (
     ['task', 'milestone'].includes(first) &&
     ['list', 'show', 'add', 'edit', 'delete'].includes(verb)
@@ -196,6 +198,7 @@ export function parseArguments(args: string[], cwd: string): Options {
       allowed.add(key);
   if (result.command === 'batch') allowed.add('input');
   if (result.command === 'project-edit') allowed.add('input');
+  if (result.command === 'project-reset') allowed.add('confirm-name');
   if (result.command === 'list') {
     for (const key of ['search', 'milestone', 'type', 'priority', 'label']) allowed.add(key);
     allowed.add('status');
@@ -245,6 +248,7 @@ export function parseArguments(args: string[], cwd: string): Options {
     'comment-delete',
     'init',
     'project-edit',
+    'project-reset',
     'batch',
     'recover',
   ].includes(result.command);
@@ -256,7 +260,9 @@ export function parseArguments(args: string[], cwd: string): Options {
     throw new CliError('USAGE', errorMessage('writeOptionsRequireAWriteCommand'));
   if (
     result.yes &&
-    !['delete', 'comment-delete', 'batch', 'recover', 'init'].includes(result.command)
+    !['delete', 'comment-delete', 'batch', 'recover', 'init', 'project-reset'].includes(
+      result.command,
+    )
   )
     throw new CliError('USAGE', errorMessage('yesRequiresDelete'));
   if (result.noInteractive && result.command !== 'init')

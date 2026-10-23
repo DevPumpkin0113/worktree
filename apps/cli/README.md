@@ -147,6 +147,26 @@ Include only changed fields in the JSON file. Arrays replace the entire list.
 
 Data location, prefix, and ID sequences cannot be changed.
 
+## Reset — `project reset`
+
+Available from CLI 0.5.0. Delete the existing planning data and settings, then create the project again.
+
+```powershell
+worktree project reset
+worktree init
+```
+
+Review the deletion scope and enter the exact project name. Cancellation changes nothing. Reset permanently deletes the entire data folder and `worktree.json`; parent folders and files outside the data folder remain. There is no undo.
+
+For automation, use the reviewed project name and revision:
+
+```powershell
+worktree project reset --dry-run --json
+worktree project reset --confirm-name "Project name" --yes --expect "<revision>" --json
+```
+
+Enter new settings with `init` after reset. Ordinary `init` never overwrites a project.
+
 ## Check — `status`, `validate`, `schema`
 
 ```powershell

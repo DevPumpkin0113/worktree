@@ -5,6 +5,8 @@ export function formatResult(
 ) {
   if (options.json) return JSON.stringify(value, null, 2);
   const english = options.language === 'en';
+  if ('reset' in value)
+    return `${value.dryRun ? 'DRY RUN' : 'RESET'} ${value.project}\n${value.deletedPaths.join('\n')}\n${english ? 'Create again with: worktree init' : '다시 생성: worktree init'}`;
   if ('config' in value || 'schema' in value || 'recovery' in value)
     return JSON.stringify(value, null, 2);
   if ('initialized' in value)

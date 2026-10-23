@@ -1,3 +1,4 @@
+import { resetProject } from './project-reset';
 import { errorMessage } from './i18n/error-messages';
 import { prepareBody } from './input';
 import { executeBatch } from './batch';
@@ -13,6 +14,7 @@ export function execute(options: Options) {
   if (options.command === 'recover') return recoverProject(options);
   prepareBody(options);
   if (options.command === 'init') return initializeProject(options);
+  if (options.command === 'project-reset') return resetProject(options);
   const project = readProject(options.project);
   const { root, source, model, revision } = project;
   if (options.command === 'batch') return executeBatch(options, project);

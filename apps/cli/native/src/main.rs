@@ -12,6 +12,13 @@ use worktree_storage::{project_files as files, project_write};
     deny_unknown_fields
 )]
 enum Request {
+    Reset {
+        root: String,
+        expected: String,
+        confirmation: String,
+        apply: bool,
+        language: String,
+    },
     Recover {
         root: String,
         apply: bool,
@@ -54,6 +61,25 @@ fn execute() -> Result<serde_json::Value, String> {
         }
     };
     match request {
+        Request::Reset {
+            root,
+            expected,
+            confirmation,
+            apply,
+            language,
+        } => {
+            worktree_storage::set_language(&language);
+            let root = files::root(Path::new(&root))?;
+            let inspection =
+                worktree_storage::project_reset::inspect(&root, &expected, &confirmation)?;
+            let status = if apply && inspection != "conflict" {
+                worktree_storage::project_reset::reset(&root, &expected, &confirmation)?
+            } else {
+                inspection
+            };
+            Ok(serde_json::json!({"status":status}))
+        }
+
         Request::Recover {
             root,
             apply,

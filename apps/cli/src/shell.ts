@@ -1,3 +1,4 @@
+import { resetWizard, wantsResetWizard } from './reset-wizard';
 import { initWizard, wantsInitWizard } from './init-wizard';
 import { readlineAsk } from './init-prompts';
 import { errorMessage } from './i18n/error-messages';
@@ -161,10 +162,16 @@ export async function shell(initial: Options) {
         else if (options.command === 'shell')
           throw new CliError('USAGE', errorMessage('nestedShellsAreNotSupported'));
         else {
-          if (wantsInitWizard(options, terminal)) {
+          if (wantsInitWizard(options, terminal) || wantsResetWizard(options, terminal)) {
             wizardActive = true;
             try {
-              if (!(await initWizard(options, readlineAsk(input), console.log))) {
+              if (
+                !(await (options.command === 'project-reset' ? resetWizard : initWizard)(
+                  options,
+                  readlineAsk(input),
+                  console.log,
+                ))
+              ) {
                 prompt();
                 continue;
               }
@@ -176,7 +183,7 @@ export async function shell(initial: Options) {
           console.log(shellOutput(result, options));
           if (
             'initialized' in result &&
-            result.initialized &&
+            (result.initialized || ('reset' in result && result.reset)) &&
             projectFolder(options.project) === projectFolder(project)
           ) {
             const refreshed = location(project);

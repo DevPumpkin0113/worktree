@@ -74,4 +74,6 @@ export const en = {
   referencesMustBeAnArray: 'references must be an array',
   expectedString: 'Expected string: {0}',
   specifyAtLeastOneFieldToEdit: 'Specify at least one field to edit.',
+  resetConfirmationRequired: 'Pass --yes and --confirm-name with the exact project name to reset.',
+  resetNameMismatch: 'Project name does not match. Nothing was deleted.',
 } as const;

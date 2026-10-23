@@ -76,4 +76,7 @@ export const ko = {
   referencesMustBeAnArray: 'references는 배열이어야 합니다.',
   expectedString: '문자열이 필요합니다: {0}',
   specifyAtLeastOneFieldToEdit: '수정할 필드를 하나 이상 지정하세요.',
+  resetConfirmationRequired:
+    '초기화하려면 --yes와 정확한 프로젝트명의 --confirm-name을 지정하세요.',
+  resetNameMismatch: '프로젝트명이 일치하지 않습니다. 삭제하지 않았습니다.',
 } as const;

@@ -47,7 +47,7 @@ export function invokeStorage(request: Record<string, unknown>) {
   if (result.status !== 0) throw new CliError('STORAGE_ERROR', errorMessage('storageHelperFailed'));
   if (response.status === 'conflict')
     throw new CliError('CONFLICT', errorMessage('projectChangedReadItAgainBeforeRetrying'));
-  if (!['saved', 'initialized', 'recovered', 'inspected'].includes(response.status ?? ''))
+  if (!['saved', 'initialized', 'recovered', 'inspected', 'reset'].includes(response.status ?? ''))
     throw new CliError('STORAGE_ERROR', errorMessage('unexpectedStorageResponse'));
   return response;
 }

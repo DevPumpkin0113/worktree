@@ -40,9 +40,13 @@ const descriptions: Record<string, Text> = {
     '댓글·한 단계 답글 조회·작성·수정·삭제',
     'List, create, edit and delete comments and one-level replies',
   ],
-  project: ['프로젝트 설정 조회·수정', 'Inspect and edit project settings'],
+  project: ['프로젝트 설정 조회·수정·초기화', 'Inspect, edit and reset project settings'],
 };
 const verbs: Record<string, Text> = {
+  reset: [
+    '프로젝트 일정 관리 데이터를 삭제하고 새 생성 단계로 돌아갑니다.',
+    'Delete project planning data, then run init to create it again.',
+  ],
   list: ['목록을 조회합니다.', 'List matching items.'],
   show: ['상세 정보를 조회합니다.', 'Inspect one item.'],
   add: [
@@ -135,6 +139,7 @@ export function help(language: Language, topic?: string, session = false) {
     else if (adding) usage += ' --title TITLE';
     if (group === 'batch') usage += ' --input FILE.json';
     if (group === 'recover') usage += ' (--dry-run | --yes)';
+    if (group === 'project' && verb === 'reset') usage += ' [--confirm-name NAME --yes]';
     if (deleting) usage += ' --yes';
     section('사용법', 'Usage', [usage + ' [options]']);
     if (verb && group !== 'project' && (comment || ['show', 'edit', 'delete'].includes(verb)))
@@ -328,7 +333,34 @@ export function help(language: Language, topic?: string, session = false) {
               ),
             ]),
       ]);
-    const writing = ['init', 'batch', 'recover'].includes(group) || adding || editing || deleting;
+    const resetting = group === 'project' && verb === 'reset';
+    if (resetting)
+      section('프로젝트 초기화', 'Project reset', [
+        t(
+          '터미널에서는 삭제 범위 안내 후 정확한 프로젝트명을 입력합니다. 취소하면 삭제하지 않습니다.',
+          'In a terminal, inspect the deletion scope and enter the exact project name. Cancellation deletes nothing.',
+        ),
+        '--confirm-name NAME  ' +
+          t(
+            '기존 프로젝트명과 정확히 일치해야 합니다.',
+            'Must match the existing project name exactly.',
+          ),
+        '--yes  ' +
+          t(
+            '자동화에서는 confirm-name과 함께 필수입니다.',
+            'Required together with confirm-name for automation.',
+          ),
+        t(
+          '데이터 저장 폴더 전체와 루트 worktree.json을 영구 삭제합니다. 상위 폴더와 저장 위치 밖의 작업물은 유지합니다. 되돌릴 수 없습니다.',
+          'Permanently deletes the entire data folder and root worktree.json. Parent folders and files outside the data folder remain. There is no undo.',
+        ),
+        t(
+          '삭제 후 worktree init으로 새 설정을 입력합니다. init은 기존 프로젝트를 덮어쓰지 않습니다.',
+          'After reset, run worktree init to enter new settings. init never overwrites an existing project.',
+        ),
+      ]);
+    const writing =
+      ['init', 'batch', 'recover'].includes(group) || adding || editing || deleting || resetting;
     if (writing)
       section('저장·미리보기', 'Writing and preview', [
         '--dry-run  ' +
@@ -460,28 +492,30 @@ export function help(language: Language, topic?: string, session = false) {
           ),
       ]);
     const example =
-      group === 'init'
-        ? 'worktree init --name "My project" --prefix W --dry-run'
-        : group === 'shell'
-          ? 'worktree shell --project "C:\\projects\\example"'
-          : group === 'schema'
-            ? 'worktree schema --json'
-            : group === 'project' && editing
-              ? 'worktree project edit --input settings.json --dry-run'
-              : comment
-                ? `worktree comment ${verb} W001${editing || deleting ? " '#001'" : ''}${adding || editing ? ' --text "Review note"' : ''}${adding ? ' --author Alice' : ''}${deleting ? ' --dry-run' : ''}`
-                : verb === 'list'
-                  ? `worktree ${group} list --status doing`
-                  : adding
-                    ? `worktree ${group} add --title "First item" --dry-run`
-                    : editing
-                      ? `worktree ${group} edit ${milestone ? 'MS001' : 'W001'} --title "Updated title" --dry-run`
-                      : deleting
-                        ? `worktree ${group} delete ${milestone ? 'MS001' : 'W001'} --dry-run`
-                        : usage +
-                          (group === 'project' || ['status', 'validate'].includes(group)
-                            ? ' --json'
-                            : '');
+      group === 'project' && verb === 'reset'
+        ? 'worktree project reset --dry-run\nworktree project reset --confirm-name "My project" --yes\nworktree init'
+        : group === 'init'
+          ? 'worktree init --name "My project" --prefix W --dry-run'
+          : group === 'shell'
+            ? 'worktree shell --project "C:\\projects\\example"'
+            : group === 'schema'
+              ? 'worktree schema --json'
+              : group === 'project' && editing
+                ? 'worktree project edit --input settings.json --dry-run'
+                : comment
+                  ? `worktree comment ${verb} W001${editing || deleting ? " '#001'" : ''}${adding || editing ? ' --text "Review note"' : ''}${adding ? ' --author Alice' : ''}${deleting ? ' --dry-run' : ''}`
+                  : verb === 'list'
+                    ? `worktree ${group} list --status doing`
+                    : adding
+                      ? `worktree ${group} add --title "First item" --dry-run`
+                      : editing
+                        ? `worktree ${group} edit ${milestone ? 'MS001' : 'W001'} --title "Updated title" --dry-run`
+                        : deleting
+                          ? `worktree ${group} delete ${milestone ? 'MS001' : 'W001'} --dry-run`
+                          : usage +
+                            (group === 'project' || ['status', 'validate'].includes(group)
+                              ? ' --json'
+                              : '');
     section('예시', 'Example', [
       verb === 'show' && group !== 'project'
         ? `worktree ${group} show ${milestone ? 'MS001' : 'W001'} --json`

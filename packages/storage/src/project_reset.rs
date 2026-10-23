@@ -142,6 +142,34 @@ pub fn recover(root: &Path) -> Result<(), String> {
         }
     }
 }
+pub fn inspect(root: &Path, expected: &str, confirmation: &str) -> Result<&'static str, String> {
+    let before: ProjectSource = serde_json::from_str(expected).map_err(|e| e.to_string())?;
+    files::validate_source(&before)?;
+    let config: serde_json::Value =
+        serde_json::from_str(&before.files["project.json"]).map_err(|e| e.to_string())?;
+    if confirmation.is_empty() || config["name"].as_str() != Some(confirmation) {
+        return Err(crate::i18n::reset_name_mismatch().into());
+    }
+    if load(root)?.is_some() {
+        return Err(conflict());
+    }
+    if snapshot(root)? != before {
+        return Ok("conflict");
+    }
+    let marker_path = files::safe_join(root, "worktree.json")?;
+    if context(fs::metadata(&marker_path), Op::Inspect, &marker_path)?
+        .permissions()
+        .readonly()
+    {
+        return context(Err(files::invalid()), Op::Inspect, &marker_path);
+    }
+    data_tree(&files::safe_join(root, &before.data_directory)?, false)?;
+    if snapshot(root)? != before {
+        return Ok("conflict");
+    }
+    Ok("inspected")
+}
+
 pub fn reset(root: &Path, expected: &str, confirmation: &str) -> Result<&'static str, String> {
     let before: ProjectSource = serde_json::from_str(expected).map_err(|e| e.to_string())?;
     files::validate_source(&before)?;

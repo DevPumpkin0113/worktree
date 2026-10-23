@@ -1,6 +1,6 @@
 # Worktree CLI
 
-[English](README.md) | [한국어](README.ko.md)
+[EN](https://github.com/DevPumpkin0113/worktree/blob/main/apps/cli/README.md) | [KO](https://github.com/DevPumpkin0113/worktree/blob/main/apps/cli/README.ko.md)
 
 A command-line tool for managing project tasks and schedules.
 

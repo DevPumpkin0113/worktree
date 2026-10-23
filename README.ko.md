@@ -1,4 +1,4 @@
-[English](README.md) | [한국어](README.ko.md)
+[EN](https://github.com/DevPumpkin0113/worktree/blob/main/README.md) | [KO](https://github.com/DevPumpkin0113/worktree/blob/main/README.ko.md)
 
 <div align="center">
   <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree 아이콘" />

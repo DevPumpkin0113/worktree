@@ -369,3 +369,17 @@ ADR 0011에 따라 최상위 묶음을 마일스톤으로 전환하고 날짜형
 - CLI npm Publish 검증 실행 39862780666 성공. 게시 작업은 검증 모드에 따라 미실행.
 - 로컬 검증: Node 246개, 공용 Rust 14개, desktop Rust 37개(조건부 2개 제외), 타입·포맷·버전·Vite 빌드 통과. 샌드박스 임시 교체/junction 제한은 일반 권한 재검증으로 확인.
 - 앱 Beta Worktree 0.33.2: Windows Release 실행 39862718133에서 설치 파일·서명·latest.json 게시, 설치 파일 서명/변조 검사 통과. 실제 설치 인수는 사용자 확인 대상.
+
+## Worktree CLI 에이전트 스킬
+
+- [x] skills/worktree-cli에 SKILL.md와 Codex UI 메타데이터 작성, 루트 영문·한국어 README에서 연결.
+- [x] 로컬 설치·검증 후 사용자 요청으로 설치본 제거. CLI 자동 설치·업그레이드는 수행하지 않음.
+- 검증: 저장소/설치본 quick_validate 통과. 별도 .local 임시 프로젝트에서 schema·원본 ID·dry-run 무변경·revision 수정·오래된 revision CONFLICT·댓글 작성·validate 검증 통과.
+- 사용자 실제 스킬 호출 인수는 별도 확인 대상. 앱·CLI 실행 코드는 변경하지 않음.
+
+- 스킬 최초 초기화는 사용자에게 이름·저장 위치·접두어와 기본/사용자 작업 규칙을 입력받고 설정 확인 후 생성하도록 변경. 이미 제공·확인된 값은 재질문하지 않으며 무응답 시 자동 생성하지 않음.
+
+- README 영문·한국어에 npx skills 설치 명령 추가. 기본 브랜치 설명은 후속 요청으로 제거. 사용자 원격 설치 검증을 위해 로컬 Codex worktree-cli 설치본만 제거하고 저장소 원본은 유지. 원격 설치는 main 반영 후 사용자 확인 대상.
+
+- 스킬의 references/commands.md에 조회·revision 수정·생성·댓글/답글·JSON/본문·batch·삭제·오류 처리 예시 추가. SKILL.md에서 필요 시 읽도록 연결. 로컬 설치본은 사용자 요청대로 제거 상태를 유지.
+- 레퍼런스 검증: JSON 예제 파싱·skill 형식 검사 및 격리 프로젝트의 revision/충돌·답글·구조화 입력·Markdown 본문·batch 미리보기/저장·마일스톤 삭제 후 하위 유지·최종 validate 통과.

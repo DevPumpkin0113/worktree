@@ -1,0 +1,4 @@
+interface:
+  display_name: "Worktree CLI"
+  short_description: "Manage Worktree tasks, milestones, and comments"
+  default_prompt: "Use $worktree-cli to inspect this project's plan and update the requested tasks."

@@ -9,7 +9,6 @@ import { FilterDropdown } from '../shared/FilterDropdown';
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
 import { workOwners, matchesWork } from '@worktree/core/work-filter';
 import { createDocumentViewState } from '../../interactions/document-view-state';
-import { useWorkspaceHeadingHeight } from '../../hooks/use-workspace-heading-height';
 import { WorkspaceProgressActions } from './WorkspaceProgressActions';
 import { TreeView } from './TreeView';
 import { KanbanView } from './KanbanView';
@@ -65,8 +64,6 @@ export function Content({
     store.detailMode === 'sidebar' && !state.settingsOpen ? state.selectedId : null;
   const rows = model?.rows;
   const root = useRef<HTMLDivElement>(null);
-  const heading = useRef<HTMLDivElement>(null);
-  useWorkspaceHeadingHeight(heading);
   const viewState = useRef(createDocumentViewState());
   const pageKey =
     state.page === 'board'
@@ -118,11 +115,8 @@ export function Content({
   }, [active?.path, pageKey, rows, filtered, label, homeVisible]);
   return (
     <main id="workspace" data-page={state.page} inert={state.settingsOpen}>
-      <div className="workspace-page-heading" ref={heading}>
-        <div>
-          <h2 id="workspacePageTitle">{PAGES[state.page][0]}</h2>
-          <p id="workspacePageDescription">{PAGES[state.page][1]}</p>
-        </div>
+      <div className="workspace-page-heading">
+        <h2 id="workspacePageTitle">{PAGES[state.page][0]}</h2>
         {(state.page === 'board' || state.page === 'tasks') && model ? (
           <WorkspaceProgressActions
             key={active?.path + ':' + state.page + ':' + state.settingsOpen}

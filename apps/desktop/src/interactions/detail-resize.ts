@@ -17,15 +17,16 @@ export function bindDetailResize({
 }) {
   let width: number | null = null,
     gesture: { id: number; x: number; width: number; next: number } | null = null;
-  const maximum = () =>
-    Math.max(
-      MIN_WIDTH,
+  const maximum = () => {
+    const panelWidth = dialog.closest<HTMLElement>('.workspace-surface')?.clientWidth;
+    const available =
+      panelWidth ||
       viewport.innerWidth -
-        MIN_CONTENT -
         (Number.parseFloat(
           viewport.getComputedStyle(surface).getPropertyValue('--workspace-nav-width'),
-        ) || 0),
-    );
+        ) || 0);
+    return Math.max(MIN_WIDTH, available - MIN_CONTENT);
+  };
   function apply(value: number) {
     width = Math.max(MIN_WIDTH, Math.min(maximum(), value));
     surface.style.setProperty('--detail-panel-width', width + 'px');

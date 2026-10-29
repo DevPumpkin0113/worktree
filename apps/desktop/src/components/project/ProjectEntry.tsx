@@ -12,6 +12,7 @@ export function ProjectEntry({
   return (
     <section className="project-tree" aria-label={messages.project}>
       <div className="project-entry">
+        <img className="app-mark" src="/worktree-icon.png" alt="" width={20} height={20} />
         <span className="project-entry-title" title={title ?? messages.noOpenProject}>
           {title ?? messages.noOpenProject}
         </span>

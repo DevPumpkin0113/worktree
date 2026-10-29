@@ -17,6 +17,13 @@
   margin-bottom: 0;
   color: var(--color-text);
 }
+.project-entry .app-mark {
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 4px;
+  pointer-events: none;
+}
 .project-manage-open {
   display: flex;
   align-items: center;
@@ -51,7 +58,8 @@
   justify-content: center;
   padding: 0;
 }
-.workspace-nav-collapsed .project-entry-title {
+.workspace-nav-collapsed .project-entry-title,
+.workspace-nav-collapsed .project-entry .app-mark {
   display: none;
 }
 .workspace-nav-collapsed .project-manage-open {
@@ -106,15 +114,16 @@
 .project-tree {
   display: flex;
   align-items: center;
-  height: var(--workspace-heading-height, auto);
-  padding: 0 4px 12px;
+  padding: 0 4px;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .workspace-nav-collapsed .project-tree {
-  padding: 0 0 12px;
+  padding: 0;
+}
+.workspace-nav[inert] .project-entry {
+  visibility: hidden;
 }
 .project-tree .project-entry {
   width: 100%;

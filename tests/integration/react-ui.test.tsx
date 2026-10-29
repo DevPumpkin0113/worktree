@@ -337,6 +337,10 @@ async function fixture(
 test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 없이 페이지·프로젝트를 전환한다', async () => {
   const f = await fixture();
   try {
+    const surface = f.element('.workspace-surface');
+    assert.ok(surface.contains(f.element('#workspace')));
+    assert.equal(surface.contains(f.element('#projectDock')), false);
+    assert.equal(surface.contains(f.element('#appStatusbar')), false);
     assert.equal(f.store.getSnapshot().projects.length, 2);
     assert.equal(f.host.querySelector('#projectFiles'), null);
     assert.equal(f.host.querySelector('#projectTreeResize'), null);
@@ -1209,15 +1213,24 @@ test('읽기 오류 중에도 프로젝트 설정 초안을 유지하고 프로�
   }
 });
 
-test('타이틀바 좌측은 패널 접힘에 따라 아이콘만 숨기고 새로고침·창 제어를 유지한다', async () => {
+test('새로고침은 검색 왼쪽에 있고 앱 아이콘은 프로젝트명 왼쪽이며 도구 입력은 창을 드래그하지 않는다', async () => {
   const f = await fixture();
   try {
-    assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
-    assert.ok(f.host.querySelector('.titlebar-workspace #reload'));
-    assert.equal(f.host.querySelector('.titlebar-workspace #settingsOpen'), null);
+    assert.ok(f.host.querySelector('.project-entry .app-mark'));
+    assert.ok(
+      f
+        .element('.project-entry .app-mark')
+        .nextElementSibling?.classList.contains('project-entry-title'),
+    );
+    assert.ok(f.host.querySelector('#titleDrag #reload'));
+    assert.ok(
+      f.element('#reload').parentElement?.nextElementSibling?.classList.contains('titlebar-search'),
+    );
+    assert.equal(f.host.querySelector('.titlebar-workspace'), null);
     await f.click('#workspaceCollapse');
     assert.equal(f.host.querySelector('.titlebar .app-mark'), null);
-    assert.ok(f.host.querySelector('.titlebar-workspace #reload'));
+    assert.ok(document.documentElement.classList.contains('workspace-nav-collapsed'));
+    assert.ok(f.host.querySelector('#titleDrag #reload'));
     const before = f.calls.filter((call) => call.command === 'scan_project').length;
     await f.click('#reload');
     assert.equal(f.calls.filter((call) => call.command === 'scan_project').length, before + 1);
@@ -1229,16 +1242,30 @@ test('타이틀바 좌측은 패널 접힘에 따라 아이콘만 숨기고 새�
     await f.click('#windowMaximize');
     await f.click('#windowClose');
     await act(() => {
-      f.element('.titlebar-workspace').dispatchEvent(
+      f.element('#titleDrag').dispatchEvent(
         new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 1 }),
       );
     });
+    for (const selector of ['#reload', '#search']) {
+      await act(() =>
+        f
+          .element(selector)
+          .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 1 })),
+      );
+    }
     assert.deepEqual(controls, ['minimize', 'maximize', 'close', 'drag']);
+    await act(() =>
+      f
+        .element('#titleDrag')
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 2 })),
+    );
+    assert.deepEqual(controls, ['minimize', 'maximize', 'close', 'drag', 'maximize']);
     await f.click('#settingsOpen');
     assert.equal(f.store.getSnapshot().settingsOpen, true);
     await f.click('#settingsOpen');
     await f.click('#workspaceCollapse');
-    assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
+    assert.ok(f.host.querySelector('.project-entry .app-mark'));
+    assert.equal(document.documentElement.classList.contains('workspace-nav-collapsed'), false);
   } finally {
     await f.close();
   }

@@ -102,6 +102,11 @@ input {
   overflow: auto;
   overscroll-behavior: contain;
 }
+#content:has(> .group) {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
 .group {
   margin: 8px 0 20px;
   border: 1px solid var(--color-group-border);
@@ -279,18 +284,6 @@ header.titlebar {
   align-items: center;
   border-bottom: 0;
   user-select: none;
-}
-header .app-mark {
-  object-fit: contain;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--color-primary);
-  letter-spacing: 0.5px;
-  margin: 0;
-  pointer-events: none;
-  border: 0;
-  border-radius: 4px;
-  padding: 0;
 }
 header .title-drag {
   display: flex;

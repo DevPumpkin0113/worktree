@@ -8,7 +8,6 @@ import type { WorkspaceStore } from '../../app/workspace-store';
 export function Titlebar({
   store,
   settingsOpen,
-  collapsed,
   query,
   searchEnabled,
   updateNotice,
@@ -16,7 +15,6 @@ export function Titlebar({
   store: WorkspaceStore;
   updateNotice: ReturnType<typeof useUpdateNotice>;
   settingsOpen: boolean;
-  collapsed: boolean;
   query: string;
   searchEnabled: boolean;
 }) {
@@ -45,17 +43,20 @@ export function Titlebar({
   return (
     <header className="titlebar">
       <div
-        className="titlebar-workspace"
+        id="titleDrag"
+        className="title-drag"
+        aria-label={messages.dragWindow}
         onMouseDown={(event) => {
-          if (event.button !== 0 || (event.target as Element).closest('button')) return;
+          if (event.button !== 0 || (event.target as Element).closest('input, label, button'))
+            return;
           event.preventDefault();
           control(event.detail === 2 ? 'maximize' : 'drag');
         }}
       >
-        {!collapsed ? (
-          <img className="app-mark" src="/worktree-icon.png" alt="" width={20} height={20} />
-        ) : null}
-        <div className="header-actions header-actions-left">
+        <h1 id="title" hidden>
+          {store.active?.model?.title ?? 'Worktree'}
+        </h1>
+        <div className="header-actions titlebar-search-actions">
           <button
             id="reload"
             aria-label={messages.reloadSource}
@@ -68,20 +69,6 @@ export function Titlebar({
             <Icon name="reload" />
           </button>
         </div>
-      </div>
-      <div
-        id="titleDrag"
-        className="title-drag"
-        aria-label={messages.dragWindow}
-        onMouseDown={(event) => {
-          if (event.button !== 0 || (event.target as Element).closest('input, label')) return;
-          event.preventDefault();
-          control(event.detail === 2 ? 'maximize' : 'drag');
-        }}
-      >
-        <h1 id="title" hidden>
-          {store.active?.model?.title ?? 'Worktree'}
-        </h1>
         <TitlebarSearch
           query={query}
           disabled={settingsOpen || !searchEnabled}

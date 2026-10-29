@@ -1,20 +1,24 @@
 {
   "assignees": [
-    "박대호",
-    "CODEX"
+    "Codex:Main",
+    "Codex:Dev",
+    "DevPumpkin"
   ],
   "dateFormat": "yyyy.MM.dd",
   "idSeparator": "hyphen",
   "labels": [
-    "API",
-    "Back-End",
-    "Front-End",
-    "etc",
-    "Database"
+    "Desktop",
+    "CLI",
+    "Core",
+    "Storage",
+    "Docs",
+    "Build",
+    "Release",
+    "AgentSkill"
   ],
   "name": "worktree",
-  "nextMilestoneNumber": 5,
-  "nextTaskNumber": 17,
+  "nextMilestoneNumber": 7,
+  "nextTaskNumber": 28,
   "priorities": [
     {
       "id": "high",

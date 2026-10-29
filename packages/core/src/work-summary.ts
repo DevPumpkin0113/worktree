@@ -12,6 +12,8 @@ export function summarizeWork(rows: WorkRow[]) {
   const completedTasks = tasks.filter((row) => row.status === 'done').length;
   return {
     taskCount: tasks.length,
+    epicCount: rows.filter((row) => row.epic).length,
+    completedEpics: rows.filter((row) => row.epic && row.status === 'done').length,
     milestoneCount: milestones.length,
     completedTasks,
     completedMilestones: milestones.filter((row) => row.status === 'done').length,

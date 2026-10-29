@@ -17,8 +17,8 @@
     "AgentSkill"
   ],
   "name": "worktree",
-  "nextMilestoneNumber": 7,
-  "nextTaskNumber": 28,
+  "nextMilestoneNumber": 8,
+  "nextTaskNumber": 30,
   "priorities": [
     {
       "id": "high",
@@ -54,5 +54,6 @@
     "chore"
   ],
   "timeFormat": "24h",
-  "useEffort": false
+  "useEffort": false,
+  "nextEpicNumber": 5
 }

@@ -2,6 +2,7 @@ import { useTabStrip } from '../../hooks/use-tab-strip';
 import { useRef, useLayoutEffect } from 'react';
 import type { WorkModel, TaskCreationTab } from '../../app/types';
 import { messages } from '../../i18n/messages';
+import { creationTitle } from '../../app/work-kind';
 import { Icon } from '../shared/Icon';
 export function TaskTabs({
   ids,
@@ -100,10 +101,9 @@ export function TaskTabs({
         const row = model.rows.find((item) => item.id === id);
         const creation = creationTabs.find((tab) => tab.id === id);
         const name = creation
-          ? (creation.kind === 'milestone' ? messages.newMilestone : messages.newTask) +
-            (creation.number > 1 ? ' (' + creation.number + ')' : '')
+          ? creationTitle(creation.kind) + (creation.number > 1 ? ' (' + creation.number + ')' : '')
           : label(id);
-        const title = row ? (row.milestone ? row.name : label(id) + ' · ' + row.name) : name;
+        const title = row ? (row.type === 'group' ? row.name : label(id) + ' · ' + row.name) : name;
         return (
           <div
             className="task-tab"

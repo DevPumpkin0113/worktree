@@ -22,8 +22,8 @@ export async function resetWizard(options: Options, ask: Ask, write: (text: stri
   write(preview.deletedPaths.join('\n'));
   write(
     ko
-      ? `작업 ${preview.taskCount}개 · 마일스톤 ${preview.milestoneCount}개 · 댓글 ${preview.commentCount}개`
-      : `${preview.taskCount} tasks · ${preview.milestoneCount} milestones · ${preview.commentCount} comments`,
+      ? `이슈 ${preview.taskCount}개 · 마일스톤 ${preview.milestoneCount}개 · 댓글 ${preview.commentCount}개`
+      : `${preview.taskCount} issues · ${preview.milestoneCount} milestones · ${preview.commentCount} comments`,
   );
   const name = await ask(
     ko

@@ -10,16 +10,22 @@ export function TaskMetadata({
   priorities,
   useEffort,
   milestone,
+  epic,
 }: {
   row: WorkRow;
   priorities?: import('@worktree/core/project-priorities').ProjectPriority[];
   useEffort: boolean;
   milestone: ReactNode;
+  epic: ReactNode;
 }) {
   return (
     <>
       {!row.milestone ? (
         <div className="detail-facts">
+          <div className="detail-fact">
+            <span>{messages.epic}</span>
+            <strong>{epic}</strong>
+          </div>
           <div className="detail-fact">
             <span>{messages.parentMilestone}</span>
             <strong>{milestone}</strong>

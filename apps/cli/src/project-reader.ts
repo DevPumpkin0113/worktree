@@ -92,7 +92,7 @@ export function readProject(input: string) {
     source.files[key] = content;
   }
   add('project.json');
-  for (const folder of ['tasks', 'milestones']) {
+  for (const folder of ['tasks', 'milestones', 'epics']) {
     const directory = safeJoin(data, folder);
     if (!fs.existsSync(directory)) continue;
     for (const file of fs.readdirSync(directory).sort())

@@ -43,6 +43,7 @@ export function Content({
   onAddTask,
   onCloseTaskTab,
   onAddMilestone,
+  onAddEpic,
   initializationStep,
   onInitializationStep,
 }: {
@@ -56,6 +57,7 @@ export function Content({
   onAddTask: () => void;
   onCloseTaskTab: (id: string) => void;
   onAddMilestone: () => void;
+  onAddEpic: () => void;
 }) {
   const active = store.active,
     model = active?.model;
@@ -123,9 +125,11 @@ export function Content({
         </div>
         {(state.page === 'board' || state.page === 'tasks') && model ? (
           <WorkspaceProgressActions
+            key={active?.path + ':' + state.page + ':' + state.settingsOpen}
             rows={model.rows}
             onAddTask={onAddTask}
             onAddMilestone={onAddMilestone}
+            onAddEpic={onAddEpic}
           />
         ) : null}
       </div>
@@ -284,7 +288,7 @@ export function Content({
               showEmptyMilestones &&
               state.page === 'board' &&
               active.view === 'tree' &&
-              model.rows.some((row) => row.milestone)
+              model.rows.some((row) => row.type === 'group')
             ) ? (
             <div className="empty">
               {model.rows.length ? messages.noMatchingTasks : messages.emptyProjectTasks}

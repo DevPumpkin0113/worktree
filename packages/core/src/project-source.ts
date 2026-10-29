@@ -18,6 +18,7 @@ export interface ProjectConfig {
   assignees?: string[];
   nextTaskNumber: number;
   nextMilestoneNumber: number;
+  nextEpicNumber?: number;
 }
 export interface ProjectSource {
   dataDirectory: string;
@@ -33,7 +34,8 @@ export class ProjectValidationError extends Error {
     readonly field: string,
     readonly value: string,
     readonly line = 0,
-    readonly reason: 'field' | 'dependency' | 'cycle' | 'dependencyDate' | 'milestone' = 'field',
+    readonly reason:
+      'field' | 'dependency' | 'cycle' | 'dependencyDate' | 'milestone' | 'epic' = 'field',
   ) {
     super(messages.invalidProjectField(file, field));
   }
@@ -120,6 +122,11 @@ export function projectConfig(source: ProjectSource): ProjectConfig {
     fail('taskTypeColors');
   for (const key of ['nextTaskNumber', 'nextMilestoneNumber'] as const)
     if (!Number.isSafeInteger(config[key]) || config[key] < 1) fail(key);
+  if (
+    config.nextEpicNumber !== undefined &&
+    (!Number.isSafeInteger(config.nextEpicNumber) || config.nextEpicNumber < 1)
+  )
+    fail('nextEpicNumber');
   return config;
 }
 export function isRelativePath(value: string) {

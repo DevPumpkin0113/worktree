@@ -44,6 +44,7 @@ export function describeDocumentErrors(
             cycle: messages.projectCycleError,
             dependencyDate: messages.projectDependencyDateError,
             milestone: messages.projectMilestoneError,
+            epic: messages.projectEpicError,
             field: messages.invalidProjectField(error.file, error.field),
           }[error.reason];
         },

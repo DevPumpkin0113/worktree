@@ -3,8 +3,8 @@ type Language = 'ko' | 'en';
 type Text = [string, string];
 const descriptions: Record<string, Text> = {
   batch: [
-    'JSON의 작업·마일스톤·댓글 명령을 모두 검증한 뒤 한 번에 저장합니다.',
-    'Validate task, milestone and comment commands, then save once.',
+    'JSON의 이슈·마일스톤·댓글 명령을 모두 검증한 뒤 한 번에 저장합니다.',
+    'Validate issue, milestone and comment commands, then save once.',
   ],
   recover: [
     '중단된 저장·초기화 기록을 검사하거나 복구합니다.',
@@ -15,8 +15,8 @@ const descriptions: Record<string, Text> = {
     'Create a project document collection without overwriting existing data.',
   ],
   status: [
-    '프로젝트 진행률·작업·마일스톤·댓글 수를 조회합니다.',
-    'Show project progress and task, milestone and comment counts.',
+    '프로젝트 진행률·이슈·마일스톤·댓글 수를 조회합니다.',
+    'Show project progress and issue, milestone and comment counts.',
   ],
   validate: [
     '프로젝트 전체의 문서·연결·일정을 검사합니다. 파일을 수정하지 않습니다.',
@@ -34,7 +34,8 @@ const descriptions: Record<string, Text> = {
     '앱과 독립적인 CLI 버전을 표시합니다.',
     'Show the CLI version, independent of the desktop app.',
   ],
-  task: ['작업 조회·생성·수정·삭제', 'List, inspect, create, edit and delete tasks'],
+  task: ['이슈 조회·생성·수정·삭제', 'List, inspect, create, edit and delete issues'],
+  epic: ['에픽 조회·생성·수정·삭제', 'List, inspect, create, edit and delete epics'],
   milestone: ['마일스톤 조회·생성·수정·삭제', 'List, inspect, create, edit and delete milestones'],
   comment: [
     '댓글·한 단계 답글 조회·작성·수정·삭제',
@@ -94,8 +95,8 @@ export function help(language: Language, topic?: string, session = false) {
     lines.push(
       'Worktree CLI',
       t(
-        '프로젝트의 작업·마일스톤·댓글을 터미널에서 관리합니다.',
-        'Manage project tasks, milestones and comments in your terminal.',
+        '프로젝트의 이슈·마일스톤·댓글을 터미널에서 관리합니다.',
+        'Manage project issues, milestones and comments in your terminal.',
       ),
     );
     section('사용법', 'Usage', [
@@ -112,7 +113,7 @@ export function help(language: Language, topic?: string, session = false) {
     );
     section('시작 예시', 'Quick start', [
       'worktree init --name "My project" --prefix W',
-      'worktree task add --title "First task"',
+      'worktree task add --title "First issue"',
       'worktree task list',
       'worktree shell',
     ]);
@@ -126,7 +127,29 @@ export function help(language: Language, topic?: string, session = false) {
   } else {
     lines.push('worktree ' + topic, pick(verb ? verbs[verb] : descriptions[group]));
     const comment = group === 'comment',
-      milestone = group === 'milestone';
+      milestone = group === 'milestone',
+      epic = group === 'epic';
+    if (milestone && ['add', 'edit', 'list'].includes(verb))
+      lines.push(
+        t(
+          '에픽 소속: --epic EP001 (미지정: -). 이동해도 마일스톤 ID는 유지합니다.',
+          'Epic membership: --epic EP001 (unassigned: -). Moving preserves milestone IDs.',
+        ),
+      );
+    if (group === 'task' && ['add', 'edit'].includes(verb))
+      lines.push(
+        t(
+          '직접 소속은 --epic EP001 또는 --milestone MS001 중 하나만 지정합니다. --milestone -는 현재 에픽의 직속 이슈로 이동하고 --epic -는 전체 소속을 해제합니다. ID와 파일명은 유지합니다.',
+          'Use either --epic EP001 for direct epic membership or --milestone MS001, not both. --milestone - retains the current epic as a direct parent; --epic - clears all membership. IDs and filenames are preserved.',
+        ),
+      );
+    if (epic && verb === 'delete')
+      lines.push(
+        t(
+          '하위 마일스톤 또는 이슈가 있으면 --children keep|delete를 지정합니다. delete는 마일스톤·이슈·댓글 전체를 삭제합니다. --yes가 필요합니다.',
+          'When milestones or issues exist, specify --children keep|delete. delete removes milestones, issues and comments recursively. --yes is required.',
+        ),
+      );
     const editing = verb === 'edit',
       adding = verb === 'add',
       deleting = verb === 'delete';
@@ -176,8 +199,8 @@ export function help(language: Language, topic?: string, session = false) {
           t('프로젝트 이름. 기본: 폴더명.', 'Project name. Default: folder name.'),
         '--prefix W        ' +
           t(
-            '작업 접두어. 기본: W. 영문 1~20자, MS 제외. 소문자는 대문자로 변환.',
-            'Task prefix. Default: W. 1–20 ASCII letters, except MS; lowercase is uppercased.',
+            '이슈 접두어. 기본: W. 영문 1~20자, MS 제외. 소문자는 대문자로 변환.',
+            'Issue prefix. Default: W. 1–20 ASCII letters, except MS; lowercase is uppercased.',
           ),
         '--directory PATH  ' +
           t(
@@ -213,9 +236,14 @@ export function help(language: Language, topic?: string, session = false) {
           ),
         '--status todo|doing|blocked|done  ' + t('상태 정확히 일치.', 'Exact status match.'),
         '--owner NAME    ' + t('담당자 정확히 일치.', 'Exact owner match.'),
+        '--epic ID       ' +
+          t(
+            '직속 또는 마일스톤을 통한 에픽 소속.',
+            'Epic membership, direct or through a milestone.',
+          ),
         '--milestone ID  ' +
           t('소속 원본 ID. 미지정은 -.', 'Milestone original ID; - means unassigned.'),
-        '--type TYPE     ' + t('작업 유형 정확히 일치.', 'Exact task type match.'),
+        '--type TYPE     ' + t('이슈 유형 정확히 일치.', 'Exact issue type match.'),
         '--priority ID   ' +
           t('우선순위 원본 ID. 미지정은 -.', 'Priority original ID; - means unspecified.'),
         '--label LABEL   ' +
@@ -244,11 +272,16 @@ export function help(language: Language, topic?: string, session = false) {
             '필드 객체. 명령 옵션이 우선. 배열은 전체 교체.',
             'Field object; flags override it. Arrays replace existing values.',
           ),
-        ...(!milestone
+        ...(!milestone && !epic
           ? [
               '--description TEXT  ' + t('선택 Markdown 설명.', 'Optional Markdown description.'),
               '--owner NAME        ' + t('담당자.', 'Owner.'),
               '--status todo|doing|blocked|done  ' + t('기본: todo.', 'Default: todo.'),
+              '--epic ID           ' +
+                t(
+                  '에픽 직속 소속. 마일스톤과 동시 지정 불가.',
+                  'Direct epic parent; mutually exclusive with milestone.',
+                ),
               '--milestone ID      ' +
                 t(
                   '소속 원본 ID. 기본: - (미지정).',
@@ -393,12 +426,12 @@ export function help(language: Language, topic?: string, session = false) {
                       ),
                   ]
                 : []),
-              ...(milestone
+              ...(milestone || epic
                 ? [
                     '--children keep|delete  ' +
                       t(
-                        '하위 작업이 있으면 필수. keep: 미지정으로 유지, delete: 함께 삭제. dry-run 기본: keep.',
-                        'Required when children exist. keep: retain as unassigned; delete: remove children. Dry-run default: keep.',
+                        '하위 항목이 있으면 필수. keep: 하위 항목 유지(마일스톤 삭제는 해당 에픽에 이슈 유지), delete: 함께 삭제. dry-run 기본: keep.',
+                        'Required when children exist. keep: retain children (milestone issues stay in its epic); delete: remove children. Dry-run default: keep.',
                       ),
                   ]
                 : []),
@@ -448,8 +481,8 @@ export function help(language: Language, topic?: string, session = false) {
                   'Required. {commands: [[command, args...], ...]}, up to 100 commands. - reads stdin.',
                 ),
               t(
-                '한 프로젝트에서 순서대로 검증합니다. 중간 실패 시 저장하지 않습니다. 내부 명령은 task/milestone/comment의 쓰기만 허용합니다.',
-                'Validate sequentially within one project; save nothing on failure. Inner commands support task/milestone/comment writes only.',
+                '한 프로젝트에서 순서대로 검증합니다. 중간 실패 시 저장하지 않습니다. 내부 명령은 task/milestone/epic/comment의 쓰기만 허용합니다.',
+                'Validate sequentially within one project; save nothing on failure. Inner commands support task/milestone/epic/comment writes only.',
               ),
               t(
                 '내부 --project/--input/파일 입력/언어/미리보기/도움말은 사용 불가. 생성 결과 ID는 결과 목록으로 확인합니다.',
@@ -509,16 +542,16 @@ export function help(language: Language, topic?: string, session = false) {
                     : adding
                       ? `worktree ${group} add --title "First item" --dry-run`
                       : editing
-                        ? `worktree ${group} edit ${milestone ? 'MS001' : 'W001'} --title "Updated title" --dry-run`
+                        ? `worktree ${group} edit ${epic ? 'EP001' : milestone ? 'MS001' : 'W001'} --title "Updated title" --dry-run`
                         : deleting
-                          ? `worktree ${group} delete ${milestone ? 'MS001' : 'W001'} --dry-run`
+                          ? `worktree ${group} delete ${epic ? 'EP001' : milestone ? 'MS001' : 'W001'} --dry-run`
                           : usage +
                             (group === 'project' || ['status', 'validate'].includes(group)
                               ? ' --json'
                               : '');
     section('예시', 'Example', [
       verb === 'show' && group !== 'project'
-        ? `worktree ${group} show ${milestone ? 'MS001' : 'W001'} --json`
+        ? `worktree ${group} show ${epic ? 'EP001' : milestone ? 'MS001' : 'W001'} --json`
         : example,
     ]);
   }
@@ -528,7 +561,10 @@ export function help(language: Language, topic?: string, session = false) {
       'use PATH / language ko|en / format table|json / author NAME',
       'help shell  ' + t('전체 세션 명령 안내.', 'Full session command help.'),
     ]);
-  if (!topic || ['status', 'schema', 'task', 'milestone', 'comment', 'project'].includes(group))
+  if (
+    !topic ||
+    ['status', 'schema', 'task', 'milestone', 'epic', 'comment', 'project'].includes(group)
+  )
     section('조회 결과와 충돌 방지', 'Read results and conflict protection', [
       t(
         '조회 결과의 revision은 프로젝트 전체 내용의 식별값입니다. --json으로 확인한 값을 쓰기의 --expect HASH에 전달하세요.',
@@ -545,8 +581,8 @@ export function help(language: Language, topic?: string, session = false) {
     section('batch.json 실제 예제', 'Example batch.json', [
       '{',
       '  "commands": [',
-      '    ["task", "add", "--title", "First task"],',
-      '    ["task", "add", "--title", "Second task"]',
+      '    ["task", "add", "--title", "First issue"],',
+      '    ["task", "add", "--title", "Second issue"]',
       '  ]',
       '}',
       'worktree batch --input batch.json --dry-run --json',

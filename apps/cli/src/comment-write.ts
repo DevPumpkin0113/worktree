@@ -38,7 +38,7 @@ export function planComment(options: Options, project: ReturnType<typeof readPro
     text = snapshot;
   const target = model.rows.find((row) => row.id === id);
   const comments = model.comments?.filter((c) => c.taskId === id) ?? [];
-  if (!target || target.milestone)
+  if (!target || target.type !== 'task')
     throw new CliError('TASK_NOT_FOUND', errorMessage('taskNotFound', [id]));
   if (options.command === 'comment-add') {
     const before = new Set(comments.map((c) => c.id));

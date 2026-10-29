@@ -17,7 +17,7 @@ export function formatResult(
       ...(value.deletion
         ? [
             `${english ? 'Delete' : '삭제 대상'}: ${value.deletion.removedIds.join(', ')}`,
-            `${english ? 'Retained tasks' : '유지할 작업'}: ${value.deletion.retainedChildIds.join(', ') || '-'}`,
+            `${english ? 'Retained issues' : '유지할 이슈'}: ${value.deletion.retainedChildIds.join(', ') || '-'}`,
             `${english ? 'Detach predecessors from' : '선행 참조 해제 대상'}: ${value.deletion.detachedFrom.join(', ') || '-'}`,
             `${english ? 'Comments' : '댓글'}: ${value.deletion.commentCount}`,
           ]
@@ -40,8 +40,9 @@ export function formatResult(
     return [
       value.project,
       value.root,
-      `${english ? 'Tasks' : '작업'}: ${value.completedTasks}/${value.taskCount}`,
+      `${english ? 'Issues' : '이슈'}: ${value.completedTasks}/${value.taskCount}`,
       `${english ? 'Progress' : '진행률'}: ${value.taskProgress ?? 0}%`,
+      `${english ? 'Epics' : '에픽'}: ${value.epicCount}`,
       `${english ? 'Milestones' : '마일스톤'}: ${value.milestoneCount}`,
       `${english ? 'Comments' : '댓글'}: ${value.comments}`,
       ...Object.entries(value.statuses).map(([status, count]) => `  ${status}: ${count}`),
@@ -54,8 +55,8 @@ export function formatResult(
           ...tasks.map((task) => [task.id, task.status, task.owner, task.title].join('\t')),
         ].join('\n')
       : english
-        ? 'No matching tasks.'
-        : '일치하는 작업이 없습니다.';
+        ? 'No matching issues.'
+        : '일치하는 이슈가 없습니다.';
   }
   if (!('task' in value) || !value.task) return '';
   const task = value.task;
@@ -63,16 +64,16 @@ export function formatResult(
     task.id + ' · ' + task.name,
     `${task.status} · ${task.owner}`,
     `${task.start} ~ ${task.end}`,
-    `${english ? 'Milestone' : '마일스톤'}: ${task.parent}`,
+    `${english ? 'Parent' : '소속'}: ${task.parent}`,
     `${english ? 'Priority' : '우선순위'}: ${task.priority ?? '-'}`,
-    `${english ? 'Type' : '작업 유형'}: ${task.taskType ?? '-'}`,
+    `${english ? 'Type' : '이슈 유형'}: ${task.taskType ?? '-'}`,
     `${english ? 'Labels' : '라벨'}: ${task.labels?.join(', ') || '-'}`,
     `${english ? 'Estimated hours' : '예상 작업 시간'}: ${task.effort}`,
     `${english ? 'Blocked reason' : '막힘 사유'}: ${task.blockedReason || '-'}`,
     `${english ? 'References' : '참조'}: ${task.references?.map((item) => item.value).join(', ') || '-'}`,
     task.description,
-    `${english ? 'Predecessors' : '선행 작업'}: ${task.deps.join(', ') || '-'}`,
-    `${english ? 'Successors' : '후속 작업'}: ${(value.successors ?? []).join(', ') || '-'}`,
+    `${english ? 'Predecessors' : '선행 이슈'}: ${task.deps.join(', ') || '-'}`,
+    `${english ? 'Successors' : '후속 이슈'}: ${(value.successors ?? []).join(', ') || '-'}`,
     ...(value.comments ?? [])
       .filter((comment) => !comment.deleted)
       .map(

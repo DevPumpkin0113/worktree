@@ -3,7 +3,7 @@ import { parseProject } from './project-document';
 import { projectConfig, readSource, serializeSource, type TaskReference } from './project-source';
 import { readTaskFile, writeTaskFile } from './task-file';
 export interface ProjectTaskDraft {
-  type: 'task' | 'milestone';
+  type: 'task' | 'milestone' | 'epic';
   name: string;
   description: string;
   owner: string;
@@ -24,11 +24,11 @@ export function projectTaskDraft(text: string, id?: string): ProjectTaskDraft {
     row = id ? model.rows.find((row) => row.id === id) : undefined;
   if (id && !row) throw Error(messages.editTaskMissing);
   return {
-    type: row?.milestone ? 'milestone' : 'task',
+    type: row?.epic ? 'epic' : row?.milestone ? 'milestone' : 'task',
     name: row?.name ?? '',
     description: row?.description ?? '',
     owner: row?.owner ?? '',
-    status: row?.milestone ? 'auto' : (row?.status ?? 'todo'),
+    status: row?.type === 'group' ? 'auto' : (row?.status ?? 'todo'),
     parent: row?.parent ?? '-',
     start: row?.start ?? '-',
     end: row?.end ?? '-',
@@ -41,16 +41,26 @@ export function projectTaskDraft(text: string, id?: string): ProjectTaskDraft {
     references: row?.references?.map((value) => ({ ...value })) ?? [],
   };
 }
-export function nextProjectId(text: string, milestone = false) {
-  const source = readSource(text),
-    config = projectConfig(source),
+export function nextProjectId(text: string, kind: boolean | 'epic' = false) {
+  const config = projectConfig(readSource(text)),
     model = parseProject(text);
-  let number = milestone ? config.nextMilestoneNumber : config.nextTaskNumber;
-  for (const row of model.rows.filter((row) => !!row.milestone === milestone))
-    number = Math.max(number, Number(row.id.match(/\d+$/)![0]) + 1);
+  const prefix = kind === 'epic' ? 'EP' : kind ? 'MS' : config.taskPrefix;
+  let number =
+    kind === 'epic'
+      ? (config.nextEpicNumber ?? 1)
+      : kind
+        ? config.nextMilestoneNumber
+        : config.nextTaskNumber;
+  if (config.taskPrefix === 'EP' && prefix === 'EP')
+    number = Math.max(number, config.nextTaskNumber, config.nextEpicNumber ?? 1);
+  // IDs remain globally unique, including legacy projects whose task prefix is EP.
+  for (const row of model.rows.filter(
+    (row) => row.id.startsWith(prefix) && /^\d+$/.test(row.id.slice(prefix.length)),
+  ))
+    number = Math.max(number, Number(row.id.slice(prefix.length)) + 1);
   if (!Number.isSafeInteger(number) || number >= Number.MAX_SAFE_INTEGER)
     throw Error(messages.idSequenceExhausted);
-  return (milestone ? 'MS' : config.taskPrefix) + String(number).padStart(3, '0');
+  return prefix + String(number).padStart(3, '0');
 }
 export function updateProjectTask(
   text: string,
@@ -64,14 +74,17 @@ export function updateProjectTask(
   const existing = id ? model.rows.find((row) => row.id === id) : undefined;
   if (id && !existing) throw Error(messages.editTaskMissing);
   if (
-    !['task', 'milestone'].includes(draft.type) ||
-    (existing && !!existing.milestone !== (draft.type === 'milestone'))
+    !['task', 'milestone', 'epic'].includes(draft.type) ||
+    (existing &&
+      (existing.epic ? 'epic' : existing.milestone ? 'milestone' : 'task') !== draft.type)
   )
     throw Error(messages.taskTypeLocked);
   if (!draft.name.trim() || /[\r\n\0]/.test(draft.name)) throw Error(messages.taskRequiredFields);
   const milestone = draft.type === 'milestone',
-    key = id ?? nextProjectId(text, milestone);
-  const file = (milestone ? 'milestones/' : 'tasks/') + key + '.md';
+    epic = draft.type === 'epic',
+    container = milestone || epic,
+    key = id ?? nextProjectId(text, epic ? 'epic' : milestone);
+  const file = (epic ? 'epics/' : milestone ? 'milestones/' : 'tasks/') + key + '.md';
   const metadata = existing ? readTaskFile(file, source.files[file]).metadata : {};
   const updatedAt = existing?.updatedAt && existing.updatedAt > now ? existing.updatedAt : now;
   Object.assign(metadata, {
@@ -83,11 +96,14 @@ export function updateProjectTask(
     createdAt: existing?.createdAt ?? now,
     updatedAt,
   });
-  if (!milestone)
+  if (milestone) metadata.epic = draft.parent || '-';
+  if (!container) {
+    const parentEpic = model.rows.find((row) => row.id === draft.parent)?.epic;
+    if (parentEpic || metadata.epic !== undefined) metadata.epic = parentEpic ? draft.parent : '-';
     Object.assign(metadata, {
       status: draft.status,
       owner: draft.owner.trim() || '-',
-      milestone: draft.parent || '-',
+      milestone: parentEpic ? '-' : draft.parent || '-',
       effort: draft.effort || '-',
       dependencies:
         draft.deps === '-'
@@ -113,9 +129,10 @@ export function updateProjectTask(
       blockedReason: draft.blockedReason,
       references: draft.references,
     });
-  source.files[file] = writeTaskFile(metadata, milestone ? '' : draft.description);
+  }
+  source.files[file] = writeTaskFile(metadata, container ? '' : draft.description);
   if (!existing) {
-    config[milestone ? 'nextMilestoneNumber' : 'nextTaskNumber'] =
+    config[epic ? 'nextEpicNumber' : milestone ? 'nextMilestoneNumber' : 'nextTaskNumber'] =
       Number(key.match(/\d+$/)![0]) + 1;
     source.files['project.json'] = JSON.stringify(config, null, 2) + '\n';
   }

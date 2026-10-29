@@ -1,4 +1,7 @@
 export const ko = {
+  invalidIssueParent: '유효한 {0} 소속 ID가 아닙니다: {1}',
+  conflictingIssueParents: '이슈는 에픽 또는 마일스톤 중 하나에만 직접 속할 수 있습니다.',
+
   duplicateOption: '중복된 옵션: {0}',
   unknownOption: '알 수 없는 옵션: {0}',
   missingValue: '옵션 값이 없습니다: {0}',
@@ -22,7 +25,7 @@ export const ko = {
   unsupportedBatchCommandAtIndex: '지원하지 않는 일괄 명령(인덱스 {0}).',
   projectFileCountOrContentSizeLimitExceeded:
     '프로젝트 파일 수 또는 내용 용량 제한을 초과했습니다.',
-  taskNotFound: '작업을 찾을 수 없습니다: {0}',
+  taskNotFound: '이슈를 찾을 수 없습니다: {0}',
   commentNotFound: '댓글을 찾을 수 없습니다: {0}',
   unsupportedAppSettingsPassAuthorName: '지원하지 않는 앱 설정입니다. --author NAME을 지정하세요.',
   configureTheAppDisplayNameOrPassAuthorName:

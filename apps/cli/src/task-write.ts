@@ -24,7 +24,7 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
   let deletion: DeletionPreview | undefined;
   if (
     options.command !== 'add' &&
-    (!target || !!target.milestone !== (options.kind === 'milestone'))
+    (!target || (target.epic ? 'epic' : target.milestone ? 'milestone' : 'task') !== options.kind)
   )
     throw new CliError('TASK_NOT_FOUND', errorMessage('itemNotFound', [id]));
   if (options.command === 'delete') {
@@ -35,7 +35,7 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
       id,
       (values.children ?? 'keep') as 'keep' | 'delete',
     );
-    if (target?.milestone && impact.childRows.length && !values.children && !options.dryRun)
+    if (target?.type === 'group' && impact.childRows.length && !values.children && !options.dryRun)
       throw new CliError('CHILD_POLICY_REQUIRED', errorMessage('specifyChildrenKeepDelete'));
     if (impact.dependents.length && !options.detach && !options.dryRun)
       throw new CliError(
@@ -54,13 +54,14 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
     });
   } else {
     const draft = projectTaskDraft(snapshot, options.command === 'edit' ? id : undefined);
-    draft.type = options.kind as 'task' | 'milestone';
+    draft.type = options.kind as 'task' | 'milestone' | 'epic';
     const aliases: Record<string, keyof ProjectTaskDraft> = {
       title: 'name',
       description: 'description',
       owner: 'owner',
       status: 'status',
       milestone: 'parent',
+      epic: 'parent',
       start: 'start',
       end: 'end',
       effort: 'effort',
@@ -82,8 +83,14 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
     for (const [key, value] of Object.entries(input)) {
       if (!Object.hasOwn(aliases, key))
         throw new CliError('USAGE', errorMessage('unknownInputField', [key]));
+      if (key === 'epic' && options.kind === 'epic')
+        throw new CliError('USAGE', errorMessage('unknownInputField', [key]));
       const field = aliases[key];
-      if (options.kind === 'milestone' && !['title', 'start', 'end'].includes(key))
+      if (options.kind === 'task' && (key === 'epic' || key === 'milestone')) continue;
+      if (
+        options.kind !== 'task' &&
+        !['title', 'start', 'end', ...(options.kind === 'milestone' ? ['epic'] : [])].includes(key)
+      )
         throw new CliError('USAGE', errorMessage('fieldNotAvailableForMilestones', [key]));
       if ((field === 'labels' || field === 'deps') && Array.isArray(value)) {
         if (!value.every((item) => typeof item === 'string' && !item.includes(',')))
@@ -97,6 +104,30 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
         if (typeof value !== 'string')
           throw new CliError('USAGE', errorMessage('expectedString', [key]));
         (draft as unknown as Record<string, unknown>)[field] = value;
+      }
+    }
+    if (options.kind === 'task') {
+      for (const key of ['epic', 'milestone'] as const) {
+        const value = input[key];
+        if (value !== undefined && typeof value !== 'string')
+          throw new CliError('USAGE', errorMessage('expectedString', [key]));
+        if (
+          typeof value === 'string' &&
+          value !== '-' &&
+          !model.rows.some((row) => row.id === value && (key === 'epic' ? row.epic : row.milestone))
+        )
+          throw new CliError('USAGE', errorMessage('invalidIssueParent', [key, value]));
+      }
+      const epic = input.epic as string | undefined,
+        milestone = input.milestone as string | undefined;
+      if (epic !== undefined && epic !== '-' && milestone !== undefined && milestone !== '-')
+        throw new CliError('USAGE', errorMessage('conflictingIssueParents'));
+      if (epic !== undefined && epic !== '-') draft.parent = epic;
+      else if (milestone !== undefined && milestone !== '-') draft.parent = milestone;
+      else if (epic === '-') draft.parent = '-';
+      else if (milestone === '-') {
+        const previousParent = model.rows.find((row) => row.id === draft.parent);
+        draft.parent = previousParent?.epic ? previousParent.id : (previousParent?.parent ?? '-');
       }
     }
     if (options.command === 'edit' && !Object.keys(input).length)

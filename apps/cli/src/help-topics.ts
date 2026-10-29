@@ -2,6 +2,7 @@ import { errorMessage } from './i18n/error-messages';
 import { CliError } from './errors';
 export const commandGroups: Record<string, string[]> = {
   task: ['list', 'show', 'add', 'edit', 'delete'],
+  epic: ['list', 'show', 'add', 'edit', 'delete'],
   milestone: ['list', 'show', 'add', 'edit', 'delete'],
   comment: ['list', 'add', 'edit', 'delete'],
   project: ['show', 'edit', 'reset'],

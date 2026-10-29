@@ -20,14 +20,17 @@ export function TaskInfo({
 }) {
   const { date } = useProjectDates();
   const byId = new Map(model.rows.map((item) => [item.id, item]));
-  const milestone = byId.get(row.parent);
+  const parent = byId.get(row.parent);
+  const milestone = parent?.milestone ? parent : undefined;
+  const epic = parent?.epic ? parent : milestone ? byId.get(milestone.parent) : undefined;
+  const isGroup = row.type === 'group';
   const children = model.rows.filter((item) => item.parent === row.id),
     previous = row.deps.map((id) => byId.get(id)!).filter(Boolean),
     next = model.rows.filter((item) => item.deps.includes(row.id));
   const group = row.type === 'group' ? summarizeGroups(model.rows).get(row.id) : null;
   const facts = group
     ? [
-        ...(row.milestone
+        ...(row.epic || row.milestone
           ? [
               [
                 messages.targetPeriod,
@@ -61,7 +64,7 @@ export function TaskInfo({
           data-detail={item.id}
           onClick={() => onSelect(item.id)}
         >
-          {!item.milestone ? <span className="detail-link-id">{label(item.id)}</span> : null}
+          {item.type === 'task' ? <span className="detail-link-id">{label(item.id)}</span> : null}
           <span className="detail-link-name">{item.name}</span>
           <span className={'detail-status ' + item.status}>{STATUS_NAMES[item.status]}</span>
           <span aria-hidden="true">›</span>
@@ -72,12 +75,19 @@ export function TaskInfo({
     );
   return (
     <>
-      {row.milestone ? (
-        <nav className="detail-breadcrumb" aria-label={messages.ancestors}>
-          <span>{model.title}</span>
-        </nav>
-      ) : null}
-      <div className={'detail-info-layout' + (row.milestone ? ' detail-info-milestone' : '')}>
+      <nav className="detail-breadcrumb" aria-label={messages.ancestors}>
+        <span>{model.title}</span>
+        {!row.epic ? (
+          epic ? (
+            <button type="button" className="detail-link" onClick={() => onSelect(epic.id)}>
+              {label(epic.id) + ' · ' + epic.name}
+            </button>
+          ) : (
+            <span>{messages.unassignedEpic}</span>
+          )
+        ) : null}
+      </nav>
+      <div className={'detail-info-layout' + (isGroup ? ' detail-info-milestone' : '')}>
         <div className="detail-main">
           <div className="detail-facts">
             {facts
@@ -93,7 +103,7 @@ export function TaskInfo({
                 </div>
               ))}
           </div>
-          {!row.milestone ? (
+          {!isGroup ? (
             <section className="detail-section description-section">
               <div className="detail-section-heading">
                 <h3>{messages.description}</h3>
@@ -107,7 +117,7 @@ export function TaskInfo({
               ) : null}
             </section>
           ) : null}
-          {!row.milestone ? <TaskContentMetadata row={row} /> : null}
+          {!isGroup ? <TaskContentMetadata row={row} /> : null}
           {children.length ? (
             <section className="detail-section">
               <h3>
@@ -117,7 +127,7 @@ export function TaskInfo({
               {links(children)}
             </section>
           ) : null}
-          {!row.milestone ? (
+          {!isGroup ? (
             <div className="detail-relations">
               {[
                 [messages.predecessors, previous],
@@ -138,12 +148,26 @@ export function TaskInfo({
             </div>
           ) : null}
         </div>
-        {!row.milestone ? (
+        {!isGroup ? (
           <aside className="detail-sub">
             <TaskMetadata
               row={row}
               priorities={model.priorities}
               useEffort={model.useEffort}
+              epic={
+                epic ? (
+                  <button
+                    type="button"
+                    className="detail-milestone-link"
+                    data-detail={epic.id}
+                    onClick={() => onSelect(epic.id)}
+                  >
+                    {label(epic.id) + ' · ' + epic.name}
+                  </button>
+                ) : (
+                  messages.unassignedEpic
+                )
+              }
               milestone={
                 milestone ? (
                   <button
@@ -163,7 +187,7 @@ export function TaskInfo({
         ) : null}
       </div>
       <div className="detail-info-actions">
-        {!row.milestone ? (
+        {!isGroup ? (
           <details className="detail-identifiers">
             <summary>{messages.identifiers}</summary>
             <dl>
@@ -172,15 +196,13 @@ export function TaskInfo({
               <dt>{messages.sourceId}</dt>
               <dd>{row.id}</dd>
               <dt>
-                {byId.get(row.parent)?.milestone ? messages.parentMilestone : messages.parentId}
+                {parent?.epic
+                  ? messages.epic
+                  : parent?.milestone
+                    ? messages.parentMilestone
+                    : messages.parentId}
               </dt>
-              <dd>
-                {row.parent === '-'
-                  ? messages.none
-                  : byId.get(row.parent)?.milestone
-                    ? byId.get(row.parent)!.name
-                    : row.parent}
-              </dd>
+              <dd>{row.parent === '-' ? messages.none : parent ? parent.name : row.parent}</dd>
             </dl>
           </details>
         ) : null}

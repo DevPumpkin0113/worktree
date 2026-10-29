@@ -39,7 +39,8 @@ export function validateTaskDraft(
     });
   }
   if (Object.keys(errors).length) return errors;
-  const targetId = id ?? nextProjectId(text, draft.type === 'milestone');
+  const targetId =
+    id ?? nextProjectId(text, draft.type === 'epic' ? 'epic' : draft.type === 'milestone');
   try {
     updateProjectTask(text, draft, id);
   } catch (error) {
@@ -47,6 +48,7 @@ export function validateTaskDraft(
     const fields: Record<string, string> = {
       title: 'name',
       milestone: 'parent',
+      epic: 'parent',
       dependencies: 'deps',
       type: 'taskType',
     };
@@ -76,6 +78,7 @@ export function validateTaskDraft(
       cycle: messages.projectCycleError,
       dependencyDate: messages.projectDependencyDateError,
       milestone: messages.projectMilestoneError,
+      epic: messages.projectEpicError,
     };
     if (error.reason === 'dependencyDate' && !error.file.endsWith('/' + targetId + '.md'))
       errors.end = reasons.dependencyDate;

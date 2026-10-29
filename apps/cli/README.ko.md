@@ -53,7 +53,9 @@ exit
 
 Ctrl+C는 입력을 지웁니다. 세션 설정과 기록은 종료하면 사라집니다.
 
-## 작업 — `task`
+## 이슈 — `task`
+
+화면 명칭은 이슈이며 기존 `task` 명령·작업 ID·저장 파일은 유지합니다. CLI 0.6.0 개발 버전에서는 `--epic EP001`로 마일스톤 없이 에픽에 직접 배정할 수 있습니다. `--milestone MS001`과 동시에 유효한 에픽을 지정하지 않습니다. `task edit ID --milestone -`는 현재 에픽을 유지하고 직속 이슈로 옮기며, `--epic -`는 소속을 해제합니다.
 
 예시 ID는 기본 접두어 W 기준입니다. 실제 프로젝트의 ID로 바꿔 사용하세요.
 
@@ -109,6 +111,23 @@ worktree milestone delete MS001 --yes --children keep
 ```
 
 삭제 시 `--children keep`은 작업 유지, `--children delete`는 작업도 삭제합니다. 다른 작업의 선행 참조를 해제해야 하면 `--detach`를 추가합니다. 삭제는 되돌릴 수 없습니다.
+
+## 에픽 — `epic` (CLI 0.6.0 개발 버전)
+
+에픽은 마일스톤을 묶는 상위 단위입니다. 기존 프로젝트는 에픽 미지정으로 읽으며 자동 변경하지 않습니다.
+
+```powershell
+worktree epic add --title "CLI 제공"
+worktree epic list
+worktree epic show EP001
+worktree epic edit EP001 --title "터미널 작업 관리"
+worktree milestone edit MS001 --epic EP001
+worktree task list --epic EP001
+worktree milestone edit MS001 --epic -
+worktree epic delete EP001 --yes --children keep
+```
+
+생성 결과의 실제 ID를 사용합니다. 소속 이동은 ID·파일명·댓글을 바꾸지 않습니다. `--children keep`은 하위 마일스톤·작업을 유지하고 소속만 해제하며, `delete`는 자손 작업·댓글까지 삭제합니다. 외부 선행 참조를 해제하려면 `--detach` 동의가 필요합니다. 에픽 데이터를 저장한 프로젝트는 앱 0.34.0 / CLI 0.6.0 이상에서 사용합니다.
 
 ## 댓글 — `comment`
 

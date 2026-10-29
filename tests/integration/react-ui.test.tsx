@@ -14,6 +14,146 @@ import { deleteProjectTask } from '@worktree/core/task-deletion';
 import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
+
+test('에픽 직속 이슈는 미지정 그룹 없이 표시하고 마일스톤 선택·해제로 같은 ID를 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '직속 이슈');
+    await f.submit();
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="EP001"]');
+    await f.submit();
+    await f.click('#taskAddOpen');
+    assert.equal(f.element('#taskEditor').getAttribute('aria-label'), '새 이슈');
+    await f.value('#taskEditor-name', '바로 연결');
+    await f.click('#taskEditor-epic');
+    await f.click('#taskEditor-epic-options [data-value="EP001"]');
+    await f.submit();
+    const issueId = f.store.getSnapshot().selectedId!;
+    assert.equal(issueId, 'W003');
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, 'EP001');
+    assert.ok(f.element('#previewInfoPanel .detail-breadcrumb').textContent?.includes('EP001'));
+    await act(() => f.store.selectWork(null));
+    const epicGroup = f.element('summary[data-work-id="EP001"]').parentElement!;
+    assert.ok(epicGroup.querySelector(':scope > .children > .task[data-id="W003"]'));
+    assert.equal(epicGroup.querySelector('.unassigned-tasks'), null);
+    await act(() => f.store.selectWork(issueId));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="MS001"]');
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, 'MS001');
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="-"]');
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, 'EP001');
+    assert.ok(readSource(f.files.get(first)!).files['tasks/W003.md']);
+  } finally {
+    await f.close();
+  }
+});
+
+test('추가 메뉴는 단일 버튼에서 작업·마일스톤·에픽 순서로 열고 키보드와 바깥 클릭으로 닫는다', async () => {
+  const f = await fixture();
+  try {
+    const key = async (selector: string, value: string) =>
+      act(async () => {
+        f.element(selector).dispatchEvent(
+          new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true }),
+        );
+      });
+    assert.equal(f.host.querySelectorAll('.workspace-create-actions > button').length, 1);
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    await f.click('#workAddOpen');
+    assert.deepEqual(
+      Array.from(
+        f.element('#workAddMenu').querySelectorAll('[role="menuitem"]'),
+        (item) => item.textContent,
+      ),
+      ['이슈', '마일스톤', '에픽'],
+    );
+    assert.equal(document.activeElement?.id, 'taskAddOpen');
+    await key('#taskAddOpen', 'End');
+    assert.equal(document.activeElement?.id, 'epicAddOpen');
+    await key('#epicAddOpen', 'ArrowDown');
+    assert.equal(document.activeElement?.id, 'taskAddOpen');
+    await key('#taskAddOpen', 'Escape');
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    assert.equal(document.activeElement?.id, 'workAddOpen');
+    await key('#workAddOpen', 'ArrowUp');
+    assert.equal(document.activeElement?.id, 'epicAddOpen');
+    await act(async () =>
+      document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })),
+    );
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    await f.click('#workAddOpen');
+    await f.click('#milestoneAddOpen');
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    assert.equal(f.element('#taskEditor').getAttribute('aria-label'), '새 마일스톤');
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽 생성·마일스톤 배정·소속 해제는 기존 작업 ID와 본문을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    const oldSource = readSource(f.files.get(first)!);
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '제품 기능 확장');
+    await f.submit();
+    const epic = f.store.active!.model!.rows.find((row) => row.epic)!;
+    assert.equal(epic.id, 'EP001');
+    assert.equal(f.element('#detailTitle').textContent, '제품 기능 확장');
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="EP001"]');
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === 'MS001')!.parent, 'EP001');
+    const source = readSource(f.files.get(first)!);
+    for (const [file, contents] of Object.entries(oldSource.files)) {
+      if (file.startsWith('tasks/')) assert.equal(source.files[file], contents);
+    }
+    await act(() => f.store.selectWork('EP001'));
+    await f.click('#taskDeleteOpen');
+    assert.ok(f.element('#taskDeleteDialog').textContent?.includes('하위 마일스톤과 이슈는 유지'));
+    await f.click('#taskDeleteConfirm');
+    const model = f.store.active!.model!;
+    assert.equal(
+      model.rows.some((row) => row.epic),
+      false,
+    );
+    assert.equal(model.rows.find((row) => row.id === 'MS001')!.parent, '-');
+    assert.equal(model.rows.filter((row) => row.type === 'task').length, 2);
+    assert.ok(f.host.querySelector('[data-view-group="unassigned-epics"]'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('기존 프로젝트는 쓰기 없이 에픽 미지정으로 보이고 빈 에픽도 트리에 표시한다', async () => {
+  const f = await fixture({ language: 'en' });
+  try {
+    const original = f.files.get(first);
+    assert.equal(f.element('[data-view-group="unassigned-epics"]').textContent, 'No epic');
+    assert.equal(f.files.get(first), original);
+    await f.click('#epicAddOpen');
+    assert.equal(f.element('#taskEditor').getAttribute('aria-label'), 'New epic');
+    await f.value('#taskEditor-name', 'Empty epic');
+    await f.submit();
+    await act(() => f.store.selectWork(null));
+    assert.ok(f.element('summary[data-work-id="EP001"]').textContent?.includes('Empty epic'));
+    assert.equal(f.store.active!.model!.rows.filter((row) => row.type === 'task').length, 2);
+  } finally {
+    await f.close();
+  }
+});
+
 async function fixture(
   options: {
     sessionFailure?: boolean;
@@ -136,10 +276,17 @@ async function fixture(
     assert.ok(node, selector);
     return node;
   };
-  const click = async (selector: string) =>
-    act(async () => {
+  const click = async (selector: string) => {
+    if (
+      ['#taskAddOpen', '#milestoneAddOpen', '#epicAddOpen'].includes(selector) &&
+      !host.querySelector(selector)
+    ) {
+      await act(async () => element<HTMLElement>('#workAddOpen').click());
+    }
+    await act(async () => {
       element<HTMLElement>(selector).click();
     });
+  };
   const value = async (selector: string, value: string) =>
     act(async () => {
       const node = element<HTMLInputElement | HTMLTextAreaElement>(selector);
@@ -252,7 +399,7 @@ test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위�
     assert.equal(f.store.active?.model?.idSeparator, 'hyphen');
     assert.equal(f.store.active?.model?.dataDirectory, 'docs/custom');
     assert.equal(f.store.active?.model?.rows.length, 0);
-    assert.ok(f.host.querySelector('#taskAddOpen'));
+    assert.ok(f.host.querySelector('#workAddOpen'));
     assert.equal(f.host.querySelector('#initializationSubmit'), null);
     await f.click('#taskAddOpen');
     assert.equal(f.host.querySelector('#taskEditor input[readonly]'), null);
@@ -536,7 +683,7 @@ test('작업·마일스톤 작성 탭은 초안을 분리하고 저장 시 같�
     await f.click('#taskAddOpen');
     const secondDraft = f.store.getSnapshot().selectedId!;
     assert.notEqual(firstDraft, secondDraft);
-    assert.equal(f.element('[id="task-tab-' + secondDraft + '"]').textContent, '새 작업 (2)');
+    assert.equal(f.element('[id="task-tab-' + secondDraft + '"]').textContent, '새 이슈 (2)');
     await f.value('#taskEditor-name', '두 번째 저장');
     await f.submit();
     assert.equal(f.store.getSnapshot().selectedId, 'W003');
@@ -645,7 +792,7 @@ test('작업 삭제는 선행 참조 해제 선택과 실패 보존을 지원한
     assert.equal(affected.querySelector('.delete-kept-badge')!.textContent, '유지됨');
     assert.match(affected.querySelector('.delete-removed-link')!.textContent ?? '', /W001/);
     assert.ok(f.element<HTMLButtonElement>('#taskDeleteConfirm').disabled);
-    assert.equal(f.element('#taskDeleteConfirm').textContent, '작업 삭제');
+    assert.equal(f.element('#taskDeleteConfirm').textContent, '이슈 삭제');
     await act(() => {
       f.element('#taskDeleteDialog form').dispatchEvent(
         new Event('submit', { bubbles: true, cancelable: true }),
@@ -724,13 +871,13 @@ test('설정 저장·언어 전환과 실패 시 기존 값 유지를 지원한�
   const f = await fixture();
   try {
     await act(() => f.store.saveSetting('language', 'en'));
-    assert.ok(f.host.textContent?.includes('Task list'));
+    assert.ok(f.host.textContent?.includes('Issue list'));
     f.setSettingsFailure(true);
     await act(() => f.store.saveSetting('language', 'ko'));
     assert.equal(f.store.getSnapshot().settings.language, 'en');
     f.setSettingsFailure(false);
     await act(() => f.store.saveSetting('language', 'ko'));
-    assert.ok(f.host.textContent?.includes('작업 목록'));
+    assert.ok(f.host.textContent?.includes('이슈 목록'));
   } finally {
     await f.close();
   }
@@ -1562,7 +1709,7 @@ test('초기화 좌측 단계는 읽기 전용이며 하단 이전·다음만 �
     await f.click('#initializationNext');
     assert.ok(f.host.querySelector('#initialization-prefix'));
     assert.equal(
-      f.element('.initialization-step[aria-current="step"]').textContent?.includes('작업 규칙'),
+      f.element('.initialization-step[aria-current="step"]').textContent?.includes('이슈 규칙'),
       true,
     );
     await f.click('#initializationPrevious');
@@ -1929,7 +2076,7 @@ test('초기화 최종 확인은 경로 표기·짝지은 항목·작업 규칙 
       '데이터 저장 위치',
       'ID 표시 형식',
       '날짜·시간 형식',
-      '작업 유형',
+      '이슈 유형',
       '라벨',
       '담당자 목록',
       '우선순위 목록',
@@ -1974,12 +2121,12 @@ test('프로젝트 관리 조회와 편집은 최종 확인 기준의 순서·�
       '데이터 저장 위치',
       'ID 표시 형식',
       '날짜·시간 형식',
-      '작업 유형',
+      '이슈 유형',
       '라벨',
       '담당자 목록',
       '우선순위 목록',
       '예상 작업 시간',
-      '작업 상태',
+      '이슈 상태',
     ];
     assert.deepEqual(labels(), expected);
     const fields = [...f.host.querySelectorAll('#projectManagement dd')];

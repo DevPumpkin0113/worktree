@@ -53,7 +53,9 @@ exit
 
 Ctrl+C clears the current input. Session settings and history are discarded on exit.
 
-## Tasks — `task`
+## Issues — `task`
+
+The UI calls these issues; existing `task` commands, IDs, and storage filenames remain compatible. CLI 0.6.0 development supports `--epic EP001` to assign an issue directly to an epic without a milestone. Do not supply both a valid `--epic` and `--milestone`. `task edit ID --milestone -` keeps the current epic and makes the issue a direct child; `--epic -` clears the assignment.
 
 Examples use the default W prefix. Replace IDs with those in your project.
 
@@ -109,6 +111,23 @@ worktree milestone delete MS001 --yes --children keep
 ```
 
 Use `--children keep` to retain tasks or `--children delete` to delete them. Add `--detach` when external predecessor references must be removed. Deletion cannot be undone.
+
+## Epics — `epic` (CLI 0.6.0 development)
+
+Epics group milestones. Existing projects without epics remain readable without automatic file changes.
+
+```powershell
+worktree epic add --title "CLI delivery"
+worktree epic list
+worktree epic show EP001
+worktree epic edit EP001 --title "Terminal task management"
+worktree milestone edit MS001 --epic EP001
+worktree task list --epic EP001
+worktree milestone edit MS001 --epic -
+worktree epic delete EP001 --yes --children keep
+```
+
+Use IDs returned by creation. Moving items preserves IDs, filenames, and comments. `--children keep` retains milestones and tasks and clears their epic assignment; `delete` removes descendants and their comments. External predecessor references require `--detach` consent. Projects containing epic data require app 0.34.0 / CLI 0.6.0 or later.
 
 ## Comments — `comment`
 

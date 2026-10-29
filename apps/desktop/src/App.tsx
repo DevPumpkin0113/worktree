@@ -48,7 +48,7 @@ export function App({ store }: { store: WorkspaceStore }) {
   const editing = edits.sessions.some(
     (session) => session.path === state.activePath && session.id === state.selectedId,
   );
-  const openEditor = (kind: 'task' | 'milestone' = 'task') => {
+  const openEditor = (kind: 'task' | 'milestone' | 'epic' = 'task') => {
     store.openCreationTab(kind);
   };
   const [deletion, setDeletion] = useState<TaskDeleteSession | null>(null);
@@ -201,6 +201,7 @@ export function App({ store }: { store: WorkspaceStore }) {
             onCloseTaskTab={closeTaskTab}
             onAddTask={() => openEditor()}
             onAddMilestone={() => openEditor('milestone')}
+            onAddEpic={() => openEditor('epic')}
           />
           <Problems
             problems={problems}

@@ -54,6 +54,19 @@ worktree task add --title "Improve search" --milestone MS001 --expect "<fresh re
 
 Do not guess the next ID or replay creation after an uncertain response without checking whether it succeeded.
 
+## Epics (CLI 0.6.0+)
+
+Check the installed version before using epic commands. Older projects do not need migration just to open them. An epic is above milestones; tasks still belong to milestones or remain unassigned. Use actual IDs from command results.
+
+```powershell
+worktree epic list --project "C:\projects\example" --json
+worktree epic add --title "Terminal task management" --expect "<revision>" --project "C:\projects\example" --json
+worktree milestone edit MS001 --epic EP001 --expect "<fresh revision>" --project "C:\projects\example" --json
+worktree task list --epic EP001 --project "C:\projects\example" --json
+```
+
+Moving a milestone preserves all existing IDs. Use `--epic -` to unassign it. For epic deletion, preview first, then explicitly select `--children keep` or `--children delete` with `--yes` and the latest revision. Keep detaches milestones without deleting their tasks; delete removes descendants and comments and requires `--detach` if external tasks reference them. Epic data requires app 0.34.0 / CLI 0.6.0 or later. Do not auto-upgrade the user's installation.
+
 ## Structured fields and Markdown
 
 Write this as a UTF-8 `task-update.json`, adapting values to the selected task. Arrays replace the existing list; preserve labels/dependencies that should remain.

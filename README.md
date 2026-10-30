@@ -4,7 +4,7 @@
   <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree icon" />
   <h1>Worktree</h1>
   <p>A Windows desktop app and CLI for tasks and schedules</p>
-  <p><strong>Beta Worktree 0.33.2</strong></p>
+  <p><strong>Beta Worktree 0.34.0</strong></p>
   <a href="https://github.com/DevPumpkin0113/worktree/releases">
     <img src="https://img.shields.io/badge/Windows-Download-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" />
   </a>

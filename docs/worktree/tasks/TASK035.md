@@ -5,12 +5,12 @@ title: "간트 보기 UI 개선"
 start: "2026-10-30"
 end: "2026-10-30"
 createdAt: "2026-10-30T09:43:06.588Z"
-updatedAt: "2026-10-30T10:11:46.914Z"
+updatedAt: "2026-10-30T10:46:46.426Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS009"
 effort: "-"
-dependencies: []
+dependencies: ["TASK009"]
 priority: "normal"
 type: "improvement"
 labels: ["Desktop"]

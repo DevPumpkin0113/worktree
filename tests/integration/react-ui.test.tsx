@@ -15,6 +15,44 @@ import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
 
+test('네트워크의 HTML 제목 클릭·키보드 선택·강조 해제·상세 열기를 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setView('flow'));
+    await act(() => {
+      const scroller = f.element<HTMLElement>('.diagram-scroll');
+      scroller.scrollLeft = 80;
+      scroller.scrollTop = 240;
+      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+    const assertViewport = () => {
+      assert.equal(f.element<HTMLElement>('.diagram-scroll').scrollTop, 240);
+      assert.equal(f.element<HTMLElement>('.diagram-scroll').scrollLeft, 80);
+    };
+    await f.click('.graph-node[data-select="W001"] .graph-name');
+    assert.equal(f.store.active!.graphFocus, 'W001');
+    assertViewport();
+    assert.ok(f.host.querySelector('.graph-node.selected[data-select="W001"]'));
+    await f.click('[data-clear-focus]');
+    assert.equal(f.store.active!.graphFocus, null);
+    assertViewport();
+    await act(() =>
+      f
+        .element('.graph-node[data-select="W001"]')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.store.active!.graphFocus, 'W001');
+    assertViewport();
+    await f.click('.network-toolbar [data-id="W001"]');
+    assert.equal(f.store.getSnapshot().selectedId, 'W001');
+    assertViewport();
+  } finally {
+    await f.close();
+  }
+});
+
 test('제목 왼쪽에서 Lucide 아이콘을 검색하고 선택·취소·명시 저장한다', async () => {
   const f = await fixture();
   try {

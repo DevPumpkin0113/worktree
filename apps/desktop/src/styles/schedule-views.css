@@ -184,12 +184,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.graph-priority {
-  flex-shrink: 0;
-  width: 20px;
-  height: 4px;
-  border-radius: 2px;
-}
+
 .graph-name {
   font:
     13px Segoe UI,

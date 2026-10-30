@@ -5,12 +5,12 @@ title: "칸반 보기 UI 개선"
 start: "2026-10-30"
 end: "2026-10-30"
 createdAt: "2026-10-30T10:11:46.937Z"
-updatedAt: "2026-10-30T10:34:21.325Z"
+updatedAt: "2026-10-30T10:46:46.395Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS009"
 effort: "-"
-dependencies: []
+dependencies: ["TASK008"]
 priority: "normal"
 type: "improvement"
 labels: ["Desktop"]

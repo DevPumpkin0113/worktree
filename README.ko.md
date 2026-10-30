@@ -4,7 +4,7 @@
   <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree 아이콘" />
   <h1>Worktree</h1>
   <p>작업과 일정을 한눈에 정리하는 Windows 데스크톱 앱</p>
-  <p><strong>Beta Worktree 0.33.2</strong></p>
+  <p><strong>Beta Worktree 0.34.0</strong></p>
   <a href="https://github.com/DevPumpkin0113/worktree/releases">
     <img src="https://img.shields.io/badge/Windows-다운로드-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 버전 다운로드" />
   </a>

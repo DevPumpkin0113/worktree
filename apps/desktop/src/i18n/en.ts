@@ -383,6 +383,8 @@ export const en = {
   networkDetails: 'Issue details',
   networkFilterHint:
     'Predecessors and successors needed to understand relationships are shown alongside matching issues. Drag empty space to pan. Double-click a node to open its details.',
+  networkCompactHint:
+    'Select: highlight connections · Double-click: details · Drag empty space: pan',
   networkHint:
     'Shows predecessor and successor relationships from left to right. Select an issue to highlight its dependency paths. Stages do not indicate dates or issue readiness.',
   networkLabel: 'Issue dependencies',

@@ -5,12 +5,12 @@ title: "Tree 보기 UI 개선"
 start: "2026-10-30"
 end: "2026-10-30"
 createdAt: "2026-10-30T04:34:57.017Z"
-updatedAt: "2026-10-30T09:43:06.553Z"
+updatedAt: "2026-10-30T10:46:46.378Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS009"
 effort: "-"
-dependencies: []
+dependencies: ["TASK008"]
 priority: "high"
 type: "improvement"
 labels: ["Desktop"]

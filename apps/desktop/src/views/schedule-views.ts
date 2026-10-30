@@ -5,6 +5,22 @@ import type { WorkRow } from '@worktree/core/types';
 import { escapeHtml as escape } from './html';
 import { STATUS_NAMES as stateName } from '../app/types';
 
+const GRAPH = { nodeWidth: 220, nodeHeight: 64, columnStep: 264, rowStep: 82, left: 16, top: 50 };
+
+const EDGE_GAP = 5;
+const EDGE_RADIUS = 6;
+function dependencyPath(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const startX = from.x + GRAPH.nodeWidth + EDGE_GAP;
+  const endX = to.x - EDGE_GAP;
+  const startY = from.y + GRAPH.nodeHeight / 2;
+  const endY = to.y + GRAPH.nodeHeight / 2;
+  if (startY === endY) return `M${startX} ${startY}H${endX}`;
+  const middle = (startX + endX) / 2;
+  const radius = Math.min(EDGE_RADIUS, Math.abs(endY - startY) / 2, (endX - startX) / 4);
+  const direction = Math.sign(endY - startY);
+  return `M${startX} ${startY}H${middle - radius}Q${middle} ${startY} ${middle} ${startY + direction * radius}V${endY - direction * radius}Q${middle} ${endY} ${middle + radius} ${endY}H${endX}`;
+}
+
 export function graphLayout(rows: WorkRow[]) {
   const byId = new Map(rows.map((r) => [r.id, r])),
     depth = new Map<string, number>(),
@@ -24,13 +40,18 @@ export function graphLayout(rows: WorkRow[]) {
   }
   const positions = new Map<string, { x: number; y: number }>();
   layers.forEach((layer, x) =>
-    layer.forEach((r, y) => positions.set(r.id, { x: 24 + x * 280, y: 52 + y * 112 })),
+    layer.forEach((r, y) =>
+      positions.set(r.id, {
+        x: GRAPH.left + x * GRAPH.columnStep,
+        y: GRAPH.top + y * GRAPH.rowStep,
+      }),
+    ),
   );
   return {
     positions,
     children,
-    width: Math.max(560, layers.length * 280 + 16),
-    height: Math.max(210, Math.max(0, ...layers.map((x) => x.length)) * 112 + 76),
+    width: Math.max(360, (layers.length - 1) * GRAPH.columnStep + GRAPH.nodeWidth + GRAPH.left * 2),
+    height: Math.max(160, Math.max(0, ...layers.map((x) => x.length)) * GRAPH.rowStep + GRAPH.top),
     layers,
   };
 }
@@ -75,7 +96,7 @@ export function renderDependencies(
   const titles = layout.layers
     .map(
       (_layer, i) =>
-        `<text x="${24 + i * 280}" y="26" class="stage-label">${i === 0 ? messages.noPredecessors : messages.dependencyStage(i)}</text>`,
+        `<text x="${GRAPH.left + i * GRAPH.columnStep}" y="23" class="stage-label">${i === 0 ? messages.noPredecessors : messages.dependencyStage(i)}</text>`,
     )
     .join('');
   const edges = nodes
@@ -86,7 +107,7 @@ export function renderDependencies(
           const a = layout.positions.get(id)!,
             b = layout.positions.get(r.id)!;
           const highlighted = related?.has(id) && related.has(r.id);
-          return `<path class="graph-edge ${related ? (highlighted ? 'related' : 'dim') : ''}" marker-end="url(#dependency-arrow)" d="M${a.x + 220} ${a.y + 38} C${a.x + 250} ${a.y + 38},${b.x - 30} ${b.y + 38},${b.x} ${b.y + 38}"/>`;
+          return `<path class="graph-edge ${related ? (highlighted ? 'related' : 'dim') : ''}" marker-end="url(#${highlighted ? 'dependency-arrow-related' : 'dependency-arrow'})" d="${dependencyPath(a, b)}"/>`;
         }),
     )
     .join('');
@@ -94,8 +115,7 @@ export function renderDependencies(
     .map((r) => {
       const p = layout.positions.get(r.id)!,
         dim = related ? !related.has(r.id) : !matchedIds.has(r.id);
-      const name = r.name.length > 19 ? r.name.slice(0, 18) + '…' : r.name;
-      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="220" height="78" rx="10"/><circle cx="${p.x + 16}" cy="${p.y + 19}" r="4" class="dot-${r.status}"/><foreignObject x="${p.x + 28}" y="${p.y + 9}" width="178" height="22"><div xmlns="http://www.w3.org/1999/xhtml" class="graph-identity"><span>${escape(label(r.id))}</span><span class="graph-priority" style="background:${priorityColorFor(r.priority ?? '-', priorities) ?? 'transparent'}" aria-hidden="true"></span></div></foreignObject><text x="${p.x + 14}" y="${p.y + 47}" class="graph-name">${escape(name)}</text><text x="${p.x + 14}" y="${p.y + 65}" class="graph-status">${stateName[r.status]}</text></g>`;
+      return `<g class="graph-node ${dim ? 'dim' : ''} ${focus === r.id ? 'selected' : ''}" data-select="${r.id}" tabindex="0" role="button" aria-label="${escape(label(r.id) + ' ' + r.name)}"><title>${escape(label(r.id) + ' · ' + r.name + ' · ' + stateName[r.status])}</title><rect x="${p.x}" y="${p.y}" width="${GRAPH.nodeWidth}" height="${GRAPH.nodeHeight}" rx="6"/><rect class="graph-priority-strip" x="${p.x + 6}" y="${p.y + 10}" width="3" height="${GRAPH.nodeHeight - 20}" rx="1.5" style="fill:${priorityColorFor(r.priority ?? '-', priorities) ?? 'transparent'}"/><circle cx="${p.x + 18}" cy="${p.y + 18}" r="3" class="dot-${r.status}"/><foreignObject x="${p.x + 28}" y="${p.y + 7}" width="178" height="22"><div xmlns="http://www.w3.org/1999/xhtml" class="graph-identity"><span>${escape(label(r.id))}</span><span class="graph-status">${escape(stateName[r.status])}</span></div></foreignObject><foreignObject x="${p.x + 14}" y="${p.y + 33}" width="192" height="22"><div xmlns="http://www.w3.org/1999/xhtml" class="graph-name">${escape(r.name)}</div></foreignObject></g>`;
     })
     .join('');
   const current = focus ? byId.get(focus) : undefined;
@@ -107,10 +127,10 @@ export function renderDependencies(
         .join(', ') || messages.none
     : '';
   const info = current
-    ? `<div class="dependency-focus"><div><strong>${escape(label(current.id) + ' · ' + current.name)}</strong><div class="sub">${escape(messages.directPredecessorsPrefix)}${escape(preceding)}${escape(messages.directSuccessorsPrefix)}${escape(following)}</div></div><button data-id="${current.id}">${escape(messages.networkDetails)}</button><button data-clear-focus>${escape(messages.clearHighlight)}</button></div>`
-    : `<div class="notice">${escape(messages.networkHint)}</div>`;
+    ? `<div class="dependency-focus network-toolbar"><div><strong>${escape(label(current.id) + ' · ' + current.name)}</strong><div class="sub">${escape(messages.directPredecessorsPrefix)}${escape(preceding)}${escape(messages.directSuccessorsPrefix)}${escape(following)}</div></div><button data-id="${current.id}">${escape(messages.networkDetails)}</button><button data-clear-focus>${escape(messages.clearHighlight)}</button></div>`
+    : `<div class="network-toolbar"><span class="network-hint" title="${escape(messages.networkHint + ' ' + messages.networkFilterHint)}">${escape(messages.networkCompactHint)}</span></div>`;
   return (
     info +
-    `<div class="chart-scroll-frame"><div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><div class="dependency-stage-header" style="width:${layout.width}px"><svg width="${layout.width}" height="40" aria-hidden="true">${titles}</svg></div><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs><marker id="dependency-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="dependency-arrow"/></marker></defs>${edges}${cards}</svg></div></div><p class="sub">${escape(messages.networkFilterHint)}</p>`
+    `<div class="chart-scroll-frame"><div class="diagram-scroll" tabindex="0" aria-label="${escape(messages.workNetwork)}"><div class="dependency-stage-header" style="width:${layout.width}px"><svg width="${layout.width}" height="36" aria-hidden="true">${titles}</svg></div><svg class="dependency-canvas" width="${layout.width}" height="${layout.height}" role="group" aria-label="${escape(messages.networkLabel)}"><defs>${[false, true].map((related) => `<marker id="${related ? 'dependency-arrow-related' : 'dependency-arrow'}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M1 1 7 4 1 7" class="dependency-arrow${related ? ' related' : ''}"/></marker>`).join('')}</defs>${edges}${cards}</svg></div></div>`
   );
 }

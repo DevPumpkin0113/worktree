@@ -27,6 +27,11 @@ export function DependencyChart({
 }) {
   const priorities = useContext(ProjectPriorityContext);
   const root = useRef<HTMLDivElement>(null);
+  const viewport = useRef<{ left: number; top: number } | null>(null);
+  function rememberViewport() {
+    const scroller = root.current?.querySelector<HTMLElement>('.diagram-scroll');
+    if (scroller) viewport.current = { left: scroller.scrollLeft, top: scroller.scrollTop };
+  }
   const consumeClick = useChartPan(root);
   const validFocus = rows.some((row) => row.id === focus) ? focus : null;
   const language = getLanguage();
@@ -35,15 +40,24 @@ export function DependencyChart({
     [rows, filtered, validFocus, label, language, priorities],
   );
   useLayoutEffect(() => {
+    const scroller = root.current?.querySelector<HTMLElement>('.diagram-scroll');
+    if (scroller && viewport.current) {
+      scroller.scrollLeft = viewport.current.left;
+      scroller.scrollTop = viewport.current.top;
+    }
     markSelectedWork(root.current, selectedId);
   }, [html, selectedId]);
   return (
     <div
       ref={root}
-      className="chart-adapter"
-      onScrollCapture={onScroll}
+      className="chart-adapter network-view"
+      onScrollCapture={() => {
+        rememberViewport();
+        onScroll();
+      }}
       onClick={(event) => {
         if (consumeClick()) return;
+        rememberViewport();
         const target = (event.target as Element).closest<HTMLElement>(
           '[data-id],[data-select],[data-clear-focus]',
         );
@@ -52,6 +66,7 @@ export function DependencyChart({
         else if (target?.dataset.id) onSelect(target.dataset.id);
       }}
       onDoubleClick={(event) => {
+        rememberViewport();
         const id = (event.target as Element).closest<HTMLElement>('[data-select]')?.dataset.select;
         if (id) onSelect(id);
       }}
@@ -60,6 +75,7 @@ export function DependencyChart({
           const target = event.target as HTMLElement;
           if (target.dataset.id || target.dataset.select) {
             event.preventDefault();
+            rememberViewport();
             if (target.dataset.select) onFocus(target.dataset.select);
             else onSelect(target.dataset.id!);
           }

@@ -23,7 +23,7 @@
   --color-text: #243249; /* 기본 글자 */
   --color-text-secondary: #617184; /* 보조 글자 */
   --color-text-muted: #718097; /* 안내 글자 */
-  --color-canvas: #f3f5f8; /* 앱 배경 */
+  --color-canvas: var(--color-sidebar); /* 패널 뒤 공통 앱 배경 */
   --color-surface-muted: #f6f8fa; /* 상세 배경 */
   --color-titlebar: var(--color-canvas); /* 콘텐츠 배경과 연결되는 타이틀바 */
   --color-sidebar: #eef2f6; /* 좌측 패널 */
@@ -46,6 +46,7 @@
   --color-error-focus: var(--color-danger); /* 오류 강조 */
   --color-window-close-hover: #c42b1c; /* 창 닫기 강조 */
   --color-surface: #fff;
+  --color-workspace-surface-shadow: color-mix(in srgb, var(--color-text) 6%, transparent);
   --color-text-inverse: #fff;
   --color-chart-node-selected: #dceef0;
   --color-chart-grid: #e5ebf0;

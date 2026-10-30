@@ -73,6 +73,12 @@
   overflow-wrap: anywhere;
   letter-spacing: -0.4px;
 }
+#detailTitle > .work-group-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  font-size: 18px;
+}
 #detailMeta {
   display: flex;
   align-items: center;
@@ -308,15 +314,11 @@
   --detail-panel-width: clamp(340px, 40vw, 520px);
 }
 #detail.sidebar {
-  position: fixed;
-  inset: var(--titlebar-height) 0
-    calc(var(--document-dock-height) + var(--statusbar-height) + var(--problems-panel-height)) auto;
+  position: absolute;
+  inset: 0 0 var(--problems-panel-height) auto;
   margin: 0;
   width: var(--detail-panel-width);
-  height: calc(
-    100vh - var(--titlebar-height) - var(--document-dock-height) - var(--statusbar-height) -
-      var(--problems-panel-height)
-  );
+  height: calc(100% - var(--problems-panel-height));
   max-height: none;
   max-width: none;
   border-radius: 0;
@@ -528,11 +530,9 @@ body:has(#detail.sidebar[open]) main {
 
 #detailResize {
   display: none;
-  position: fixed;
-  top: var(--titlebar-height);
-  bottom: calc(
-    var(--document-dock-height) + var(--statusbar-height) + var(--problems-panel-height)
-  );
+  position: absolute;
+  top: 0;
+  bottom: var(--problems-panel-height);
   right: calc(var(--detail-panel-width) - 4px);
   width: 8px;
   z-index: 6;

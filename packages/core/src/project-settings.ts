@@ -45,12 +45,12 @@ export function updateProjectSettings(text: string, draft: ProjectSettingsDraft)
   if (!taskTypes.length) throw Error(messages.projectTypesRequired);
   if (new Set(taskTypes).size !== taskTypes.length || new Set(labels).size !== labels.length)
     throw Error(messages.projectDuplicateValues);
-  const inUse = model.rows.find((row) => !row.milestone && !taskTypes.includes(row.taskType!));
+  const inUse = model.rows.find((row) => row.type === 'task' && !taskTypes.includes(row.taskType!));
   if (inUse) throw Error(messages.projectTypeInUse(inUse.taskType!));
   if (!validPriorities(draft.priorities)) throw Error(messages.invalidPriorities);
   const usedPriority = model.rows.find(
     (row) =>
-      !row.milestone &&
+      row.type === 'task' &&
       row.priority &&
       row.priority !== '-' &&
       !draft.priorities.some((p) => p.id === row.priority),

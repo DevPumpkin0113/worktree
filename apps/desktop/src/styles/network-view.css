@@ -1,0 +1,106 @@
+.network-view {
+  margin-top: 8px;
+}
+
+.network-view > .network-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  min-height: 38px;
+  margin: 0 0 8px;
+  padding: 4px 0;
+  border-radius: 0;
+  background: transparent;
+}
+.network-view .network-hint {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 18px;
+}
+.network-view .dependency-focus > div {
+  flex: 1;
+  min-width: 140px;
+  overflow: hidden;
+}
+.network-view .dependency-focus strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+}
+.network-view .dependency-focus .sub {
+  margin-top: 3px;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.network-view .network-toolbar button {
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.network-view .network-toolbar button:hover:not(:disabled) {
+  background: var(--color-option-hover);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+}
+.network-view > .chart-scroll-frame {
+  --chart-scroll-inset: 0px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.network-view .dependency-stage-header {
+  height: 36px;
+  margin-bottom: -36px;
+  background: var(--color-surface);
+}
+.network-view .stage-label {
+  font-size: 11px;
+}
+.network-view .graph-node > rect:first-of-type {
+  stroke-width: 1;
+}
+.network-view .graph-node .graph-priority-strip {
+  stroke: none;
+}
+.network-view .graph-edge {
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.network-view .graph-edge.related {
+  stroke-width: 1.6;
+}
+.network-view .dependency-arrow {
+  fill: none;
+  stroke: var(--color-chart-edge);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.network-view .dependency-arrow.related {
+  stroke: var(--color-chart-edge-highlight);
+  stroke-width: 1.6;
+}
+.network-view .graph-identity {
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+}
+.network-view .graph-status {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+.network-view .graph-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+  font-size: 12px;
+  line-height: 20px;
+}

@@ -100,7 +100,7 @@ export function ProjectOverview({
                 values={projectRuleValues(draft!.taskTypes)}
                 colors={draft!.taskTypeColors}
                 locked={
-                  model?.rows.filter((row) => !row.milestone).map((row) => row.taskType!) ?? []
+                  model?.rows.filter((row) => row.type === 'task').map((row) => row.taskType!) ?? []
                 }
                 onChange={(values) =>
                   onChange!({
@@ -159,7 +159,9 @@ export function ProjectOverview({
               <PriorityListEditor
                 id="projectSettings-priorities"
                 value={draft!.priorities}
-                locked={model?.rows.filter((r) => !r.milestone).map((r) => r.priority ?? '-') ?? []}
+                locked={
+                  model?.rows.filter((r) => r.type === 'task').map((r) => r.priority ?? '-') ?? []
+                }
                 onChange={(priorities) => onChange!({ priorities })}
               />
             ) : (

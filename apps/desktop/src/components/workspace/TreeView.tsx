@@ -8,6 +8,8 @@ import { groupSchedule, groupEffort, groupProgress } from '../../views/group-sum
 import { STATUS_NAMES, type WorkRow } from '../../app/types';
 import type { ListProps } from './types';
 import { TaskCard } from './TaskCard';
+import { Icon } from '../shared/Icon';
+import { WorkGroupIcon } from '../shared/WorkGroupIcon';
 export function TreeView({
   rows,
   visibleIds,
@@ -28,9 +30,10 @@ export function TreeView({
     for (const row of rows) map.set(row.parent, [...(map.get(row.parent) ?? []), row]);
     return map;
   }, [rows]);
-  function branch(parent: string): React.ReactNode[] {
+  function branch(parent: string, kind?: 'epic' | 'milestone'): React.ReactNode[] {
     return (children.get(parent) ?? [])
       .filter((row) => parent !== '-' || row.type === 'group')
+      .filter((row) => !kind || (kind === 'epic' ? row.epic : !row.epic))
       .flatMap((row) => {
         if (row.type !== 'group')
           return visibleIds.has(row.id)
@@ -44,7 +47,7 @@ export function TreeView({
               ]
             : [];
         const content = branch(row.id);
-        if (!content.length && !(row.milestone && showEmptyMilestones)) return [];
+        if (!content.length && !((row.milestone || row.epic) && showEmptyMilestones)) return [];
         const summary = summaries.get(row.id)!;
         return [
           <details className="group" key={row.id} open onToggle={onToggle}>
@@ -53,14 +56,21 @@ export function TreeView({
               className={props.selectedId === row.id ? 'detail-selected' : undefined}
               aria-current={props.selectedId === row.id ? 'true' : undefined}
             >
-              {row.milestone ? <span className="milestone-label">{messages.milestone}</span> : null}
-              {row.milestone ? row.name : props.label(row.id) + ' · ' + row.name}{' '}
+              <Icon name="chevron-right" className="tree-toggle" />
+              {row.epic || row.milestone ? (
+                <WorkGroupIcon epic={row.epic} icon={row.icon} iconColor={row.iconColor} />
+              ) : null}
+              <span className="tree-group-name" title={row.name}>
+                {row.epic || row.milestone ? row.name : props.label(row.id) + ' · ' + row.name}
+              </span>
               <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>
               <button
                 type="button"
                 className="group-detail"
                 data-id={row.id}
-                aria-label={row.name + messages.milestoneDetailSuffix}
+                aria-label={
+                  row.name + (row.epic ? messages.epicDetailSuffix : messages.milestoneDetailSuffix)
+                }
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -69,7 +79,7 @@ export function TreeView({
               >
                 {messages.details}
               </button>
-              {row.milestone ? (
+              {row.milestone || row.epic ? (
                 <MilestoneSummary row={row} summary={summary} />
               ) : (
                 <span className="group-summary">
@@ -82,22 +92,34 @@ export function TreeView({
               {content.length ? (
                 content
               ) : (
-                <p className="milestone-empty">{messages.noMilestoneTasks}</p>
+                <p className="milestone-empty">
+                  {row.epic ? messages.noEpicMilestones : messages.noMilestoneTasks}
+                </p>
               )}
             </div>
           </details>,
         ];
       });
   }
+  const unassignedMilestones = branch('-', 'milestone');
   return (
-    <>
-      {branch('-')}
+    <div className="tree-view">
+      {branch('-', 'epic')}
+      {unassignedMilestones.length ? (
+        <details className="group unassigned-epics" open onToggle={onToggle}>
+          <summary data-view-group="unassigned-epics">
+            <Icon name="chevron-right" className="tree-toggle" />
+            {messages.unassignedEpic}
+          </summary>
+          <div className="children">{unassignedMilestones}</div>
+        </details>
+      ) : null}
       <UnassignedTasks
         rows={(children.get('-') ?? []).filter((row) => row.type === 'task')}
         visibleIds={visibleIds}
         onToggle={onToggle}
         {...props}
       />
-    </>
+    </div>
   );
 }

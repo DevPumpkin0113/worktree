@@ -37,3 +37,16 @@ test('간트의 최초 중앙 위치를 사용하고 저장된 날짜 앵커를 
  store.restore('a','gantt:week',root,[]);assert.equal(chart.scrollLeft,120);
  store.restore('a','gantt:day',root,[]);assert.equal(chart.scrollLeft,240);assert.equal(chart.dataset.restoreWindowStart,'1792531200000');assert.equal(chart.dataset.windowStart,'1792531200000');assert.ok(chart.events>0);
 });
+
+test('에픽 미지정 접힘은 마일스톤 배정 후 해제되고 에픽 자체와 혼동하지 않는다',()=>{
+ const store=createDocumentViewState();
+ const group={dataset:{viewGroup:'unassigned-epics'},parentElement:{open:false}};
+ let summaries=[group];const root={scrollLeft:0,scrollTop:0,querySelector:()=>null,querySelectorAll:()=>summaries};
+ const milestone={id:'MS001',type:'group',milestone:true,parent:'-'};
+ store.capture('a','tree',root);summaries=[];store.restore('a','tree',root,[milestone]);
+ summaries=[group];group.parentElement.open=true;store.restore('a','tree',root,[milestone]);
+ assert.equal(group.parentElement.open,false);
+ store.restore('a','tree',root,[{...milestone,parent:'EP001'},{id:'EP001',type:'group',epic:true,parent:'-'}]);
+ group.parentElement.open=true;store.restore('a','tree',root,[milestone]);
+ assert.equal(group.parentElement.open,true);
+});

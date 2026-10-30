@@ -1,4 +1,5 @@
 import { usePriorityStyle } from '../../app/project-priority-context';
+import { Icon } from '../shared/Icon';
 import { TaskTypeBadge } from '../shared/TaskTypeBadge';
 import { messages } from '../../i18n/messages';
 import { STATUS_NAMES, type WorkRow } from '../../app/types';
@@ -32,11 +33,11 @@ export function TaskCard({
         }
       }}
     >
+      {kanban ? <span className="task-priority-mark" aria-hidden="true" /> : null}
       {kanban ? (
         <div className="task-card-heading">
           <span className="task-card-identity">
             <span className="id">{label(row.id)}</span>
-            <span className="task-priority-mark" aria-hidden="true" />
           </span>
           <TaskTypeBadge type={row.taskType ?? 'task'} />
         </div>
@@ -46,14 +47,18 @@ export function TaskCard({
           <span className="task-priority-mark" aria-hidden="true" />
         </span>
       )}
-      <div>
-        {row.name}
-        <div className="sub">
-          {!kanban ? (
+      <div className="task-body">
+        <span className="task-name" title={row.name}>
+          {row.name}
+        </span>
+        <div className={'sub' + (kanban ? ' task-card-footer' : '')}>
+          {kanban ? (
+            <Icon name="person" />
+          ) : (
             <>
               <TaskTypeBadge type={row.taskType ?? 'task'} /> ·{' '}
             </>
-          ) : null}
+          )}
           {row.owner === '-' ? messages.unassigned : row.owner}
         </div>
       </div>

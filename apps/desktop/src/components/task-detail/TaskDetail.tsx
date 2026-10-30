@@ -1,6 +1,6 @@
 import type { OpenDocument } from '../../app/types';
 import { useState, type ReactNode } from 'react';
-import { TaskEditorTitleContext } from './task-editor-title-context';
+import { TaskEditorTitleContext, TaskEditorIconRequestContext } from './task-editor-title-context';
 import { messages } from '../../i18n/messages';
 import { useDetailDialog } from './use-detail-dialog';
 import { Comments } from './Comments';
@@ -9,6 +9,7 @@ import { useCommentThreads } from './use-comment-threads';
 import { TaskInfo } from './TaskInfo';
 import { TaskTimestamps } from './TaskTimestamps';
 import { Icon } from '../shared/Icon';
+import { WorkGroupIcon } from '../shared/WorkGroupIcon';
 import { STATUS_NAMES, type DetailMode, type WorkModel } from '../../app/types';
 export function TaskDetail({
   model,
@@ -53,6 +54,7 @@ export function TaskDetail({
 }) {
   const comments = useCommentThreads(documents);
   const [titleTarget, setTitleTarget] = useState<HTMLDivElement | null>(null);
+  const [iconRequest, setIconRequest] = useState<string | null>(null);
   const visible = !!model && !!id && !settingsOpen;
   const row = model?.rows.find((item) => item.id === id);
   const taskComments = model?.comments?.filter((comment) => comment.taskId === id) ?? [];
@@ -157,15 +159,41 @@ export function TaskDetail({
             {editing ? (
               <div id="detailTitle" className="detail-title-editor" ref={setTitleTarget} />
             ) : (
-              <h2 id="detailTitle">{row?.name ?? ''}</h2>
+              <h2 id="detailTitle">
+                {row?.epic ? (
+                  <button
+                    id="detailEpicIconOpen"
+                    className="epic-icon-trigger"
+                    type="button"
+                    aria-label={messages.chooseEpicIcon}
+                    title={messages.chooseEpicIcon}
+                    onClick={() => {
+                      setIconRequest(row.id);
+                      onEdit(row.id);
+                    }}
+                  >
+                    <WorkGroupIcon epic icon={row.icon} iconColor={row.iconColor} />
+                  </button>
+                ) : row?.milestone ? (
+                  <WorkGroupIcon />
+                ) : null}
+                <span className="detail-title-text">{row?.name ?? ''}</span>
+              </h2>
             )}
             {row ? <TaskTimestamps row={row} /> : null}
           </div>
         </header>
         <div id="detailBody">
-          <TaskEditorTitleContext.Provider value={titleTarget}>
-            {editors}
-          </TaskEditorTitleContext.Provider>
+          <TaskEditorIconRequestContext.Provider
+            value={{
+              requested: iconRequest === id && editing,
+              consume: () => setIconRequest(null),
+            }}
+          >
+            <TaskEditorTitleContext.Provider value={titleTarget}>
+              {editors}
+            </TaskEditorTitleContext.Provider>
+          </TaskEditorIconRequestContext.Provider>
           {row && model ? (
             <>
               {!editing ? (

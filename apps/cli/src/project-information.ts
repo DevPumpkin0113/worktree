@@ -1,3 +1,4 @@
+import { DEFAULT_EPIC_ICON, EPIC_ICONS, LUCIDE_EPIC_ICONS } from '@worktree/core/epic-icons';
 import { projectConfig } from '@worktree/core/project-source';
 import { projectSettingsDraft } from '@worktree/core/project-settings';
 import { DATE_FORMATS, TIME_FORMATS } from '@worktree/core/project-display';
@@ -34,6 +35,10 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
         description: field('string'),
         owner: field('string', { suggestions: info.config.assignees }),
         status: field('string', { enum: ['todo', 'doing', 'blocked', 'done'] }),
+        epic: field('string', {
+          enum: ['-', ...project.model.rows.filter((r) => r.epic).map((r) => r.id)],
+          exclusiveWith: 'milestone',
+        }),
         milestone: field('string', {
           enum: ['-', ...project.model.rows.filter((r) => r.milestone).map((r) => r.id)],
         }),
@@ -44,7 +49,7 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
         type: field('string', { enum: info.config.taskTypes }),
         labels: field('string[] | comma-separated string', { suggestions: info.config.labels }),
         deps: field('string[] | comma-separated string', {
-          suggestions: project.model.rows.filter((r) => !r.milestone).map((r) => r.id),
+          suggestions: project.model.rows.filter((r) => r.type === 'task').map((r) => r.id),
         }),
         'blocked-reason': field('string'),
         references: field('array', {
@@ -54,7 +59,29 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
           },
         }),
       },
+      epic: {
+        iconColor: field('string', {
+          pattern: '^#[0-9a-fA-F]{6}$',
+          unset: '-',
+          storage: 'optional; - removes the stored color',
+        }),
+        icon: field('string', {
+          description:
+            'One complete Unicode emoji, a supported lucide:<name>, or a legacy built-in icon name.',
+          legacyValues: EPIC_ICONS,
+          supportedLucideValues: LUCIDE_EPIC_ICONS.map((name) => `lucide:${name}`),
+          default: DEFAULT_EPIC_ICON,
+          unset: '-',
+          storage: 'optional; lucide:layers and - remove the stored override',
+        }),
+        title: field('string', { required: true }),
+        start: field('string', { format: 'YYYY-MM-DD', unset: '-' }),
+        end: field('string', { format: 'YYYY-MM-DD', unset: '-' }),
+      },
       milestone: {
+        epic: field('string', {
+          enum: ['-', ...project.model.rows.filter((r) => r.epic).map((r) => r.id)],
+        }),
         title: field('string', { required: true }),
         start: field('string', { format: 'YYYY-MM-DD', unset: '-' }),
         end: field('string', { format: 'YYYY-MM-DD', unset: '-' }),
@@ -69,7 +96,7 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
           taskTypes: field('string[]'),
           labels: field('string[]'),
           assignees: field('string[]'),
-          taskTypeColors: field('object', { values: '#RRGGBB', keys: 'defined task types' }),
+          taskTypeColors: field('object', { values: '#RRGGBB', keys: 'defined issue types' }),
           priorities: field('array', {
             items: { id: 'string', name: 'string' },
             order: 'highest to lowest',
@@ -93,6 +120,7 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
           'taskPrefix',
           'nextTaskNumber',
           'nextMilestoneNumber',
+          'nextEpicNumber',
           'root',
           'dataDirectory',
         ],

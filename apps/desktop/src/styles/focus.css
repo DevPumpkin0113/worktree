@@ -42,7 +42,7 @@
   color: var(--color-text-inverse);
 }
 
-.gantt-view :is(.gantt-scroll, .gantt-label, .timeline-row, .unscheduled-list button):focus {
+.gantt-view :is(.gantt-scroll, .gantt-label, .timeline-row):focus {
   outline: none;
   box-shadow: none;
 }

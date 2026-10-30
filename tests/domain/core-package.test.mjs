@@ -22,7 +22,9 @@ test('core는 데스크톱 없이 패키지 경로로 문서 처리와 언어 �
 
 test('core의 패키지 의존성은 데스크톱과 UI 런타임을 포함하지 않는다', () => {
   const core = JSON.parse(fs.readFileSync('packages/core/package.json', 'utf8'));
-  assert.deepEqual(core.dependencies ?? {}, {});
+  // Unicode 검증용 순수 패키지만 허용하고 UI·플랫폼 런타임 의존은 계속 차단한다.
+  assert.deepEqual(Object.keys(core.dependencies ?? {}), ['emoji-regex']);
+  assert.match(core.dependencies['emoji-regex'], /^\d+\.\d+\.\d+$/);
   for (const file of fs.readdirSync('packages/core/src', { recursive: true })) {
     if (!file.endsWith('.ts')) continue;
     const source = fs.readFileSync('packages/core/src/' + file, 'utf8');

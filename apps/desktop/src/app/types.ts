@@ -7,7 +7,7 @@ export type Page = 'board' | 'tasks' | 'analytics' | 'project' | 'initialize';
 export type DetailMode = 'sidebar' | 'tabs';
 export interface TaskCreationTab {
   id: string;
-  kind: 'task' | 'milestone';
+  kind: 'task' | 'milestone' | 'epic';
   number: number;
   text: string;
   saving?: boolean;

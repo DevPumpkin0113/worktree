@@ -9,6 +9,9 @@ import './styles/task-detail.css';
 import './styles/task-tabs.css';
 import './styles/settings.css';
 import './styles/workspace.css';
+import './styles/tree-view.css';
+import './styles/kanban-view.css';
+import './styles/network-view.css';
 const store = new WorkspaceStore(createNativePlatform());
 createRoot(document.getElementById('root')!).render(<App store={store} />);
 

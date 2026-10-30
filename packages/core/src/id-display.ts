@@ -3,9 +3,9 @@ export function createIdLabels(model: WorkModel, separator: string) {
   const labels = new Map<string, string>(),
     counts = new Map<string, number>();
   for (const row of model.rows) {
-    if (row.milestone) {
+    if (row.milestone || row.epic) {
       const number = row.id.match(/(\d+)$/)?.[1];
-      const label = 'MS' + (separator === 'hyphen' ? '-' : '') + number;
+      const label = (row.epic ? 'EP' : 'MS') + (separator === 'hyphen' ? '-' : '') + number;
       labels.set(row.id, label);
       counts.set(label, (counts.get(label) || 0) + 1);
       continue;

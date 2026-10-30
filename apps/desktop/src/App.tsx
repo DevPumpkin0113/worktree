@@ -48,7 +48,7 @@ export function App({ store }: { store: WorkspaceStore }) {
   const editing = edits.sessions.some(
     (session) => session.path === state.activePath && session.id === state.selectedId,
   );
-  const openEditor = (kind: 'task' | 'milestone' = 'task') => {
+  const openEditor = (kind: 'task' | 'milestone' | 'epic' = 'task') => {
     store.openCreationTab(kind);
   };
   const [deletion, setDeletion] = useState<TaskDeleteSession | null>(null);
@@ -160,7 +160,6 @@ export function App({ store }: { store: WorkspaceStore }) {
             updateNotice={updateNotice}
             store={store}
             settingsOpen={state.settingsOpen}
-            collapsed={collapsed}
             query={state.query}
             searchEnabled={!!model && (page === 'board' || page === 'tasks')}
           />
@@ -178,39 +177,44 @@ export function App({ store }: { store: WorkspaceStore }) {
             onCollapse={() => setCollapsed((value) => !value)}
             inert={state.settingsOpen}
           />
-          <Content
-            detail={detail}
-            creation={
-              <TaskCreationDetail
-                documents={state.documents}
-                path={state.activePath}
-                id={state.selectedId}
-                hidden={state.settingsOpen || !model || (page !== 'board' && page !== 'tasks')}
-                onSave={(path, tab, draft) => store.saveCreationTab(path, tab.id, tab.text, draft)}
-                onBusyChange={(path, id, saving) => store.setCreationSaving(path, id, saving)}
-                onClose={(path, id) => {
-                  if (state.activePath === path) closeTaskTab(id);
-                }}
-              />
-            }
-            initializationStep={initializationStep}
-            onInitializationStep={setInitializationStep}
-            store={store}
-            state={{ ...state, page }}
-            label={label}
-            onCloseTaskTab={closeTaskTab}
-            onAddTask={() => openEditor()}
-            onAddMilestone={() => openEditor('milestone')}
-          />
-          <Problems
-            problems={problems}
-            open={state.problemsOpen}
-            inert={state.settingsOpen}
-            onClose={() => {
-              store.closeProblems();
-              document.getElementById('error')?.focus();
-            }}
-          />
+          <div className="workspace-surface">
+            <Content
+              detail={detail}
+              creation={
+                <TaskCreationDetail
+                  documents={state.documents}
+                  path={state.activePath}
+                  id={state.selectedId}
+                  hidden={state.settingsOpen || !model || (page !== 'board' && page !== 'tasks')}
+                  onSave={(path, tab, draft) =>
+                    store.saveCreationTab(path, tab.id, tab.text, draft)
+                  }
+                  onBusyChange={(path, id, saving) => store.setCreationSaving(path, id, saving)}
+                  onClose={(path, id) => {
+                    if (state.activePath === path) closeTaskTab(id);
+                  }}
+                />
+              }
+              initializationStep={initializationStep}
+              onInitializationStep={setInitializationStep}
+              store={store}
+              state={{ ...state, page }}
+              label={label}
+              onCloseTaskTab={closeTaskTab}
+              onAddTask={() => openEditor()}
+              onAddMilestone={() => openEditor('milestone')}
+              onAddEpic={() => openEditor('epic')}
+            />
+            <Problems
+              problems={problems}
+              open={state.problemsOpen}
+              inert={state.settingsOpen}
+              onClose={() => {
+                store.closeProblems();
+                document.getElementById('error')?.focus();
+              }}
+            />
+          </div>
           <ProjectDock store={store} state={state} />
           <footer
             id="appStatusbar"

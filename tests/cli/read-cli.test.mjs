@@ -35,9 +35,9 @@ test('CLI 요약·필터·상세·검증은 JSON을 반환하고 파일을 변�
 });
 test('CLI 한국어·영어 일반 출력과 빈 검색 결과',t=>{
  const root=fixture(t);
- assert.match(cli(root,'status','--lang','ko').stdout,/작업: 1\/2/);
- assert.match(cli(root,'status','--lang','en').stdout,/Tasks: 1\/2/);
- assert.match(cli(root,'task','list','--owner','없음','--lang','ko').stdout,/일치하는 작업이 없습니다/);
+ assert.match(cli(root,'status','--lang','ko').stdout,/이슈: 1\/2/);
+ assert.match(cli(root,'status','--lang','en').stdout,/Issues: 1\/2/);
+ assert.match(cli(root,'task','list','--owner','없음','--lang','ko').stdout,/일치하는 이슈가 없습니다/);
 });
 test('CLI 도움말·버전은 프로젝트 없이 실행하고 잘못된 명령은 종료 코드 2',()=>{
  assert.equal(run(repository,'--help').status,0);

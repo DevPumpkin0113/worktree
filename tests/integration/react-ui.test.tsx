@@ -14,6 +14,440 @@ import { deleteProjectTask } from '@worktree/core/task-deletion';
 import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
+
+test('네트워크의 HTML 제목 클릭·키보드 선택·강조 해제·상세 열기를 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setView('flow'));
+    await act(() => {
+      const scroller = f.element<HTMLElement>('.diagram-scroll');
+      scroller.scrollLeft = 80;
+      scroller.scrollTop = 240;
+      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+    });
+    const assertViewport = () => {
+      assert.equal(f.element<HTMLElement>('.diagram-scroll').scrollTop, 240);
+      assert.equal(f.element<HTMLElement>('.diagram-scroll').scrollLeft, 80);
+    };
+    await f.click('.graph-node[data-select="W001"] .graph-name');
+    assert.equal(f.store.active!.graphFocus, 'W001');
+    assertViewport();
+    assert.ok(f.host.querySelector('.graph-node.selected[data-select="W001"]'));
+    await f.click('[data-clear-focus]');
+    assert.equal(f.store.active!.graphFocus, null);
+    assertViewport();
+    await act(() =>
+      f
+        .element('.graph-node[data-select="W001"]')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.store.active!.graphFocus, 'W001');
+    assertViewport();
+    await f.click('.network-toolbar [data-id="W001"]');
+    assert.equal(f.store.getSnapshot().selectedId, 'W001');
+    assertViewport();
+  } finally {
+    await f.close();
+  }
+});
+
+test('제목 왼쪽에서 Lucide 아이콘을 검색하고 선택·취소·명시 저장한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#epicAddOpen');
+    assert.ok(
+      f.host.querySelector(
+        '.task-creation-title #epicIconOpen [data-epic-icon="lucide:layers"] svg',
+      ),
+    );
+    await f.value('#taskEditor-name', '개발');
+    await f.click('#epicIconOpen');
+    assert.equal(f.element('#epicIconPopup').getAttribute('role'), 'dialog');
+    assert.equal(f.element('#epicPickerTab-icons').getAttribute('aria-selected'), 'true');
+    assert.ok(f.host.querySelector('.epic-lucide-categories h3'));
+    await f.click('.epic-color-custom');
+    assert.equal(f.host.querySelector('input[type="color"]'), null);
+    assert.ok(f.host.querySelector('.epic-color-plane'));
+    assert.ok(f.host.querySelector('[data-lucide-icon="folder"]'));
+    assert.ok(f.host.querySelector('.epic-icon-search'));
+    await f.value('.epic-color-hex input', '#ef4444');
+    const plane = f.element<HTMLElement>('.epic-color-plane');
+    plane.getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
+      toJSON() {},
+    });
+    await act(() =>
+      plane.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          clientX: 50,
+          clientY: 50,
+        }),
+      ),
+    );
+    assert.equal(f.element<HTMLInputElement>('.epic-color-hex input').value, '#804040');
+    await f.value('.epic-color-hue', '180');
+    assert.equal(f.element<HTMLInputElement>('.epic-color-hex input').value, '#408080');
+    await f.value('.epic-color-hex input', '#ef4444');
+    await f.click('[data-lucide-icon="folder"]');
+    assert.ok(f.host.querySelector('.epic-color-plane'));
+    await f.click('.epic-color-heading .epic-color-custom');
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    await f.value('.epic-icon-search', 'folder');
+    assert.equal(f.host.querySelector('[data-lucide-icon="rocket"]'), null);
+    await f.click('[data-lucide-icon="folder"]');
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    assert.equal(
+      f.store.active!.model!.rows.some((row) => row.epic),
+      false,
+    );
+    await f.submit();
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.icon,
+      'lucide:folder',
+    );
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.iconColor,
+      '#ef4444',
+    );
+    assert.ok(
+      f.host.querySelector('summary[data-work-id="EP001"] [data-epic-icon="lucide:folder"] svg'),
+    );
+    assert.equal(f.host.querySelector('summary[data-work-id="EP001"] .work-group-emoji'), null);
+    await f.click('#detailEpicIconOpen');
+    assert.ok(f.host.querySelector('#taskEditor'));
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    await f.click('[data-icon-color="#6366f1"]');
+    await f.value('.epic-icon-search', 'rocket');
+    await act(() =>
+      f
+        .element('.epic-icon-search')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(document.activeElement, f.element('[data-lucide-icon="rocket"]'));
+    await f.click('[data-lucide-icon="rocket"]');
+    await f.click('#taskEditorCancel');
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.iconColor,
+      '#ef4444',
+    );
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.icon,
+      'lucide:folder',
+    );
+    await f.click('#detailEpicIconOpen');
+    await act(() =>
+      f
+        .element('.epic-icon-search')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.host.querySelector('#epicIconPopup'), null);
+    assert.ok(f.host.querySelector('#taskEditor'));
+    assert.equal(document.activeElement, f.element('#epicIconOpen'));
+    await f.click('#epicIconOpen');
+    await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+    assert.equal(f.host.querySelector('#epicIconPopup'), null);
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽 이모지와 legacy 아이콘을 보존하고 마일스톤은 고정 SVG를 표시한다', async () => {
+  const f = await fixture();
+  const openEmoji = async () => {
+    await f.click('#epicIconOpen');
+    await f.click('#epicPickerTab-emoji');
+  };
+  try {
+    assert.ok(
+      f.host.querySelector(
+        'summary[data-work-id="MS001"] [data-milestone-icon="diamond"] svg path',
+      ),
+    );
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '이모지 테스트');
+    await openEmoji();
+    for (
+      let attempt = 0;
+      !f.host.querySelector('.worktree-emoji-catalog input') && attempt < 40;
+      attempt++
+    ) {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      });
+    }
+    assert.equal(f.host.querySelectorAll('#epicPickerPanel input').length, 1);
+    assert.equal(f.host.querySelector('[data-epr-part="category-nav"]'), null);
+    await f.value('.worktree-emoji-catalog input', '로켓');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    assert.ok(f.host.querySelector('[data-epr-unified="1f680"][data-epr-part="emoji"]'));
+    await f.value('.worktree-emoji-catalog input', 'rocket');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    await f.click('[data-epr-unified="1f680"][data-epr-part="emoji"]');
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.icon, '🚀');
+    assert.equal(f.element('summary[data-work-id="EP001"] .work-group-emoji').textContent, '🚀');
+    const legacy = readSource(f.files.get(first)!);
+    legacy.files['epics/EP001.md'] = legacy.files['epics/EP001.md'].replace(
+      'icon: "🚀"',
+      'icon: "rocket"',
+    );
+    f.files.set(first, serializeSource(legacy));
+    await f.click('#reload');
+    assert.equal(f.element('#detailTitle .work-group-emoji').textContent, '🚀');
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '기존 선택 유지');
+    await f.submit();
+    assert.match(readSource(f.files.get(first)!).files['epics/EP001.md'], /icon: "rocket"/);
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    assert.equal(f.host.querySelector('#taskEditor-icon'), null);
+  } finally {
+    await f.close();
+  }
+});
+
+test('탭 오른쪽 도구 패널에서 보기·필터를 선택하고 Escape와 외부 클릭으로 닫는다', async () => {
+  const f = await fixture();
+  try {
+    assert.ok(f.element('.workspace-tab-row').contains(f.element('#workspaceTools')));
+    assert.equal(f.element<HTMLElement>('#viewOptionsOpen-panel').hidden, true);
+    await f.click('#viewOptionsOpen');
+    assert.equal(f.element('#viewOptionsOpen').getAttribute('aria-expanded'), 'true');
+    await f.click('[data-view="board"]');
+    assert.equal(f.store.active?.view, 'board');
+    await act(() =>
+      f
+        .element('[data-view="board"]')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.element('#viewOptionsOpen').getAttribute('aria-expanded'), 'false');
+    assert.equal(document.activeElement, f.element('#viewOptionsOpen'));
+    await f.click('#filterOptionsOpen');
+    assert.equal(f.element('#status > span').textContent, '상태');
+    await act(() =>
+      f
+        .element('#status')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.ok(f.host.querySelector('#status-options'));
+    await act(() =>
+      f
+        .element('#status')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'true');
+    await act(() =>
+      f.element('#status').dispatchEvent(new MouseEvent('pointerover', { bubbles: true })),
+    );
+    assert.ok(f.host.querySelector('#status-options'));
+    await act(() =>
+      f.element('#status').dispatchEvent(new MouseEvent('pointerout', { bubbles: true })),
+    );
+    await act(() =>
+      f.element('#priorityFilter').dispatchEvent(new MouseEvent('pointerover', { bubbles: true })),
+    );
+    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.ok(f.host.querySelector('#priorityFilter-options'));
+    await act(() =>
+      f.element('#status').dispatchEvent(new MouseEvent('pointerover', { bubbles: true })),
+    );
+    assert.equal(f.host.querySelector('#priorityFilter-options'), null);
+    assert.ok(f.host.querySelector('#status-options'));
+    await f.click('#status-options [data-value="done"]');
+    assert.equal(f.store.getSnapshot().status, 'done');
+    assert.equal(
+      f.element('#status-options [data-value="done"]').getAttribute('aria-selected'),
+      'true',
+    );
+    assert.ok(f.host.querySelector('#status-options'));
+    assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'true');
+    assert.ok(f.element('#filterOptionsOpen').classList.contains('active'));
+    assert.equal(f.element('#status > span').textContent, '상태');
+    assert.equal(f.host.querySelector('.filter-category-value'), null);
+    assert.match(f.element('[data-remove-filter="status"]').textContent ?? '', /상태: 완료/);
+    assert.ok(f.element('#workspaceHome').contains(f.element('.applied-filters')));
+    assert.ok(
+      f.element('.applied-filters').compareDocumentPosition(f.element('#content')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+    assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'false');
+    await f.click('[data-remove-filter="status"]');
+    assert.equal(f.store.getSnapshot().status, 'all');
+    assert.equal(f.host.querySelector('.applied-filters'), null);
+    assert.equal(f.host.querySelector('.applied-filter'), null);
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽 직속 이슈는 미지정 그룹 없이 표시하고 마일스톤 선택·해제로 같은 ID를 유지한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '직속 이슈');
+    await f.submit();
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="EP001"]');
+    await f.submit();
+    await f.click('#taskAddOpen');
+    assert.equal(f.element('#taskEditor').getAttribute('aria-label'), '새 이슈');
+    await f.value('#taskEditor-name', '바로 연결');
+    await f.click('#taskEditor-epic');
+    await f.click('#taskEditor-epic-options [data-value="EP001"]');
+    await f.submit();
+    const issueId = f.store.getSnapshot().selectedId!;
+    assert.equal(issueId, 'W003');
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, 'EP001');
+    assert.ok(f.element('#previewInfoPanel .detail-breadcrumb').textContent?.includes('EP001'));
+    await act(() => f.store.selectWork(null));
+    const epicGroup = f.element('summary[data-work-id="EP001"]').parentElement!;
+    assert.ok(epicGroup.querySelector(':scope > .children > .task[data-id="W003"]'));
+    assert.equal(epicGroup.querySelector('.unassigned-tasks'), null);
+    await act(() => f.store.selectWork(issueId));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="MS001"]');
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, 'MS001');
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="-"]');
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, 'EP001');
+    assert.ok(readSource(f.files.get(first)!).files['tasks/W003.md']);
+  } finally {
+    await f.close();
+  }
+});
+
+test('추가 메뉴는 단일 버튼에서 작업·마일스톤·에픽 순서로 열고 키보드와 바깥 클릭으로 닫는다', async () => {
+  const f = await fixture();
+  try {
+    const key = async (selector: string, value: string) =>
+      act(async () => {
+        f.element(selector).dispatchEvent(
+          new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true }),
+        );
+      });
+    assert.equal(f.host.querySelectorAll('.workspace-create-actions > button').length, 1);
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    await f.click('#workAddOpen');
+    assert.deepEqual(
+      Array.from(
+        f.element('#workAddMenu').querySelectorAll('[role="menuitem"]'),
+        (item) => item.textContent,
+      ),
+      ['이슈', '마일스톤', '에픽'],
+    );
+    assert.equal(document.activeElement?.id, 'taskAddOpen');
+    await key('#taskAddOpen', 'End');
+    assert.equal(document.activeElement?.id, 'epicAddOpen');
+    await key('#epicAddOpen', 'ArrowDown');
+    assert.equal(document.activeElement?.id, 'taskAddOpen');
+    await key('#taskAddOpen', 'Escape');
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    assert.equal(document.activeElement?.id, 'workAddOpen');
+    await key('#workAddOpen', 'ArrowUp');
+    assert.equal(document.activeElement?.id, 'epicAddOpen');
+    await act(async () =>
+      document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })),
+    );
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    await f.click('#workAddOpen');
+    await f.click('#milestoneAddOpen');
+    assert.equal(f.host.querySelector('#workAddMenu'), null);
+    assert.equal(f.element('#taskEditor').getAttribute('aria-label'), '새 마일스톤');
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽 생성·마일스톤 배정·소속 해제는 기존 작업 ID와 본문을 유지한다', async () => {
+  const f = await fixture();
+  try {
+    const oldSource = readSource(f.files.get(first)!);
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '제품 기능 확장');
+    await f.submit();
+    const epic = f.store.active!.model!.rows.find((row) => row.epic)!;
+    assert.equal(epic.id, 'EP001');
+    assert.equal(f.element('#detailTitle .detail-title-text').textContent, '제품 기능 확장');
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="EP001"]');
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === 'MS001')!.parent, 'EP001');
+    const source = readSource(f.files.get(first)!);
+    for (const [file, contents] of Object.entries(oldSource.files)) {
+      if (file.startsWith('tasks/')) assert.equal(source.files[file], contents);
+    }
+    await act(() => f.store.selectWork('EP001'));
+    await f.click('#taskDeleteOpen');
+    assert.ok(f.element('#taskDeleteDialog').textContent?.includes('하위 마일스톤과 이슈는 유지'));
+    await f.click('#taskDeleteConfirm');
+    const model = f.store.active!.model!;
+    assert.equal(
+      model.rows.some((row) => row.epic),
+      false,
+    );
+    assert.equal(model.rows.find((row) => row.id === 'MS001')!.parent, '-');
+    assert.equal(model.rows.filter((row) => row.type === 'task').length, 2);
+    assert.ok(f.host.querySelector('[data-view-group="unassigned-epics"]'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('기존 프로젝트는 쓰기 없이 에픽 미지정으로 보이고 빈 에픽도 트리에 표시한다', async () => {
+  const f = await fixture({ language: 'en' });
+  try {
+    const original = f.files.get(first);
+    assert.equal(f.element('[data-view-group="unassigned-epics"]').textContent, 'No epic');
+    assert.equal(f.files.get(first), original);
+    await f.click('#epicAddOpen');
+    assert.equal(f.element('#taskEditor').getAttribute('aria-label'), 'New epic');
+    await f.value('#taskEditor-name', 'Empty epic');
+    await f.submit();
+    await act(() => f.store.selectWork(null));
+    assert.ok(f.element('summary[data-work-id="EP001"]').textContent?.includes('Empty epic'));
+    assert.equal(f.store.active!.model!.rows.filter((row) => row.type === 'task').length, 2);
+  } finally {
+    await f.close();
+  }
+});
+
 async function fixture(
   options: {
     sessionFailure?: boolean;
@@ -136,10 +570,17 @@ async function fixture(
     assert.ok(node, selector);
     return node;
   };
-  const click = async (selector: string) =>
-    act(async () => {
+  const click = async (selector: string) => {
+    if (
+      ['#taskAddOpen', '#milestoneAddOpen', '#epicAddOpen'].includes(selector) &&
+      !host.querySelector(selector)
+    ) {
+      await act(async () => element<HTMLElement>('#workAddOpen').click());
+    }
+    await act(async () => {
       element<HTMLElement>(selector).click();
     });
+  };
   const value = async (selector: string, value: string) =>
     act(async () => {
       const node = element<HTMLInputElement | HTMLTextAreaElement>(selector);
@@ -190,6 +631,10 @@ async function fixture(
 test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 없이 페이지·프로젝트를 전환한다', async () => {
   const f = await fixture();
   try {
+    const surface = f.element('.workspace-surface');
+    assert.ok(surface.contains(f.element('#workspace')));
+    assert.equal(surface.contains(f.element('#projectDock')), false);
+    assert.equal(surface.contains(f.element('#appStatusbar')), false);
     assert.equal(f.store.getSnapshot().projects.length, 2);
     assert.equal(f.host.querySelector('#projectFiles'), null);
     assert.equal(f.host.querySelector('#projectTreeResize'), null);
@@ -252,7 +697,7 @@ test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위�
     assert.equal(f.store.active?.model?.idSeparator, 'hyphen');
     assert.equal(f.store.active?.model?.dataDirectory, 'docs/custom');
     assert.equal(f.store.active?.model?.rows.length, 0);
-    assert.ok(f.host.querySelector('#taskAddOpen'));
+    assert.ok(f.host.querySelector('#workAddOpen'));
     assert.equal(f.host.querySelector('#initializationSubmit'), null);
     await f.click('#taskAddOpen');
     assert.equal(f.host.querySelector('#taskEditor input[readonly]'), null);
@@ -536,7 +981,7 @@ test('작업·마일스톤 작성 탭은 초안을 분리하고 저장 시 같�
     await f.click('#taskAddOpen');
     const secondDraft = f.store.getSnapshot().selectedId!;
     assert.notEqual(firstDraft, secondDraft);
-    assert.equal(f.element('[id="task-tab-' + secondDraft + '"]').textContent, '새 작업 (2)');
+    assert.equal(f.element('[id="task-tab-' + secondDraft + '"]').textContent, '새 이슈 (2)');
     await f.value('#taskEditor-name', '두 번째 저장');
     await f.submit();
     assert.equal(f.store.getSnapshot().selectedId, 'W003');
@@ -645,7 +1090,7 @@ test('작업 삭제는 선행 참조 해제 선택과 실패 보존을 지원한
     assert.equal(affected.querySelector('.delete-kept-badge')!.textContent, '유지됨');
     assert.match(affected.querySelector('.delete-removed-link')!.textContent ?? '', /W001/);
     assert.ok(f.element<HTMLButtonElement>('#taskDeleteConfirm').disabled);
-    assert.equal(f.element('#taskDeleteConfirm').textContent, '작업 삭제');
+    assert.equal(f.element('#taskDeleteConfirm').textContent, '이슈 삭제');
     await act(() => {
       f.element('#taskDeleteDialog form').dispatchEvent(
         new Event('submit', { bubbles: true, cancelable: true }),
@@ -723,14 +1168,15 @@ test('손상된 세션은 저장하지 않고 프로젝트를 직접 열어 복�
 test('설정 저장·언어 전환과 실패 시 기존 값 유지를 지원한다', async () => {
   const f = await fixture();
   try {
+    await f.click('[data-workspace-page="tasks"]');
     await act(() => f.store.saveSetting('language', 'en'));
-    assert.ok(f.host.textContent?.includes('Task list'));
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Issues');
     f.setSettingsFailure(true);
     await act(() => f.store.saveSetting('language', 'ko'));
     assert.equal(f.store.getSnapshot().settings.language, 'en');
     f.setSettingsFailure(false);
     await act(() => f.store.saveSetting('language', 'ko'));
-    assert.ok(f.host.textContent?.includes('작업 목록'));
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Issues');
   } finally {
     await f.close();
   }
@@ -1062,15 +1508,24 @@ test('읽기 오류 중에도 프로젝트 설정 초안을 유지하고 프로�
   }
 });
 
-test('타이틀바 좌측은 패널 접힘에 따라 아이콘만 숨기고 새로고침·창 제어를 유지한다', async () => {
+test('새로고침은 검색 왼쪽에 있고 앱 아이콘은 프로젝트명 왼쪽이며 도구 입력은 창을 드래그하지 않는다', async () => {
   const f = await fixture();
   try {
-    assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
-    assert.ok(f.host.querySelector('.titlebar-workspace #reload'));
-    assert.equal(f.host.querySelector('.titlebar-workspace #settingsOpen'), null);
+    assert.ok(f.host.querySelector('.project-entry .app-mark'));
+    assert.ok(
+      f
+        .element('.project-entry .app-mark')
+        .nextElementSibling?.classList.contains('project-entry-title'),
+    );
+    assert.ok(f.host.querySelector('#titleDrag #reload'));
+    assert.ok(
+      f.element('#reload').parentElement?.nextElementSibling?.classList.contains('titlebar-search'),
+    );
+    assert.equal(f.host.querySelector('.titlebar-workspace'), null);
     await f.click('#workspaceCollapse');
     assert.equal(f.host.querySelector('.titlebar .app-mark'), null);
-    assert.ok(f.host.querySelector('.titlebar-workspace #reload'));
+    assert.ok(document.documentElement.classList.contains('workspace-nav-collapsed'));
+    assert.ok(f.host.querySelector('#titleDrag #reload'));
     const before = f.calls.filter((call) => call.command === 'scan_project').length;
     await f.click('#reload');
     assert.equal(f.calls.filter((call) => call.command === 'scan_project').length, before + 1);
@@ -1082,16 +1537,30 @@ test('타이틀바 좌측은 패널 접힘에 따라 아이콘만 숨기고 새�
     await f.click('#windowMaximize');
     await f.click('#windowClose');
     await act(() => {
-      f.element('.titlebar-workspace').dispatchEvent(
+      f.element('#titleDrag').dispatchEvent(
         new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 1 }),
       );
     });
+    for (const selector of ['#reload', '#search']) {
+      await act(() =>
+        f
+          .element(selector)
+          .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 1 })),
+      );
+    }
     assert.deepEqual(controls, ['minimize', 'maximize', 'close', 'drag']);
+    await act(() =>
+      f
+        .element('#titleDrag')
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 2 })),
+    );
+    assert.deepEqual(controls, ['minimize', 'maximize', 'close', 'drag', 'maximize']);
     await f.click('#settingsOpen');
     assert.equal(f.store.getSnapshot().settingsOpen, true);
     await f.click('#settingsOpen');
     await f.click('#workspaceCollapse');
-    assert.ok(f.host.querySelector('.titlebar-workspace .app-mark'));
+    assert.ok(f.host.querySelector('.project-entry .app-mark'));
+    assert.equal(document.documentElement.classList.contains('workspace-nav-collapsed'), false);
   } finally {
     await f.close();
   }
@@ -1377,10 +1846,11 @@ test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정
     const popup = f.element<HTMLElement>('#status-options');
     assert.equal(popup.getAttribute('popover'), 'manual');
     assert.equal(shown, 1);
-    assert.equal(popup.style.top, '354px');
+    assert.equal(popup.style.left, '248px');
+    assert.equal(popup.style.top, `${Math.min(600, window.innerHeight - 8 - 240)}px`);
     top = 100;
     await act(() => window.dispatchEvent(new Event('resize')));
-    assert.equal(popup.style.top, '146px');
+    assert.equal(popup.style.top, '100px');
     await act(() =>
       trigger.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }),
@@ -1392,7 +1862,7 @@ test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정
       ),
     );
     assert.equal(f.store.getSnapshot().status, 'done');
-    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.ok(f.host.querySelector('#status-options'));
     assert.equal(document.activeElement, trigger);
     await f.click('#status');
     await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
@@ -1562,7 +2032,7 @@ test('초기화 좌측 단계는 읽기 전용이며 하단 이전·다음만 �
     await f.click('#initializationNext');
     assert.ok(f.host.querySelector('#initialization-prefix'));
     assert.equal(
-      f.element('.initialization-step[aria-current="step"]').textContent?.includes('작업 규칙'),
+      f.element('.initialization-step[aria-current="step"]').textContent?.includes('이슈 규칙'),
       true,
     );
     await f.click('#initializationPrevious');
@@ -1929,7 +2399,7 @@ test('초기화 최종 확인은 경로 표기·짝지은 항목·작업 규칙 
       '데이터 저장 위치',
       'ID 표시 형식',
       '날짜·시간 형식',
-      '작업 유형',
+      '이슈 유형',
       '라벨',
       '담당자 목록',
       '우선순위 목록',
@@ -1974,12 +2444,12 @@ test('프로젝트 관리 조회와 편집은 최종 확인 기준의 순서·�
       '데이터 저장 위치',
       'ID 표시 형식',
       '날짜·시간 형식',
-      '작업 유형',
+      '이슈 유형',
       '라벨',
       '담당자 목록',
       '우선순위 목록',
       '예상 작업 시간',
-      '작업 상태',
+      '이슈 상태',
     ];
     assert.deepEqual(labels(), expected);
     const fields = [...f.host.querySelectorAll('#projectManagement dd')];

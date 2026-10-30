@@ -24,7 +24,7 @@ export interface Options {
     | 'comment-add'
     | 'comment-edit'
     | 'comment-delete';
-  kind: 'task' | 'milestone' | 'comment';
+  kind: 'task' | 'milestone' | 'epic' | 'comment';
   project: string;
   json: boolean;
   language: 'ko' | 'en';
@@ -51,8 +51,11 @@ const valued = [
   'status',
   'owner',
   'title',
+  'icon',
+  'icon-color',
   'description',
   'milestone',
+  'epic',
   'start',
   'end',
   'effort',
@@ -165,10 +168,10 @@ export function parseArguments(args: string[], cwd: string): Options {
   else if (first === 'project' && ['show', 'edit', 'reset'].includes(verb) && words.length === 2) {
     result.command = ('project-' + verb) as Options['command'];
   } else if (
-    ['task', 'milestone'].includes(first) &&
+    ['task', 'milestone', 'epic'].includes(first) &&
     ['list', 'show', 'add', 'edit', 'delete'].includes(verb)
   ) {
-    result.kind = first as 'task' | 'milestone';
+    result.kind = first as 'task' | 'milestone' | 'epic';
     result.command = verb as Options['command'];
     result.id = id;
     if (words.length !== (['show', 'edit', 'delete'].includes(verb) ? 3 : 2))
@@ -200,7 +203,8 @@ export function parseArguments(args: string[], cwd: string): Options {
   if (result.command === 'project-edit') allowed.add('input');
   if (result.command === 'project-reset') allowed.add('confirm-name');
   if (result.command === 'list') {
-    for (const key of ['search', 'milestone', 'type', 'priority', 'label']) allowed.add(key);
+    for (const key of ['search', 'milestone', 'epic', 'type', 'priority', 'label'])
+      allowed.add(key);
     allowed.add('status');
     allowed.add('owner');
   }
@@ -215,6 +219,7 @@ export function parseArguments(args: string[], cwd: string): Options {
             'description',
             'description-file',
             'milestone',
+            'epic',
             'owner',
             'status',
             'effort',
@@ -225,10 +230,14 @@ export function parseArguments(args: string[], cwd: string): Options {
             'blocked-reason',
             'references',
           ]
-        : []),
+        : result.kind === 'milestone'
+          ? ['epic']
+          : result.kind === 'epic'
+            ? ['icon', 'icon-color']
+            : []),
     ])
       allowed.add(key);
-  if (result.command === 'delete' && result.kind === 'milestone') {
+  if (result.command === 'delete' && ['milestone', 'epic'].includes(result.kind)) {
     allowed.add('children');
   }
   if (['comment-add', 'comment-edit'].includes(result.command)) {

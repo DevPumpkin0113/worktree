@@ -117,7 +117,7 @@ pub fn valid_file(file: &str) -> bool {
                         .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
             });
     }
-    if !["tasks", "milestones"].contains(&folder) || !name.ends_with(".md") {
+    if !["tasks", "milestones", "epics"].contains(&folder) || !name.ends_with(".md") {
         return false;
     }
     let stem = &name[..name.len() - 3];
@@ -155,7 +155,7 @@ pub fn read(root: &Path) -> Result<ProjectSource, String> {
         "project.json".into(),
         read_text(&safe_join(&data, "project.json")?)?,
     );
-    for folder in ["milestones", "tasks"] {
+    for folder in ["epics", "milestones", "tasks"] {
         let path = safe_join(&data, folder)?;
         if !path.exists() {
             continue;
@@ -217,6 +217,25 @@ pub fn read(root: &Path) -> Result<ProjectSource, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn epic_documents_are_included_in_snapshots_and_path_validation() {
+        assert!(valid_file("epics/EP001.md"));
+        assert!(!valid_file("epics/../EP001.md"));
+        assert!(!valid_file("epics/ep001.md"));
+        let root = tempfile::tempdir().unwrap();
+        let data = root.path().join("docs/worktree");
+        fs::create_dir_all(data.join("epics")).unwrap();
+        fs::write(
+            root.path().join("worktree.json"),
+            r#"{"dataDirectory":"docs/worktree"}"#,
+        )
+        .unwrap();
+        fs::write(data.join("project.json"), r#"{"schemaVersion":1}"#).unwrap();
+        fs::write(data.join("epics/EP001.md"), "epic contents").unwrap();
+        let snapshot = read(root.path()).unwrap();
+        assert_eq!(snapshot.files["epics/EP001.md"], "epic contents");
+        assert!(validate_source(&snapshot).is_ok());
+    }
     #[test]
     fn comment_paths_are_limited_to_task_ids_and_uuid_markdown_files() {
         assert!(valid_file(

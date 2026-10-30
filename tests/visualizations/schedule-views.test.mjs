@@ -14,3 +14,17 @@ test('빈 공간 드래그는 스크롤만 이동하고 이후 클릭을 억제�
  assert.equal(scroller.scrollLeft,120);assert.equal(scroller.scrollTop,90);assert.equal(pan.consumeClick(),true);assert.equal(pan.consumeClick(),false);
  root.onpointerdown({button:0,pointerType:'mouse',pointerId:2,clientX:50,clientY:50,target});root.onpointerup();assert.equal(pan.consumeClick(),false);
 });
+test('네트워크 노드는 캔버스 안에 배치하고 긴 제목을 폭 기준 말줄임용 HTML로 안전하게 보존한다',()=>{
+ const rows=[task('A'),task('B',['A']),task('C',['A']),task('D',['B','C'])];
+ const layout=graphLayout(rows);
+ for(const point of layout.positions.values()) {
+  assert.ok(point.x>=0 && point.x+220<=layout.width);
+  assert.ok(point.y>=36 && point.y+64<=layout.height);
+ }
+ rows[0].name='Long title <script>alert(1)</script> preserved for width-based ellipsis';
+ const html=renderDependencies(rows,rows,null,id=>id);
+ assert.match(html,/<div[^>]*class="graph-name">Long title &lt;script&gt;alert\(1\)&lt;\/script&gt; preserved for width-based ellipsis<\/div>/);
+ assert.doesNotMatch(html,/<script>/);
+ assert.match(html,/graph-priority-strip/);
+ assert.doesNotMatch(html,/<p class="sub">/);
+});

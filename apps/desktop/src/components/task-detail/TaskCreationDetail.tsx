@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { OpenDocument, TaskCreationTab } from '../../app/types';
 import type { ProjectTaskDraft } from '@worktree/core/task-editing';
 import { messages } from '../../i18n/messages';
+import { creationTitle } from '../../app/work-kind';
 import { Icon } from '../shared/Icon';
 import { TaskEditor } from './TaskEditor';
 import { TaskEditorTitleContext } from './task-editor-title-context';
@@ -38,9 +39,7 @@ export function TaskCreationDetail({
     >
       <header className="detail-header">
         <div className="detail-header-row">
-          <span className="detail-type">
-            {current?.kind === 'milestone' ? messages.newMilestone : messages.newTask}
-          </span>
+          <span className="detail-type">{creationTitle(current?.kind ?? 'task')}</span>
           <button
             type="button"
             className="modal-close"

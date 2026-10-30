@@ -1,4 +1,10 @@
 export const en = {
+  invalidEpicIcon:
+    'Use one Unicode emoji, a supported lucide:<name> from schema, or a legacy icon name: {0}; - restores layers.',
+  invalidIssueParent: 'Invalid {0} parent ID: {1}',
+  conflictingIssueParents:
+    'An issue can belong directly to either an epic or a milestone, not both.',
+
   duplicateOption: 'Duplicate option: {0}',
   unknownOption: 'Unknown option: {0}',
   missingValue: 'Missing value: {0}',
@@ -21,7 +27,7 @@ export const en = {
   unsupportedBatchOptionAtIndex: 'Unsupported batch option at index {0}.',
   unsupportedBatchCommandAtIndex: 'Unsupported batch command at index {0}.',
   projectFileCountOrContentSizeLimitExceeded: 'Project file count or content size limit exceeded.',
-  taskNotFound: 'Task not found: {0}',
+  taskNotFound: 'Issue not found: {0}',
   commentNotFound: 'Comment not found: {0}',
   unsupportedAppSettingsPassAuthorName: 'Unsupported app settings. Pass --author NAME.',
   configureTheAppDisplayNameOrPassAuthorName:
@@ -67,7 +73,7 @@ export const en = {
   itemNotFound: 'Item not found: {0}',
   specifyChildrenKeepDelete: 'Specify --children keep|delete.',
   reviewDryRunAndPassDetachToDetachDependentTasks:
-    'Review --dry-run and pass --detach to detach dependent tasks.',
+    'Review --dry-run and pass --detach to detach dependent issues.',
   unknownInputField: 'Unknown input field: {0}',
   fieldNotAvailableForMilestones: 'Field not available for milestones: {0}',
   expectedAStringArray: 'Expected a string array: {0}',

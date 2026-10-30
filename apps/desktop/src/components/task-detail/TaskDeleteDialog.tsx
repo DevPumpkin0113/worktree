@@ -75,18 +75,25 @@ export function TaskDeleteDialog({
       >
         <div className="task-editor-heading">
           <h2 id="taskDeleteTitle">
-            {impact.target.milestone ? messages.deleteMilestone : messages.deleteTask}
+            {impact.target.epic
+              ? messages.deleteEpic
+              : impact.target.milestone
+                ? messages.deleteMilestone
+                : messages.deleteTask}
           </h2>
         </div>
         <div className="task-delete-body">
           <p className="delete-target">{label(impact.target.id) + ' · ' + impact.target.name}</p>
           <p className="task-editor-hint">{messages.deleteSourceHint}</p>
+          {impact.target.epic ? (
+            <p className="task-editor-hint">{messages.epicDeleteKeepHint}</p>
+          ) : null}
           {impact.commentCount ? (
             <p className="task-editor-hint">
               {messages.commentsDeletedWithTask(impact.commentCount)}
             </p>
           ) : null}
-          {impact.childRows.length ? (
+          {impact.childRows.length && !impact.target.epic ? (
             <DeleteChildTasks
               rows={impact.childRows}
               value={children}
@@ -128,9 +135,11 @@ export function TaskDeleteDialog({
           >
             {saving
               ? messages.deletingTask
-              : impact.target.milestone
-                ? messages.deleteMilestone
-                : messages.deleteTask}
+              : impact.target.epic
+                ? messages.deleteEpic
+                : impact.target.milestone
+                  ? messages.deleteMilestone
+                  : messages.deleteTask}
           </button>
         </div>
       </form>

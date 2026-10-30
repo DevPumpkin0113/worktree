@@ -1,3 +1,4 @@
+import { isEpicIcon, isEpicIconColor, type EpicIcon } from './epic-icons';
 import { readProjectComments } from './comment-file';
 import { legacyPriorities } from './project-priorities';
 import type { WorkModel, WorkRow, Status } from './types';
@@ -13,15 +14,20 @@ export function parseProject(text: string): WorkModel {
   const source = readSource(text),
     config = projectConfig(source);
   const rows: WorkRow[] = [];
-  const locations = new Map<string, { file: string; lines: Map<string, number> }>();
+  const locations = new Map<
+    string,
+    { file: string; lines: Map<string, number>; parentField: 'epic' | 'milestone' }
+  >();
   for (const [file, content] of Object.entries(source.files).sort(([a], [b]) =>
     a.localeCompare(b),
   )) {
     if (file === 'project.json' || file.startsWith('comments/')) continue;
-    if (!/^(tasks|milestones)\/[A-Z]+\d{3,}\.md$/.test(file) || typeof content !== 'string')
+    if (!/^(tasks|milestones|epics)\/[A-Z]+\d{3,}\.md$/.test(file) || typeof content !== 'string')
       throw new ProjectValidationError(file, 'filename', file);
     const { metadata: m, lines, description } = readTaskFile(file, content);
     const milestone = file.startsWith('milestones/');
+    const epic = file.startsWith('epics/');
+    const container = milestone || epic;
     const fail = (field: string): never => {
       throw new ProjectValidationError(
         file,
@@ -42,11 +48,13 @@ export function parseProject(text: string): WorkModel {
         : Array.isArray(m[key]) && (m[key] as unknown[]).every((v) => typeof v === 'string')
           ? (m[key] as string[])
           : fail(key);
+    if (m.iconColor !== undefined && (!epic || !isEpicIconColor(m.iconColor))) fail('iconColor');
+    if (m.icon !== undefined && (!epic || !isEpicIcon(m.icon))) fail('icon');
     const id = string('id');
-    const prefix = milestone ? 'MS' : config.taskPrefix;
+    const prefix = epic ? 'EP' : milestone ? 'MS' : config.taskPrefix;
     if (
       !new RegExp('^' + prefix + '\\d{3,}$').test(id) ||
-      file !== (milestone ? 'milestones/' : 'tasks/') + id + '.md'
+      file !== (epic ? 'epics/' : milestone ? 'milestones/' : 'tasks/') + id + '.md'
     )
       fail('id');
     const number = Number(id.match(/\d+$/)?.[0]);
@@ -54,7 +62,7 @@ export function parseProject(text: string): WorkModel {
     if (m.schemaVersion !== 1) fail('schemaVersion');
     const name = string('title');
     if (!name.trim() || /[\r\n]/.test(name)) fail('title');
-    const status = milestone ? 'todo' : string('status', 'todo');
+    const status = container ? 'todo' : string('status', 'todo');
     if (!['todo', 'doing', 'blocked', 'done'].includes(status)) fail('status');
     const start = string('start', '-'),
       end = string('end', '-');
@@ -70,10 +78,10 @@ export function parseProject(text: string): WorkModel {
     const effort = string('effort', '-');
     if (effort !== '-' && (!Number.isFinite(Number(effort)) || Number(effort) <= 0)) fail('effort');
     const taskType = string('type', config.taskTypes[0]);
-    if (!milestone && !config.taskTypes.includes(taskType)) fail('type');
+    if (!container && !config.taskTypes.includes(taskType)) fail('type');
     const priority = string('priority', 'normal');
     if (
-      !milestone &&
+      !container &&
       priority !== '-' &&
       !(config.priorities ?? legacyPriorities()).some((p) => p.id === priority)
     )
@@ -107,19 +115,26 @@ export function parseProject(text: string): WorkModel {
         fail(key);
     }
     if (string('updatedAt') < string('createdAt')) fail('updatedAt');
+    const milestoneParent = container ? '-' : string('milestone', '-');
+    const epicParent = epic ? '-' : string('epic', '-');
+    if (!container && milestoneParent !== '-' && epicParent !== '-') fail('epic');
+    const parentField = milestone || epicParent !== '-' ? 'epic' : 'milestone';
     const row: WorkRow = {
       id,
       name,
-      type: milestone ? 'group' : 'task',
+      type: container ? 'group' : 'task',
       milestone,
-      parent: milestone ? '-' : string('milestone', '-'),
+      epic,
+      ...(epic && m.iconColor !== undefined ? { iconColor: m.iconColor as string } : {}),
+      ...(epic && m.icon !== undefined ? { icon: m.icon as EpicIcon } : {}),
+      parent: epic ? '-' : epicParent !== '-' ? epicParent : milestoneParent,
       description: description,
-      owner: milestone ? '-' : string('owner', '-'),
+      owner: container ? '-' : string('owner', '-'),
       status: status as Status,
       start,
       end,
-      effort: milestone ? '-' : effort,
-      deps: milestone ? [] : list('dependencies'),
+      effort: container ? '-' : effort,
+      deps: container ? [] : list('dependencies'),
       priority,
       taskType,
       labels,
@@ -129,8 +144,9 @@ export function parseProject(text: string): WorkModel {
       updatedAt: string('updatedAt'),
     };
     if (new Set(row.deps).size !== row.deps.length) fail('dependencies');
+    if (locations.has(id)) fail('id');
     rows.push(row);
-    locations.set(id, { file, lines });
+    locations.set(id, { file, lines, parentField });
   }
   const byId = new Map(rows.map((row) => [row.id, row]));
   const failRow = (
@@ -143,11 +159,15 @@ export function parseProject(text: string): WorkModel {
     throw new ProjectValidationError(at.file, field, value, at.lines.get(field) ?? 0, reason);
   };
   for (const row of rows) {
-    if (row.parent !== '-' && !byId.get(row.parent)?.milestone)
-      failRow(row, 'milestone', row.parent, 'milestone');
+    const parentField = locations.get(row.id)!.parentField;
+    if (
+      row.parent !== '-' &&
+      !(parentField === 'epic' ? byId.get(row.parent)?.epic : byId.get(row.parent)?.milestone)
+    )
+      failRow(row, parentField, row.parent, parentField);
     for (const dep of row.deps) {
       const previous = byId.get(dep) ?? failRow(row, 'dependencies', dep, 'dependency');
-      if (!previous || previous.milestone || dep === row.id)
+      if (!previous || previous.type === 'group' || dep === row.id)
         failRow(row, 'dependencies', dep, 'dependency');
       if (row.start !== '-' && previous.end !== '-' && row.start <= previous.end)
         failRow(row, 'start', dep, 'dependencyDate');
@@ -172,8 +192,15 @@ export function parseProject(text: string): WorkModel {
       for (const dep of byId.get(id)!.deps) stack.push([dep, false]);
     }
   }
-  for (const row of rows.filter((r) => r.milestone)) {
-    const children = rows.filter((child) => child.parent === row.id);
+  for (const row of [...rows.filter((r) => r.milestone), ...rows.filter((r) => r.epic)]) {
+    const milestones = new Set(
+      rows.filter((child) => child.parent === row.id && child.milestone).map((child) => child.id),
+    );
+    const children = rows.filter(
+      (child) =>
+        child.type === 'task' &&
+        (child.parent === row.id || (row.epic && milestones.has(child.parent))),
+    );
     row.status =
       !children.length || children.every((r) => r.status === 'todo')
         ? 'todo'
@@ -192,11 +219,13 @@ export function parseProject(text: string): WorkModel {
     timeFormat: config.timeFormat ?? '24h',
     nextTaskNumber: String(config.nextTaskNumber),
     nextMilestoneNumber: String(config.nextMilestoneNumber),
+    nextEpicNumber: String(config.nextEpicNumber ?? 1),
     commonLabels: config.labels,
     priorities:
       config.priorities ??
       legacyPriorities().filter(
-        (p) => p.id !== 'urgent' || rows.some((row) => !row.milestone && row.priority === 'urgent'),
+        (p) =>
+          p.id !== 'urgent' || rows.some((row) => row.type === 'task' && row.priority === 'urgent'),
       ),
     assignees: config.assignees ?? [],
     taskTypes: config.taskTypes,

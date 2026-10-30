@@ -8,6 +8,7 @@ import type { ProjectTaskDraft } from '@worktree/core/task-editing';
 import { useContext, useMemo } from 'react';
 import { TaskFieldError, TaskFieldErrorsContext } from './TaskFieldError';
 import { createIdLabels } from '@worktree/core/id-display';
+import { IssueMembershipFields } from './IssueMembershipFields';
 export function TaskEditorFields({
   draft,
   model,
@@ -104,28 +105,12 @@ export function TaskEditorFields({
         </div>
       </div>
       <div className="task-editor-sub">
-        <div className="task-editor-field">
-          <span>{messages.parentMilestone}</span>
-          <FilterDropdown
-            id="taskEditor-parent"
-            invalid={!!errors.parent}
-            describedBy={errors.parent ? 'taskEditor-parent-error' : undefined}
-            label={messages.parentMilestone}
-            value={draft.parent}
-            disabled={disabled}
-            options={[
-              { value: '-', label: messages.unassignedMilestone },
-              ...model.rows
-                .filter((row) => row.type === 'group' && row.id !== id)
-                .map((row) => ({
-                  value: row.id,
-                  label: (labels.get(row.id) ?? row.id) + ' · ' + row.name,
-                })),
-            ]}
-            onChange={(value) => change('parent', value)}
-          />
-          <TaskFieldError field="parent" />
-        </div>
+        <IssueMembershipFields
+          draft={draft}
+          model={model}
+          disabled={disabled}
+          onChange={onChange}
+        />
         <div className="task-editor-field task-field-owner">
           <span>{messages.owner}</span>
           <FilterDropdown

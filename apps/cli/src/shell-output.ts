@@ -1,3 +1,4 @@
+import { DEFAULT_EPIC_ICON } from '@worktree/core/epic-icons';
 import type { execute } from './commands';
 import type { Options } from './arguments';
 import { table } from './table';
@@ -7,12 +8,15 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
     options.language === 'ko'
       ? {
           Title: '제목',
+          Icon: '아이콘',
           Status: '상태',
           Owner: '담당자',
           Metric: '항목',
           Value: '값',
           Project: '프로젝트',
-          Tasks: '작업',
+          Issues: '이슈',
+          Epics: '에픽',
+          Parent: '소속',
           Completed: '완료',
           Progress: '진행률',
           Milestones: '마일스톤',
@@ -20,12 +24,12 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
           Field: '항목',
           Milestone: '마일스톤',
           Priority: '우선순위',
-          Type: '작업 유형',
+          Type: '이슈 유형',
           Labels: '라벨',
           Start: '시작일',
           End: '종료일',
-          Predecessors: '선행 작업',
-          Successors: '후속 작업',
+          Predecessors: '선행 이슈',
+          Successors: '후속 이슈',
           Author: '작성자',
           'Reply to': '답글 대상',
           Comment: '내용',
@@ -51,9 +55,10 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
       ['Metric', 'Value'],
       [
         ['Project', result.project],
-        ['Tasks', result.taskCount],
+        ['Issues', result.taskCount],
         ['Completed', result.completedTasks],
         ['Progress', `${result.taskProgress ?? 0}%`],
+        ['Epics', result.epicCount],
         ['Milestones', result.milestoneCount],
         ['Comments', result.comments],
         ...Object.entries(result.statuses),
@@ -67,9 +72,10 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
         [
           ['ID', t.id],
           ['Title', t.name],
+          ...(t.epic ? [['Icon', t.icon ?? DEFAULT_EPIC_ICON]] : []),
           ['Status', t.status],
           ['Owner', t.owner],
-          ['Milestone', t.parent],
+          ['Parent', t.parent],
           ['Priority', t.priority],
           ['Type', t.taskType],
           ['Labels', t.labels?.join(', ')],

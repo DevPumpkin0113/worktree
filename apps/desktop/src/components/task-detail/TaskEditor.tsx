@@ -12,11 +12,14 @@ import {
 import { TaskEditorFields } from './TaskEditorFields';
 import { validateTaskDraft, type TaskDraftErrors } from '@worktree/core/task-draft-validation';
 import { TaskFieldError, TaskFieldErrorsContext } from './TaskFieldError';
+import { creationTitle, editingTitle, fieldTitle } from '../../app/work-kind';
+import { EpicIconPicker } from './EpicIconPicker';
+import { WorkGroupIcon } from '../shared/WorkGroupIcon';
 export interface TaskEditorSession {
   path: string;
   text: string;
   id?: string;
-  kind?: 'task' | 'milestone';
+  kind?: 'task' | 'milestone' | 'epic';
 }
 export function TaskEditor({
   session,
@@ -35,8 +38,8 @@ export function TaskEditor({
   const titleTarget = useContext(TaskEditorTitleContext);
   const [draft, setDraft] = useState(() => {
     const draft = projectTaskDraft(session.text, session.id);
-    return !session.id && session.kind === 'milestone'
-      ? { ...draft, type: 'milestone' as const, description: '', status: 'auto', effort: '-' }
+    return !session.id && session.kind && session.kind !== 'task'
+      ? { ...draft, type: session.kind, description: '', status: 'auto', effort: '-' }
       : draft;
   });
   const [sameDay, setSameDay] = useState(
@@ -57,9 +60,11 @@ export function TaskEditor({
   const id = useMemo(
     () =>
       session.id ??
-      (session.kind === 'milestone'
-        ? nextProjectId(session.text, true)
-        : nextProjectId(session.text)),
+      (session.kind === 'epic'
+        ? nextProjectId(session.text, 'epic')
+        : session.kind === 'milestone'
+          ? nextProjectId(session.text, true)
+          : nextProjectId(session.text)),
     [session.id, session.text, session.kind],
   );
   useLayoutEffect(() => {
@@ -125,15 +130,7 @@ export function TaskEditor({
         ref={root}
         id="taskEditor"
         className="task-editor task-editor-inline"
-        aria-label={
-          draft.type === 'milestone'
-            ? session.id
-              ? messages.editMilestone
-              : messages.newMilestone
-            : session.id
-              ? messages.editTask
-              : messages.newTask
-        }
+        aria-label={session.id ? editingTitle(draft.type) : creationTitle(draft.type)}
         onKeyDown={(event) => {
           if (event.key !== 'Escape' || event.defaultPrevented) return;
           event.preventDefault();
@@ -144,30 +141,36 @@ export function TaskEditor({
         {titleTarget
           ? createPortal(
               <>
-                <input
-                  id="taskEditor-name"
-                  className="detail-title-input"
-                  form="taskEditorForm"
-                  aria-label={
-                    draft.type === 'milestone' ? messages.milestoneTitle : messages.taskName
-                  }
-                  value={draft.name}
-                  placeholder={
-                    session.id
-                      ? undefined
-                      : draft.type === 'milestone'
-                        ? messages.milestoneTitle
-                        : messages.taskName
-                  }
-                  data-editor-field="name"
-                  aria-invalid={!!fieldErrors.name}
-                  aria-describedby={fieldErrors.name ? 'taskEditor-name-error' : undefined}
-                  required
-                  disabled={saving}
-                  autoComplete="off"
-                  onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                />
+                <div className="task-editor-title-controls">
+                  {draft.type === 'epic' ? (
+                    <EpicIconPicker
+                      value={draft.icon}
+                      color={draft.iconColor}
+                      onColorChange={(iconColor) => setDraft({ ...draft, iconColor })}
+                      disabled={saving}
+                      onChange={(icon) => setDraft({ ...draft, icon })}
+                    />
+                  ) : draft.type === 'milestone' ? (
+                    <WorkGroupIcon />
+                  ) : null}
+                  <input
+                    id="taskEditor-name"
+                    className="detail-title-input"
+                    form="taskEditorForm"
+                    aria-label={fieldTitle(draft.type)}
+                    value={draft.name}
+                    placeholder={session.id ? undefined : fieldTitle(draft.type)}
+                    data-editor-field="name"
+                    aria-invalid={!!fieldErrors.name}
+                    aria-describedby={fieldErrors.name ? 'taskEditor-name-error' : undefined}
+                    required
+                    disabled={saving}
+                    autoComplete="off"
+                    onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+                  />
+                </div>
                 <TaskFieldError field="name" />
+                <TaskFieldError field="icon" />
               </>,
               titleTarget,
             )
@@ -189,9 +192,10 @@ export function TaskEditor({
               </span>{' '}
               {messages.requiredFieldsHint}
             </p>
-            {draft.type === 'milestone' ? (
+            {draft.type !== 'task' ? (
               <MilestoneEditorFields
                 draft={draft}
+                model={model}
                 disabled={saving}
                 onChange={setDraft}
                 sameDay={sameDay}

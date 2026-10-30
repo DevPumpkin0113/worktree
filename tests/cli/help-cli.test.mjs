@@ -13,7 +13,7 @@ test('command help works without a project and matches help subcommands',t=>{
   const direct=run([...args,'--help','--project',missing]);const explicit=run(['help',...args,'--project',missing]);assert.equal(direct.status,0,direct.stderr);assert.equal(direct.stdout,explicit.stdout);assert.match(direct.stdout,new RegExp('worktree '+args.join(' ')));assert.equal(fs.existsSync(missing),false);
  }
  const creation=run(['task','add','--help','--lang','ko']);assert.match(creation.stdout,/제목 필수/);assert.match(creation.stdout,/기본: 프로젝트 유형 목록의 첫 항목/);assert.doesNotMatch(creation.stdout,/--children/);
- const deletion=run(['milestone','delete','--help','--lang','ko']);assert.match(deletion.stdout,/--children keep\|delete/);assert.match(deletion.stdout,/하위 작업이 있으면 필수/);
+ const deletion=run(['milestone','delete','--help','--lang','ko']);assert.match(deletion.stdout,/--children keep\|delete/);assert.match(deletion.stdout,/하위 항목이 있으면 필수/);
 });
 test('help is localized, JSON-compatible and validates unknown topics',()=>{
  const ko=run(['help','task','list','--json','--lang','ko']);assert.equal(ko.status,0,ko.stderr);assert.match(JSON.parse(ko.stdout).help,/선택 필터/);
@@ -32,6 +32,6 @@ test('English is the default and shell help makes exit discoverable',t=>{
  const session=run(['shell','--project',root],'help\nlanguage ko\nhelp\nquit\ninit\n');assert.equal(session.status,0,session.stderr);assert.match(session.stdout,/Type exit or quit to leave/);assert.match(session.stdout,/exit \/ quit  Exit the shell/);assert.match(session.stdout,/exit \/ quit  shell 종료/);assert.equal(fs.existsSync(path.join(root,'worktree.json')),false);
 });
 test('help includes an executable batch JSON example and revision workflow',()=>{
- const batch=run(['batch','--help']);assert.equal(batch.status,0,batch.stderr);assert.match(batch.stdout,/Example batch.json/);const start=batch.stdout.indexOf('  {\n'),end=batch.stdout.indexOf('\n  }',start);const example=JSON.parse(batch.stdout.slice(start,end+4));assert.equal(example.commands.length,2);assert.deepEqual(example.commands[0],['task','add','--title','First task']);
+ const batch=run(['batch','--help']);assert.equal(batch.status,0,batch.stderr);assert.match(batch.stdout,/Example batch.json/);const start=batch.stdout.indexOf('  {\n'),end=batch.stdout.indexOf('\n  }',start);const example=JSON.parse(batch.stdout.slice(start,end+4));assert.equal(example.commands.length,2);assert.deepEqual(example.commands[0],['task','add','--title','First issue']);
  assert.match(batch.stdout,/batchCommand/);assert.match(run(['status','--help']).stdout,/entire project state/);assert.match(run(['project','show','--help','--lang','ko']).stdout,/프로젝트 전체/);
 });

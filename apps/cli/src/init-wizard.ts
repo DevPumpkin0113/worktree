@@ -94,14 +94,14 @@ export async function initWizard(
     );
     options.values.prefix = (
       await text(
-        t('작업 ID 접두어', 'Task ID prefix'),
+        t('이슈 ID 접두어', 'Issue ID prefix'),
         options.values.prefix ?? 'W',
         (v) => validTaskPrefix(v.replace(/[a-z]/g, (c) => c.toUpperCase())),
         t('MS를 제외한 영문 1~20자를 입력하세요.', 'Enter 1–20 ASCII letters, excluding MS.'),
       )
     ).toUpperCase();
     const customize = await select(
-      t('작업 규칙', 'Task rules'),
+      t('이슈 규칙', 'Issue rules'),
       [t('기본 규칙 사용', 'Use default rules'), t('직접 설정', 'Customize')],
       0,
     );
@@ -158,10 +158,10 @@ export async function initWizard(
       );
       const taskTypes = projectRuleValues(
         await text(
-          t('작업 유형 (쉼표 구분)', 'Task types (comma-separated)'),
+          t('이슈 유형 (쉼표 구분)', 'Issue types (comma-separated)'),
           DEFAULT_TASK_TYPES.join(', '),
           (v) => validProjectRuleValues(v, true),
-          t('중복 없이 유형을 하나 이상 입력하세요.', 'Enter at least one unique task type.'),
+          t('중복 없이 유형을 하나 이상 입력하세요.', 'Enter at least one unique issue type.'),
         ),
       );
       const defaults = defaultPriorities();
@@ -184,7 +184,7 @@ export async function initWizard(
     );
     const rules = preview.settings;
     write(
-      `${t('작업 유형', 'Task types')}: ${rules.taskTypes.join(', ')}\n${t('라벨', 'Labels')}: ${rules.labels.join(', ') || '-'}\n${t('담당자', 'Assignees')}: ${(rules.assignees ?? []).join(', ') || '-'}\n${t('우선순위 (높은 순)', 'Priorities (highest first)')}: ${(rules.priorities ?? []).map((p) => p.name).join(' > ') || '-'}\n${t('예상 작업 시간', 'Estimated hours')}: ${rules.useEffort ? t('사용', 'Enabled') : t('사용 안 함', 'Disabled')}`,
+      `${t('이슈 유형', 'Issue types')}: ${rules.taskTypes.join(', ')}\n${t('라벨', 'Labels')}: ${rules.labels.join(', ') || '-'}\n${t('담당자', 'Assignees')}: ${(rules.assignees ?? []).join(', ') || '-'}\n${t('우선순위 (높은 순)', 'Priorities (highest first)')}: ${(rules.priorities ?? []).map((p) => p.name).join(' > ') || '-'}\n${t('예상 작업 시간', 'Estimated hours')}: ${rules.useEffort ? t('사용', 'Enabled') : t('사용 안 함', 'Disabled')}`,
     );
     const decision = await select(
       options.dryRun

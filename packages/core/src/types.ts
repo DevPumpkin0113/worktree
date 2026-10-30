@@ -2,6 +2,9 @@ export type Status = 'todo' | 'doing' | 'blocked' | 'done';
 export interface WorkRow {
   /** Milestone containers share group rendering and aggregation. */
   milestone?: boolean;
+  epic?: boolean;
+  icon?: import('./epic-icons').EpicIcon;
+  iconColor?: string;
   id: string;
   parent: string;
   type: 'group' | 'task';
@@ -25,6 +28,7 @@ export interface WorkModel {
   comments?: import('./comment-file').ProjectComment[];
   nextTaskNumber?: string;
   nextMilestoneNumber?: string;
+  nextEpicNumber?: string;
   title: string;
   idPrefix: string;
   idSeparator?: 'none' | 'hyphen';

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState, type RefObject, type CSSProperties } from 'react';
-import { floatingListPosition } from '../interactions/floating-list';
+import { floatingListPosition, floatingSubmenuPosition } from '../interactions/floating-list';
 
 export function useFloatingList(
   open: boolean,
@@ -7,6 +7,8 @@ export function useFloatingList(
   list: RefObject<HTMLDivElement | null>,
   itemCount?: number,
   fitContent = false,
+  placement: 'below' | 'side' = 'below',
+  maximumHeight = 240,
 ) {
   const [position, setPosition] = useState<CSSProperties>({ visibility: 'hidden' });
   useLayoutEffect(() => {
@@ -18,11 +20,12 @@ export function useFloatingList(
     const update = () => {
       const anchor = button.getBoundingClientRect();
       const viewport = { width: window.innerWidth, height: window.innerHeight };
-      const next = floatingListPosition(
+      const next = (placement === 'side' ? floatingSubmenuPosition : floatingListPosition)(
         anchor,
         viewport,
         popup.scrollHeight || 240,
         fitContent ? popup.getBoundingClientRect().width : undefined,
+        maximumHeight,
       );
       setPosition(
         fitContent
@@ -46,6 +49,6 @@ export function useFloatingList(
       observer?.disconnect();
       if (nativePopover && popup.isConnected) popup.hidePopover();
     };
-  }, [open, trigger, list, itemCount, fitContent]);
+  }, [open, trigger, list, itemCount, fitContent, placement, maximumHeight]);
   return position;
 }

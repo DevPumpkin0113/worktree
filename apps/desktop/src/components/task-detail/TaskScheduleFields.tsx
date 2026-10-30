@@ -29,7 +29,7 @@ export function TaskScheduleFields({
             type="date"
             value={draft[key] === '-' ? '' : draft[key]}
             disabled={disabled || (key === 'end' && sameDay)}
-            required={draft.type === 'milestone' && scheduled}
+            required={draft.type !== 'task' && scheduled}
             aria-invalid={!!errors[key]}
             aria-describedby={errors[key] ? 'taskEditor-' + key + '-error' : undefined}
             onChange={(event) =>

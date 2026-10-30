@@ -570,7 +570,7 @@ export class WorkspaceStore {
       return;
     this.patch({ selectedId });
   }
-  openCreationTab(kind: 'task' | 'milestone') {
+  openCreationTab(kind: 'task' | 'milestone' | 'epic') {
     const doc = this.active;
     if (!doc?.model) return;
     const tabs = doc.creationTabs ?? [];

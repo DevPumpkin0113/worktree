@@ -84,7 +84,10 @@ export function WorkspaceNav({
       )}
       <div className="workspace-nav-footer">
         <div className="workspace-footer-copy">
-          {worktreeReleaseStage(version)} Worktree<span>{version}</span>
+          Worktree
+          <span>
+            {worktreeReleaseStage(version)} {version}
+          </span>
         </div>
         <button
           id="workspaceCollapse"

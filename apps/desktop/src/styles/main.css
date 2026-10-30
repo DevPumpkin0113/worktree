@@ -102,8 +102,13 @@ input {
   overflow: auto;
   overscroll-behavior: contain;
 }
+#workspace:is([data-page='board'], [data-page='tasks'], [data-page='analytics']) #content {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
 .group {
-  margin: 8px 0 20px;
+  margin: 0 0 20px;
   border: 1px solid var(--color-group-border);
   border-radius: 9px;
   overflow: hidden;
@@ -279,18 +284,6 @@ header.titlebar {
   align-items: center;
   border-bottom: 0;
   user-select: none;
-}
-header .app-mark {
-  object-fit: contain;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--color-primary);
-  letter-spacing: 0.5px;
-  margin: 0;
-  pointer-events: none;
-  border: 0;
-  border-radius: 4px;
-  padding: 0;
 }
 header .title-drag {
   display: flex;
@@ -563,8 +556,8 @@ main {
 }
 .view-icon {
   display: block;
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.25;
@@ -603,8 +596,7 @@ summary.detail-selected {
   border-color: var(--color-view-button-active-border-color);
   background: var(--color-selection);
 }
-.gantt-label.detail-selected,
-.unscheduled-list button.detail-selected {
+.gantt-label.detail-selected {
   background: var(--color-selection);
   color: var(--color-gantt-label-detail-selected-color);
 }
@@ -1159,14 +1151,12 @@ body:has(#documentProblems:not([hidden])) {
 }
 
 .all-tasks .all-task-id,
-.gantt-label[data-id],
-.unscheduled .unscheduled-list button {
+.gantt-label[data-id] {
   position: relative;
   padding-left: 22px;
 }
 .all-task-id::before,
-.gantt-label::before,
-.unscheduled-list button::before {
+.gantt-label::before {
   content: '';
   position: absolute;
   left: 8px;
@@ -1244,4 +1234,25 @@ body:has(#documentProblems:not([hidden])) {
   width: 48px;
   height: auto;
   min-height: 4px;
+}
+.work-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: 16px;
+  vertical-align: -0.1em;
+}
+.work-group-emoji {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  line-height: 1;
+}
+.work-group-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }

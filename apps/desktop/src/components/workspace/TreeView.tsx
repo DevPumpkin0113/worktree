@@ -8,6 +8,8 @@ import { groupSchedule, groupEffort, groupProgress } from '../../views/group-sum
 import { STATUS_NAMES, type WorkRow } from '../../app/types';
 import type { ListProps } from './types';
 import { TaskCard } from './TaskCard';
+import { Icon } from '../shared/Icon';
+import { WorkGroupIcon } from '../shared/WorkGroupIcon';
 export function TreeView({
   rows,
   visibleIds,
@@ -54,12 +56,13 @@ export function TreeView({
               className={props.selectedId === row.id ? 'detail-selected' : undefined}
               aria-current={props.selectedId === row.id ? 'true' : undefined}
             >
+              <Icon name="chevron-right" className="tree-toggle" />
               {row.epic || row.milestone ? (
-                <span className="milestone-label">
-                  {row.epic ? messages.epic : messages.milestone}
-                </span>
+                <WorkGroupIcon epic={row.epic} icon={row.icon} iconColor={row.iconColor} />
               ) : null}
-              {row.epic || row.milestone ? row.name : props.label(row.id) + ' · ' + row.name}{' '}
+              <span className="tree-group-name" title={row.name}>
+                {row.epic || row.milestone ? row.name : props.label(row.id) + ' · ' + row.name}
+              </span>
               <span className={'tag ' + row.status}>{STATUS_NAMES[row.status]}</span>
               <button
                 type="button"
@@ -100,11 +103,14 @@ export function TreeView({
   }
   const unassignedMilestones = branch('-', 'milestone');
   return (
-    <>
+    <div className="tree-view">
       {branch('-', 'epic')}
       {unassignedMilestones.length ? (
         <details className="group unassigned-epics" open onToggle={onToggle}>
-          <summary data-view-group="unassigned-epics">{messages.unassignedEpic}</summary>
+          <summary data-view-group="unassigned-epics">
+            <Icon name="chevron-right" className="tree-toggle" />
+            {messages.unassignedEpic}
+          </summary>
           <div className="children">{unassignedMilestones}</div>
         </details>
       ) : null}
@@ -114,6 +120,6 @@ export function TreeView({
         onToggle={onToggle}
         {...props}
       />
-    </>
+    </div>
   );
 }

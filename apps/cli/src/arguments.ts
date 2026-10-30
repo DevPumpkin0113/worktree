@@ -51,6 +51,8 @@ const valued = [
   'status',
   'owner',
   'title',
+  'icon',
+  'icon-color',
   'description',
   'milestone',
   'epic',
@@ -230,7 +232,9 @@ export function parseArguments(args: string[], cwd: string): Options {
           ]
         : result.kind === 'milestone'
           ? ['epic']
-          : []),
+          : result.kind === 'epic'
+            ? ['icon', 'icon-color']
+            : []),
     ])
       allowed.add(key);
   if (result.command === 'delete' && ['milestone', 'epic'].includes(result.kind)) {

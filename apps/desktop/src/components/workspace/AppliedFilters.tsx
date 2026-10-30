@@ -31,16 +31,10 @@ export function AppliedFilters({
     { key: 'owner', label: messages.owner, value: owner === '-' ? messages.unassigned : owner },
   ] satisfies { key: FilterKey; label: string; value: string }[];
   const applied = filters.filter((filter) => state[filter.key] !== 'all');
+  if (!applied.length) return null;
   return (
-    <div
-      className="applied-filters"
-      role={applied.length ? 'group' : undefined}
-      aria-label={applied.length ? messages.appliedFilters : undefined}
-      aria-hidden={!applied.length}
-    >
-      {applied.length ? (
-        <span className="applied-filters-label">{messages.appliedFilters}</span>
-      ) : null}
+    <div className="applied-filters" role="group" aria-label={messages.appliedFilters}>
+      <span className="applied-filters-label">{messages.appliedFilters}</span>
       {applied.map((filter) => (
         <button
           key={filter.key}

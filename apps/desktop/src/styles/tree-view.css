@@ -1,0 +1,162 @@
+.tree-view {
+  container-type: inline-size;
+}
+.tree-view .group {
+  margin: 0 0 6px;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.tree-view > .group {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+.tree-view .group > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 12px;
+  list-style: none;
+}
+.tree-view .group > summary::-webkit-details-marker {
+  display: none;
+}
+.tree-view .group > summary:hover {
+  background: var(--color-task-card-hover-background);
+}
+.tree-toggle {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+.tree-view .group[open] > summary > .tree-toggle {
+  transform: rotate(90deg);
+}
+.tree-group-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-view .group-detail {
+  margin: 0;
+  padding: 2px 5px;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.tree-view .children {
+  margin-left: 14px;
+  padding: 0 0 0 12px;
+  border-left: 1px solid var(--color-border);
+}
+.tree-view .milestone-summary {
+  margin: 0 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.tree-view .task-count-progress {
+  margin-left: auto;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.tree-view .task-count-progress progress {
+  width: 48px;
+  height: 3px;
+}
+.tree-view .group-summary {
+  margin: 0 0 0 auto;
+  font-size: 10px;
+}
+.tree-view .task {
+  grid-template-columns: minmax(76px, max-content) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 7px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.tree-view .task-tree-identity {
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+}
+.tree-view .task-tree-identity > .task-priority-mark {
+  order: -1;
+  flex: 0 0 3px;
+  width: 3px;
+  height: 14px;
+  min-height: 0;
+}
+.tree-view .task-tree-identity .id {
+  white-space: nowrap;
+}
+.tree-view .task-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.tree-view .task-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-view .task-body .sub {
+  max-width: 45%;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.tree-view .tag {
+  grid-column: auto;
+  margin: 0;
+  padding: 2px 5px;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.tree-view .milestone-empty {
+  padding: 8px;
+  font-size: 11px;
+}
+.tree-view .group > summary.detail-selected,
+.tree-view .task.detail-selected {
+  background: var(--color-selection);
+}
+.tree-view .group > summary:focus-visible,
+.tree-view .task:focus-visible {
+  background: var(--color-nav-selected);
+  color: var(--color-primary);
+}
+@container (max-width: 650px) {
+  .tree-view .milestone-target,
+  .tree-view .task-count-progress progress {
+    display: none;
+  }
+}
+@container (max-width: 480px) {
+  .tree-view .task-body {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .tree-view .task-name {
+    flex-basis: 100%;
+  }
+  .tree-view .task-body .sub {
+    max-width: 100%;
+  }
+  .tree-view .group > summary {
+    flex-wrap: wrap;
+  }
+}

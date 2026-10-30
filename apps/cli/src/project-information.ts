@@ -1,3 +1,4 @@
+import { DEFAULT_EPIC_ICON, EPIC_ICONS, LUCIDE_EPIC_ICONS } from '@worktree/core/epic-icons';
 import { projectConfig } from '@worktree/core/project-source';
 import { projectSettingsDraft } from '@worktree/core/project-settings';
 import { DATE_FORMATS, TIME_FORMATS } from '@worktree/core/project-display';
@@ -59,6 +60,20 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
         }),
       },
       epic: {
+        iconColor: field('string', {
+          pattern: '^#[0-9a-fA-F]{6}$',
+          unset: '-',
+          storage: 'optional; - removes the stored color',
+        }),
+        icon: field('string', {
+          description:
+            'One complete Unicode emoji, a supported lucide:<name>, or a legacy built-in icon name.',
+          legacyValues: EPIC_ICONS,
+          supportedLucideValues: LUCIDE_EPIC_ICONS.map((name) => `lucide:${name}`),
+          default: DEFAULT_EPIC_ICON,
+          unset: '-',
+          storage: 'optional; lucide:layers and - remove the stored override',
+        }),
         title: field('string', { required: true }),
         start: field('string', { format: 'YYYY-MM-DD', unset: '-' }),
         end: field('string', { format: 'YYYY-MM-DD', unset: '-' }),

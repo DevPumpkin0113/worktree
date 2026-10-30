@@ -1,4 +1,6 @@
 export const ko = {
+  invalidEpicIcon:
+    'Unicode 이모지 하나, schema에서 지원하는 lucide:<name> 또는 기존 아이콘 이름({0})을 입력해 주세요. -는 기본 layers로 되돌립니다.',
   invalidIssueParent: '유효한 {0} 소속 ID가 아닙니다: {1}',
   conflictingIssueParents: '이슈는 에픽 또는 마일스톤 중 하나에만 직접 속할 수 있습니다.',
 

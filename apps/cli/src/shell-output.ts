@@ -1,3 +1,4 @@
+import { DEFAULT_EPIC_ICON } from '@worktree/core/epic-icons';
 import type { execute } from './commands';
 import type { Options } from './arguments';
 import { table } from './table';
@@ -7,6 +8,7 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
     options.language === 'ko'
       ? {
           Title: '제목',
+          Icon: '아이콘',
           Status: '상태',
           Owner: '담당자',
           Metric: '항목',
@@ -70,6 +72,7 @@ export function shellOutput(result: ReturnType<typeof execute>, options: Options
         [
           ['ID', t.id],
           ['Title', t.name],
+          ...(t.epic ? [['Icon', t.icon ?? DEFAULT_EPIC_ICON]] : []),
           ['Status', t.status],
           ['Owner', t.owner],
           ['Parent', t.parent],

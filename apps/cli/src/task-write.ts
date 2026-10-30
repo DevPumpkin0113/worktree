@@ -1,3 +1,9 @@
+import {
+  DEFAULT_EPIC_ICON,
+  isEpicIcon,
+  isEpicIconColor,
+  EPIC_ICONS,
+} from '@worktree/core/epic-icons';
 import { errorMessage } from './i18n/error-messages';
 import { jsonInput } from './input';
 import {
@@ -57,6 +63,9 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
     draft.type = options.kind as 'task' | 'milestone' | 'epic';
     const aliases: Record<string, keyof ProjectTaskDraft> = {
       title: 'name',
+      icon: 'icon',
+      iconColor: 'iconColor',
+      'icon-color': 'iconColor',
       description: 'description',
       owner: 'owner',
       status: 'status',
@@ -86,6 +95,20 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
       if (key === 'epic' && options.kind === 'epic')
         throw new CliError('USAGE', errorMessage('unknownInputField', [key]));
       const field = aliases[key];
+      if (field === 'iconColor') {
+        if (options.kind !== 'epic' || (value !== '-' && !isEpicIconColor(value)))
+          throw new CliError('USAGE', errorMessage('expectedString', ['iconColor (#RRGGBB or -)']));
+        draft.iconColor = value as string;
+        continue;
+      }
+      if (key === 'icon') {
+        if (options.kind !== 'epic')
+          throw new CliError('USAGE', errorMessage('unknownInputField', [key]));
+        if (value !== '-' && !isEpicIcon(value))
+          throw new CliError('USAGE', errorMessage('invalidEpicIcon', [EPIC_ICONS.join(', ')]));
+        draft.icon = value === '-' ? DEFAULT_EPIC_ICON : value;
+        continue;
+      }
       if (options.kind === 'task' && (key === 'epic' || key === 'milestone')) continue;
       if (
         options.kind !== 'task' &&

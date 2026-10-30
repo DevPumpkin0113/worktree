@@ -7,10 +7,11 @@ export function MilestoneSummary({ row, summary }: { row: WorkRow; summary: Grou
   const { date } = useProjectDates();
   return (
     <span className="milestone-summary">
-      <span className="milestone-target">
-        {messages.targetPeriod}:{' '}
-        {row.start === '-' ? messages.unscheduled : date(row.start) + ' ~ ' + date(row.end)}
-      </span>
+      {row.start !== '-' ? (
+        <span className="milestone-target">
+          {messages.targetPeriod}: {date(row.start) + ' ~ ' + date(row.end)}
+        </span>
+      ) : null}
       <TaskCountProgress completed={summary.completedTasks} total={summary.taskCount} />
     </span>
   );

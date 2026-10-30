@@ -1,3 +1,4 @@
+import { EPIC_ICONS, DEFAULT_EPIC_ICON } from '@worktree/core/epic-icons';
 import { commandGroups, singleCommands } from './help-topics';
 type Language = 'ko' | 'en';
 type Text = [string, string];
@@ -141,6 +142,13 @@ export function help(language: Language, topic?: string, session = false) {
         t(
           '직접 소속은 --epic EP001 또는 --milestone MS001 중 하나만 지정합니다. --milestone -는 현재 에픽의 직속 이슈로 이동하고 --epic -는 전체 소속을 해제합니다. ID와 파일명은 유지합니다.',
           'Use either --epic EP001 for direct epic membership or --milestone MS001, not both. --milestone - retains the current epic as a direct parent; --epic - clears all membership. IDs and filenames are preserved.',
+        ),
+      );
+    if (epic && ['add', 'edit'].includes(verb))
+      lines.push(
+        t(
+          `색상: --icon-color #RRGGBB (기본값으로 복원: -). 아이콘: --icon "🚀"처럼 Unicode 이모지 하나 또는 --icon lucide:folder처럼 지원하는 Lucide 아이콘을 지정합니다. 지원 목록은 schema의 supportedLucideValues를 확인하세요. 기존 이름 ${EPIC_ICONS.join('|')}도 지원합니다. 기본은 ${DEFAULT_EPIC_ICON}이며 - 또는 ${DEFAULT_EPIC_ICON}는 저장된 선택을 제거합니다. 편집 시 생략하면 기존 선택을 유지합니다.`,
+          `Color: --icon-color #RRGGBB (reset: -). Icon: pass one Unicode emoji, such as --icon "🚀", or a supported Lucide icon, such as --icon lucide:folder. Read supportedLucideValues in schema for the catalog. Legacy names ${EPIC_ICONS.join('|')} are also accepted. Default: ${DEFAULT_EPIC_ICON}. - or ${DEFAULT_EPIC_ICON} removes the stored override; omitting icon on edit preserves the current choice.`,
         ),
       );
     if (epic && verb === 'delete')

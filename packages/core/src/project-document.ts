@@ -1,3 +1,4 @@
+import { isEpicIcon, isEpicIconColor, type EpicIcon } from './epic-icons';
 import { readProjectComments } from './comment-file';
 import { legacyPriorities } from './project-priorities';
 import type { WorkModel, WorkRow, Status } from './types';
@@ -47,6 +48,8 @@ export function parseProject(text: string): WorkModel {
         : Array.isArray(m[key]) && (m[key] as unknown[]).every((v) => typeof v === 'string')
           ? (m[key] as string[])
           : fail(key);
+    if (m.iconColor !== undefined && (!epic || !isEpicIconColor(m.iconColor))) fail('iconColor');
+    if (m.icon !== undefined && (!epic || !isEpicIcon(m.icon))) fail('icon');
     const id = string('id');
     const prefix = epic ? 'EP' : milestone ? 'MS' : config.taskPrefix;
     if (
@@ -122,6 +125,8 @@ export function parseProject(text: string): WorkModel {
       type: container ? 'group' : 'task',
       milestone,
       epic,
+      ...(epic && m.iconColor !== undefined ? { iconColor: m.iconColor as string } : {}),
+      ...(epic && m.icon !== undefined ? { icon: m.icon as EpicIcon } : {}),
       parent: epic ? '-' : epicParent !== '-' ? epicParent : milestoneParent,
       description: description,
       owner: container ? '-' : string('owner', '-'),

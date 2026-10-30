@@ -15,6 +15,180 @@ import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
 
+test('제목 왼쪽에서 Lucide 아이콘을 검색하고 선택·취소·명시 저장한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#epicAddOpen');
+    assert.ok(
+      f.host.querySelector(
+        '.task-creation-title #epicIconOpen [data-epic-icon="lucide:layers"] svg',
+      ),
+    );
+    await f.value('#taskEditor-name', '개발');
+    await f.click('#epicIconOpen');
+    assert.equal(f.element('#epicIconPopup').getAttribute('role'), 'dialog');
+    assert.equal(f.element('#epicPickerTab-icons').getAttribute('aria-selected'), 'true');
+    assert.ok(f.host.querySelector('.epic-lucide-categories h3'));
+    await f.click('.epic-color-custom');
+    assert.equal(f.host.querySelector('input[type="color"]'), null);
+    assert.ok(f.host.querySelector('.epic-color-plane'));
+    assert.ok(f.host.querySelector('[data-lucide-icon="folder"]'));
+    assert.ok(f.host.querySelector('.epic-icon-search'));
+    await f.value('.epic-color-hex input', '#ef4444');
+    const plane = f.element<HTMLElement>('.epic-color-plane');
+    plane.getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
+      toJSON() {},
+    });
+    await act(() =>
+      plane.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          clientX: 50,
+          clientY: 50,
+        }),
+      ),
+    );
+    assert.equal(f.element<HTMLInputElement>('.epic-color-hex input').value, '#804040');
+    await f.value('.epic-color-hue', '180');
+    assert.equal(f.element<HTMLInputElement>('.epic-color-hex input').value, '#408080');
+    await f.value('.epic-color-hex input', '#ef4444');
+    await f.click('[data-lucide-icon="folder"]');
+    assert.ok(f.host.querySelector('.epic-color-plane'));
+    await f.click('.epic-color-heading .epic-color-custom');
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    await f.value('.epic-icon-search', 'folder');
+    assert.equal(f.host.querySelector('[data-lucide-icon="rocket"]'), null);
+    await f.click('[data-lucide-icon="folder"]');
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    assert.equal(
+      f.store.active!.model!.rows.some((row) => row.epic),
+      false,
+    );
+    await f.submit();
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.icon,
+      'lucide:folder',
+    );
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.iconColor,
+      '#ef4444',
+    );
+    assert.ok(
+      f.host.querySelector('summary[data-work-id="EP001"] [data-epic-icon="lucide:folder"] svg'),
+    );
+    assert.equal(f.host.querySelector('summary[data-work-id="EP001"] .work-group-emoji'), null);
+    await f.click('#detailEpicIconOpen');
+    assert.ok(f.host.querySelector('#taskEditor'));
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    await f.click('[data-icon-color="#6366f1"]');
+    await f.value('.epic-icon-search', 'rocket');
+    await act(() =>
+      f
+        .element('.epic-icon-search')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(document.activeElement, f.element('[data-lucide-icon="rocket"]'));
+    await f.click('[data-lucide-icon="rocket"]');
+    await f.click('#taskEditorCancel');
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.iconColor,
+      '#ef4444',
+    );
+    assert.equal(
+      f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.icon,
+      'lucide:folder',
+    );
+    await f.click('#detailEpicIconOpen');
+    await act(() =>
+      f
+        .element('.epic-icon-search')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.host.querySelector('#epicIconPopup'), null);
+    assert.ok(f.host.querySelector('#taskEditor'));
+    assert.equal(document.activeElement, f.element('#epicIconOpen'));
+    await f.click('#epicIconOpen');
+    await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+    assert.equal(f.host.querySelector('#epicIconPopup'), null);
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽 이모지와 legacy 아이콘을 보존하고 마일스톤은 고정 SVG를 표시한다', async () => {
+  const f = await fixture();
+  const openEmoji = async () => {
+    await f.click('#epicIconOpen');
+    await f.click('#epicPickerTab-emoji');
+  };
+  try {
+    assert.ok(
+      f.host.querySelector(
+        'summary[data-work-id="MS001"] [data-milestone-icon="diamond"] svg path',
+      ),
+    );
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '이모지 테스트');
+    await openEmoji();
+    for (
+      let attempt = 0;
+      !f.host.querySelector('.worktree-emoji-catalog input') && attempt < 40;
+      attempt++
+    ) {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      });
+    }
+    assert.equal(f.host.querySelectorAll('#epicPickerPanel input').length, 1);
+    assert.equal(f.host.querySelector('[data-epr-part="category-nav"]'), null);
+    await f.value('.worktree-emoji-catalog input', '로켓');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    assert.ok(f.host.querySelector('[data-epr-unified="1f680"][data-epr-part="emoji"]'));
+    await f.value('.worktree-emoji-catalog input', 'rocket');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    await f.click('[data-epr-unified="1f680"][data-epr-part="emoji"]');
+    assert.ok(f.host.querySelector('#epicIconPopup'));
+    await f.submit();
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === 'EP001')?.icon, '🚀');
+    assert.equal(f.element('summary[data-work-id="EP001"] .work-group-emoji').textContent, '🚀');
+    const legacy = readSource(f.files.get(first)!);
+    legacy.files['epics/EP001.md'] = legacy.files['epics/EP001.md'].replace(
+      'icon: "🚀"',
+      'icon: "rocket"',
+    );
+    f.files.set(first, serializeSource(legacy));
+    await f.click('#reload');
+    assert.equal(f.element('#detailTitle .work-group-emoji').textContent, '🚀');
+    await f.click('#taskEditOpen');
+    await f.value('#taskEditor-name', '기존 선택 유지');
+    await f.submit();
+    assert.match(readSource(f.files.get(first)!).files['epics/EP001.md'], /icon: "rocket"/);
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    assert.equal(f.host.querySelector('#taskEditor-icon'), null);
+  } finally {
+    await f.close();
+  }
+});
+
 test('탭 오른쪽 도구 패널에서 보기·필터를 선택하고 Escape와 외부 클릭으로 닫는다', async () => {
   const f = await fixture();
   try {
@@ -90,8 +264,7 @@ test('탭 오른쪽 도구 패널에서 보기·필터를 선택하고 Escape와
     assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'false');
     await f.click('[data-remove-filter="status"]');
     assert.equal(f.store.getSnapshot().status, 'all');
-    assert.ok(f.host.querySelector('.applied-filters'));
-    assert.equal(f.element('.applied-filters').getAttribute('aria-hidden'), 'true');
+    assert.equal(f.host.querySelector('.applied-filters'), null);
     assert.equal(f.host.querySelector('.applied-filter'), null);
   } finally {
     await f.close();
@@ -191,7 +364,7 @@ test('에픽 생성·마일스톤 배정·소속 해제는 기존 작업 ID와 �
     await f.submit();
     const epic = f.store.active!.model!.rows.find((row) => row.epic)!;
     assert.equal(epic.id, 'EP001');
-    assert.equal(f.element('#detailTitle').textContent, '제품 기능 확장');
+    assert.equal(f.element('#detailTitle .detail-title-text').textContent, '제품 기능 확장');
     await act(() => f.store.selectWork('MS001'));
     await f.click('#taskEditOpen');
     await f.click('#taskEditor-parent');

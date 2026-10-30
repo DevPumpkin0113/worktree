@@ -8,6 +8,7 @@ export function useFloatingList(
   itemCount?: number,
   fitContent = false,
   placement: 'below' | 'side' = 'below',
+  maximumHeight = 240,
 ) {
   const [position, setPosition] = useState<CSSProperties>({ visibility: 'hidden' });
   useLayoutEffect(() => {
@@ -24,6 +25,7 @@ export function useFloatingList(
         viewport,
         popup.scrollHeight || 240,
         fitContent ? popup.getBoundingClientRect().width : undefined,
+        maximumHeight,
       );
       setPosition(
         fitContent
@@ -47,6 +49,6 @@ export function useFloatingList(
       observer?.disconnect();
       if (nativePopover && popup.isConnected) popup.hidePopover();
     };
-  }, [open, trigger, list, itemCount, fitContent, placement]);
+  }, [open, trigger, list, itemCount, fitContent, placement, maximumHeight]);
   return position;
 }

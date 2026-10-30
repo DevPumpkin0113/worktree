@@ -13,6 +13,8 @@ import { TaskEditorFields } from './TaskEditorFields';
 import { validateTaskDraft, type TaskDraftErrors } from '@worktree/core/task-draft-validation';
 import { TaskFieldError, TaskFieldErrorsContext } from './TaskFieldError';
 import { creationTitle, editingTitle, fieldTitle } from '../../app/work-kind';
+import { EpicIconPicker } from './EpicIconPicker';
+import { WorkGroupIcon } from '../shared/WorkGroupIcon';
 export interface TaskEditorSession {
   path: string;
   text: string;
@@ -139,22 +141,36 @@ export function TaskEditor({
         {titleTarget
           ? createPortal(
               <>
-                <input
-                  id="taskEditor-name"
-                  className="detail-title-input"
-                  form="taskEditorForm"
-                  aria-label={fieldTitle(draft.type)}
-                  value={draft.name}
-                  placeholder={session.id ? undefined : fieldTitle(draft.type)}
-                  data-editor-field="name"
-                  aria-invalid={!!fieldErrors.name}
-                  aria-describedby={fieldErrors.name ? 'taskEditor-name-error' : undefined}
-                  required
-                  disabled={saving}
-                  autoComplete="off"
-                  onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                />
+                <div className="task-editor-title-controls">
+                  {draft.type === 'epic' ? (
+                    <EpicIconPicker
+                      value={draft.icon}
+                      color={draft.iconColor}
+                      onColorChange={(iconColor) => setDraft({ ...draft, iconColor })}
+                      disabled={saving}
+                      onChange={(icon) => setDraft({ ...draft, icon })}
+                    />
+                  ) : draft.type === 'milestone' ? (
+                    <WorkGroupIcon />
+                  ) : null}
+                  <input
+                    id="taskEditor-name"
+                    className="detail-title-input"
+                    form="taskEditorForm"
+                    aria-label={fieldTitle(draft.type)}
+                    value={draft.name}
+                    placeholder={session.id ? undefined : fieldTitle(draft.type)}
+                    data-editor-field="name"
+                    aria-invalid={!!fieldErrors.name}
+                    aria-describedby={fieldErrors.name ? 'taskEditor-name-error' : undefined}
+                    required
+                    disabled={saving}
+                    autoComplete="off"
+                    onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+                  />
+                </div>
                 <TaskFieldError field="name" />
+                <TaskFieldError field="icon" />
               </>,
               titleTarget,
             )

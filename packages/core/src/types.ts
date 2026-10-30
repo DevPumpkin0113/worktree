@@ -3,6 +3,8 @@ export interface WorkRow {
   /** Milestone containers share group rendering and aggregation. */
   milestone?: boolean;
   epic?: boolean;
+  icon?: import('./epic-icons').EpicIcon;
+  iconColor?: string;
   id: string;
   parent: string;
   type: 'group' | 'task';

@@ -1,3 +1,4 @@
+import { DEFAULT_EPIC_ICON } from '@worktree/core/epic-icons';
 import { resetProject } from './project-reset';
 import { errorMessage } from './i18n/error-messages';
 import { prepareBody } from './input';
@@ -103,6 +104,8 @@ export function execute(options: Options) {
         .map((row) => ({
           id: row.id,
           title: row.name,
+          ...(row.epic && row.iconColor ? { iconColor: row.iconColor } : {}),
+          ...(row.epic ? { icon: row.icon ?? DEFAULT_EPIC_ICON } : {}),
           status: row.status,
           owner: row.owner,
           milestone: row.type === 'task' && parentOf(row.parent)?.milestone ? row.parent : '-',
@@ -118,7 +121,7 @@ export function execute(options: Options) {
   return {
     project: model.title,
     revision,
-    task,
+    task: task.epic ? { ...task, icon: task.icon ?? DEFAULT_EPIC_ICON } : task,
     successors: tasks.filter((row) => row.deps.includes(task.id)).map((row) => row.id),
     comments: model.comments?.filter((comment) => comment.taskId === task.id) ?? [],
   };

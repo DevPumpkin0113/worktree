@@ -1,9 +1,18 @@
+import { DEFAULT_EPIC_ICON, isEpicIcon, isEpicIconColor, type EpicIcon } from './epic-icons';
 import { messages } from './i18n/messages';
 import { parseProject } from './project-document';
-import { projectConfig, readSource, serializeSource, type TaskReference } from './project-source';
+import {
+  projectConfig,
+  readSource,
+  serializeSource,
+  ProjectValidationError,
+  type TaskReference,
+} from './project-source';
 import { readTaskFile, writeTaskFile } from './task-file';
 export interface ProjectTaskDraft {
   type: 'task' | 'milestone' | 'epic';
+  icon?: EpicIcon;
+  iconColor?: string;
   name: string;
   description: string;
   owner: string;
@@ -25,6 +34,7 @@ export function projectTaskDraft(text: string, id?: string): ProjectTaskDraft {
   if (id && !row) throw Error(messages.editTaskMissing);
   return {
     type: row?.epic ? 'epic' : row?.milestone ? 'milestone' : 'task',
+    ...(row?.epic ? { icon: row.icon ?? DEFAULT_EPIC_ICON, iconColor: row.iconColor ?? '-' } : {}),
     name: row?.name ?? '',
     description: row?.description ?? '',
     owner: row?.owner ?? '',
@@ -86,6 +96,18 @@ export function updateProjectTask(
     key = id ?? nextProjectId(text, epic ? 'epic' : milestone);
   const file = (epic ? 'epics/' : milestone ? 'milestones/' : 'tasks/') + key + '.md';
   const metadata = existing ? readTaskFile(file, source.files[file]).metadata : {};
+  if (draft.icon !== undefined && (!epic || !isEpicIcon(draft.icon)))
+    throw new ProjectValidationError(file, 'icon', String(draft.icon));
+  if (epic && draft.icon !== undefined) {
+    if (draft.icon === DEFAULT_EPIC_ICON) delete metadata.icon;
+    else metadata.icon = draft.icon;
+  }
+  if (draft.iconColor !== undefined) {
+    if (!epic || (draft.iconColor !== '-' && !isEpicIconColor(draft.iconColor)))
+      throw new ProjectValidationError(file, 'iconColor', String(draft.iconColor));
+    if (draft.iconColor === '-') delete metadata.iconColor;
+    else metadata.iconColor = draft.iconColor.toLowerCase();
+  }
   const updatedAt = existing?.updatedAt && existing.updatedAt > now ? existing.updatedAt : now;
   Object.assign(metadata, {
     schemaVersion: 1,

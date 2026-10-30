@@ -1238,3 +1238,24 @@ body:has(#documentProblems:not([hidden])) {
   height: auto;
   min-height: 4px;
 }
+.work-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: 16px;
+  vertical-align: -0.1em;
+}
+.work-group-emoji {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  line-height: 1;
+}
+.work-group-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

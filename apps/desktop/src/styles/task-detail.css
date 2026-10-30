@@ -73,6 +73,12 @@
   overflow-wrap: anywhere;
   letter-spacing: -0.4px;
 }
+#detailTitle > .work-group-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  font-size: 18px;
+}
 #detailMeta {
   display: flex;
   align-items: center;

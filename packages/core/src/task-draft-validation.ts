@@ -69,6 +69,8 @@ export function validateTaskDraft(
         'blockedReason',
         'references',
         'description',
+        'icon',
+        'iconColor',
       ].includes(field)
     )
       throw error;

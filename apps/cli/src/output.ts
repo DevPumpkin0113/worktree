@@ -1,3 +1,4 @@
+import { DEFAULT_EPIC_ICON } from '@worktree/core/epic-icons';
 import type { Options } from './arguments';
 export function formatResult(
   value: ReturnType<typeof import('./commands').execute>,
@@ -62,6 +63,7 @@ export function formatResult(
   const task = value.task;
   return [
     task.id + ' · ' + task.name,
+    ...(task.epic ? [`${english ? 'Icon' : '아이콘'}: ${task.icon ?? DEFAULT_EPIC_ICON}`] : []),
     `${task.status} · ${task.owner}`,
     `${task.start} ~ ${task.end}`,
     `${english ? 'Parent' : '소속'}: ${task.parent}`,

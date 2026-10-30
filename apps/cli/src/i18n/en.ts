@@ -1,4 +1,6 @@
 export const en = {
+  invalidEpicIcon:
+    'Use one Unicode emoji, a supported lucide:<name> from schema, or a legacy icon name: {0}; - restores layers.',
   invalidIssueParent: 'Invalid {0} parent ID: {1}',
   conflictingIssueParents:
     'An issue can belong directly to either an epic or a milestone, not both.',

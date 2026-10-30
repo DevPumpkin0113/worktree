@@ -46,8 +46,10 @@ export function TaskCard({
           <span className="task-priority-mark" aria-hidden="true" />
         </span>
       )}
-      <div>
-        {row.name}
+      <div className="task-body">
+        <span className="task-name" title={row.name}>
+          {row.name}
+        </span>
         <div className="sub">
           {!kanban ? (
             <>

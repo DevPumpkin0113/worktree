@@ -1,6 +1,7 @@
 import { messages } from '../../i18n/messages';
 import { TaskCard } from './TaskCard';
 import { TaskCountProgress } from './TaskCountProgress';
+import { Icon } from '../shared/Icon';
 import type { ListProps } from './types';
 export function UnassignedTasks({
   rows,
@@ -16,6 +17,7 @@ export function UnassignedTasks({
   return (
     <details className="group unassigned-tasks" open onToggle={onToggle}>
       <summary data-view-group="unassigned">
+        <Icon name="chevron-right" className="tree-toggle" />
         {messages.unassignedMilestone}
         <TaskCountProgress
           completed={rows.filter((row) => row.status === 'done').length}

@@ -637,9 +637,16 @@ header.titlebar {
   background: transparent;
   color: var(--color-text-secondary);
 }
+.workspace-tool-button.active,
 .workspace-tool-button[aria-expanded='true'] {
   background: var(--color-nav-selected);
   color: var(--color-primary);
+  border-color: var(--color-border);
+}
+.workspace-tool-button:hover:not(:disabled) {
+  background: var(--color-option-hover);
+  color: var(--color-primary);
+  border-color: var(--color-border);
 }
 .workspace-tool-button svg {
   width: 16px;

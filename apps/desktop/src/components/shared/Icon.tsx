@@ -13,6 +13,12 @@ const icons: Record<string, ReactNode> = {
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  'milestone-diamond': (
+    <path
+      transform="translate(0 5)"
+      d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"
+    />
+  ),
   filter: <path d="M4 4h16l-6 7v7l-4 2v-9z" />,
   status: (
     <>

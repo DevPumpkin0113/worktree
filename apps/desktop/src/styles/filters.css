@@ -160,3 +160,38 @@
   text-overflow: ellipsis;
   overflow-wrap: normal;
 }
+.workspace-tool-popover .workspace-filter-actions {
+  gap: 2px;
+}
+.workspace-tool-popover .filter-submenu {
+  width: auto;
+}
+.filter-submenu .filter-trigger {
+  min-height: 34px;
+  padding: 7px 8px;
+  gap: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+}
+.filter-submenu .filter-trigger:hover,
+.filter-submenu .filter-trigger[aria-expanded='true'] {
+  background: var(--color-option-hover);
+  color: var(--color-text);
+}
+.filter-submenu .filter-trigger > span:first-of-type {
+  flex: 1;
+}
+.filter-category-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+.filter-submenu .filter-chevron,
+.filter-submenu .filter-trigger[aria-expanded='true'] .filter-chevron {
+  width: 12px;
+  height: 12px;
+  transform: none;
+}

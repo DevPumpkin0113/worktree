@@ -13,6 +13,32 @@ const icons: Record<string, ReactNode> = {
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  filter: <path d="M4 4h16l-6 7v7l-4 2v-9z" />,
+  status: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="m8 12 3 3 5-6" />
+    </>
+  ),
+  priority: (
+    <>
+      <path d="M5 20v-5M12 20V9M19 20V4" />
+    </>
+  ),
+  person: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+    </>
+  ),
+  'view-options': (
+    <>
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <rect x="14" y="14" width="6" height="6" rx="1" />
+    </>
+  ),
   search: (
     <>
       <circle cx="10.5" cy="10.5" r="6.5" />
@@ -84,37 +110,27 @@ const icons: Record<string, ReactNode> = {
   ),
   tree: (
     <>
-      <rect x="8" y="3" width="8" height="5" rx="1" />
-      <path d="M12 8v5M5 16v-3h14v3" />
-      <rect x="2" y="16" width="6" height="5" rx="1" />
-      <rect x="16" y="16" width="6" height="5" rx="1" />
+      <path d="M5 5h14M7 5v14h4M7 12h4M14 12h5M14 19h5" />
     </>
   ),
   board: (
     <>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M9 3v18M15 3v18" />
-      <rect x="5" y="6" width="2" height="4" rx=".5" />
-      <rect x="11" y="6" width="2" height="4" rx=".5" />
-      <rect x="17" y="6" width="2" height="4" rx=".5" />
-      <rect x="5" y="13" width="2" height="4" rx=".5" />
-      <rect x="17" y="13" width="2" height="4" rx=".5" />
+      <rect x="3" y="5" width="4" height="14" rx="1" />
+      <rect x="10" y="5" width="4" height="9" rx="1" />
+      <rect x="17" y="5" width="4" height="12" rx="1" />
     </>
   ),
   flow: (
     <>
-      <circle cx="5" cy="5" r="3" />
-      <circle cx="5" cy="19" r="3" />
-      <circle cx="19" cy="12" r="3" />
-      <path d="m8 6.5 7 3.5m-2-3 2 3-3 .5M8 17.5l7-3.5m-3-.5 3 .5-2 3" />
+      <circle cx="5" cy="12" r="2" />
+      <circle cx="18" cy="5" r="2" />
+      <circle cx="18" cy="19" r="2" />
+      <path d="M7 12h4V5h5M11 12v7h5" />
     </>
   ),
   gantt: (
     <>
-      <path d="M3 3v18h18" />
-      <rect x="6" y="5" width="8" height="3" rx="1" />
-      <rect x="10" y="10" width="9" height="3" rx="1" />
-      <rect x="15" y="15" width="6" height="3" rx="1" />
+      <path d="M4 5h9M8 12h12M12 19h8" />
     </>
   ),
   restore: (

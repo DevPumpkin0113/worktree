@@ -2,6 +2,10 @@ import { en as coreMessages } from '@worktree/core/i18n/en';
 import type { ko } from './ko';
 
 export const en = {
+  filters: 'Filters',
+  appliedFilters: 'Applied filters',
+  removeFilter: 'Remove filter',
+  viewOptions: 'View options',
   addWork: 'Add',
   epic: 'Epic',
   newEpic: 'New epic',
@@ -409,9 +413,9 @@ export const en = {
   weekUnit: 'Weeks · 5 weeks',
   weightedProgressPrefix: 'Time-weighted progress: ',
   windowControlError: 'Window control error',
-  workBoard: 'Issue board',
+  workBoard: 'Views',
   workBoardDescription: 'Explore your work in different views.',
-  workList: 'Issue list',
+  workList: 'Issues',
   workListDescription: 'Find and review document issues in one list.',
   workNetwork: 'Issue network',
   workProgress: 'Issue progress',

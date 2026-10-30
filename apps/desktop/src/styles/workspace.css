@@ -95,19 +95,24 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .workspace-page-heading {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
   gap: 15px;
   padding-bottom: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .workspace-page-heading h2 {
   margin: 0;
-  font-size: 18px;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
   letter-spacing: -0.5px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 #content:has(> .all-tasks) {
@@ -229,10 +234,7 @@ body:has(#detail.sidebar[open]) main#workspace {
     --workspace-nav-padding: 8px;
   }
   .workspace-page-heading {
-    margin-bottom: 12px;
-  }
-  .workspace-page-heading h2 {
-    font-size: 17px;
+    margin-bottom: 0;
   }
 }
 [hidden] {
@@ -350,7 +352,7 @@ body:has(#detail.sidebar[open]) main#workspace {
 
 .workspace-progress-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 10px 16px;
   flex: 0 1 440px;
@@ -363,7 +365,8 @@ body:has(#detail.sidebar[open]) main#workspace {
   min-width: 0;
 }
 .compact-progress {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 14px;
   color: var(--color-text-secondary);
 }
 .compact-progress > div {
@@ -372,6 +375,12 @@ body:has(#detail.sidebar[open]) main#workspace {
   align-items: center;
   gap: 12px;
 }
+.compact-progress > div > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .compact-progress strong {
   color: var(--color-primary);
   font-weight: 600;
@@ -379,12 +388,13 @@ body:has(#detail.sidebar[open]) main#workspace {
 }
 .compact-progress-count {
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .compact-progress progress {
   display: block;
   width: 100%;
-  height: 5px;
-  margin-top: 7px;
+  height: 4px;
+  margin-top: 4px;
   border: 0;
   border-radius: 4px;
   overflow: hidden;
@@ -405,13 +415,6 @@ body:has(#detail.sidebar[open]) main#workspace {
   border-radius: 4px;
 }
 
-#workspaceTools {
-  align-items: center;
-  min-height: 42px;
-}
-#workspaceTools .filter-trigger {
-  min-height: 42px;
-}
 .workspace-filter-actions {
   display: flex;
   flex-wrap: wrap;
@@ -428,11 +431,12 @@ body:has(#detail.sidebar[open]) main#workspace {
   margin-left: auto;
   flex-shrink: 0;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 14px;
 }
 .task-add-button svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
@@ -440,9 +444,6 @@ body:has(#detail.sidebar[open]) main#workspace {
   display: flex;
   flex: 0 0 auto;
   min-width: 0;
-}
-.create-menu-chevron {
-  transform: rotate(90deg);
 }
 .create-work-menu {
   min-width: 144px;
@@ -460,10 +461,12 @@ body:has(#detail.sidebar[open]) main#workspace {
   color: var(--color-text);
 }
 .workspace-create-actions .task-add-button {
-  width: 100%;
+  width: 22px;
+  height: 22px;
   min-width: 0;
   margin-left: 0;
-  padding-inline: 8px;
+  padding: 3px;
+  border-radius: 50%;
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-text-inverse);
@@ -471,6 +474,13 @@ body:has(#detail.sidebar[open]) main#workspace {
 .workspace-create-actions .task-add-button:hover:not(:disabled) {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
+}
+.workspace-create-actions .task-add-button svg {
+  color: var(--color-text-inverse);
+}
+.workspace-create-actions .task-add-button svg path {
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
 }
 .milestone-label {
   font-size: 10px;
@@ -586,5 +596,131 @@ header.titlebar {
   display: none;
 }
 .workspace-home > .tools {
+  flex-shrink: 0;
+}
+.workspace-tab-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+.workspace-tab-row:has(> .tools[hidden]):not(:has(.task-tabs)) {
+  display: none;
+}
+.workspace-tab-row > .task-tabs {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+.workspace-tab-row > .tools {
+  display: flex;
+  gap: 0;
+  margin: 0 0 0 auto;
+  padding: 0;
+  flex-shrink: 0;
+}
+.workspace-tab-row > .tools > div,
+.workspace-tools-panel {
+  display: flex;
+  align-items: stretch;
+}
+.workspace-tool-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  padding: 5px 8px;
+  border: 0;
+  border-left: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.workspace-tool-button[aria-expanded='true'] {
+  background: var(--color-nav-selected);
+  color: var(--color-primary);
+}
+.workspace-tool-button svg {
+  width: 16px;
+  height: 16px;
+}
+.workspace-tool-popover {
+  padding: 12px;
+  padding-inline: 8px;
+  max-height: min(480px, 80vh);
+}
+.workspace-tool-popover h3 {
+  font-size: 12px;
+  margin: 2px 8px 8px;
+  color: var(--color-text-secondary);
+}
+.workspace-tool-popover .workspace-filter-actions {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  width: max-content;
+  max-width: 100%;
+}
+.workspace-tool-popover .view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  margin: 0 3px;
+  border-radius: 16px;
+  font-size: 11px;
+}
+#filterOptionsOpen-panel {
+  padding: 8px;
+}
+.applied-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-height: 32px;
+  height: 32px;
+  padding: 4px 0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.applied-filters::-webkit-scrollbar {
+  height: 0;
+}
+.applied-filters-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.applied-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 24px;
+  padding: 3px 7px;
+  font-size: 11px;
+  line-height: 16px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--color-option-selected);
+  color: var(--color-primary);
+}
+.applied-filter > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.applied-filter svg {
+  width: 12px;
+  height: 12px;
   flex-shrink: 0;
 }

@@ -8,6 +8,7 @@ export interface FilterOption {
   color?: string;
   badge?: boolean;
 }
+const SUBMENU_CLOSE_DELAY = 180;
 export function FilterDropdown({
   id,
   label,
@@ -17,6 +18,7 @@ export function FilterDropdown({
   disabled = false,
   invalid = false,
   describedBy,
+  submenu,
 }: {
   id: string;
   label: string;
@@ -26,18 +28,32 @@ export function FilterDropdown({
   disabled?: boolean;
   invalid?: boolean;
   describedBy?: string;
+  submenu?: { label: string; icon: string };
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function cancelClose() {
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  }
+  useEffect(() => cancelClose, []);
   const selected = Math.max(
     0,
     options.findIndex((option) => option.value === value),
   );
   const expanded = open && !disabled;
-  const position = useFloatingList(expanded, trigger, list, options.length, true);
+  const position = useFloatingList(
+    expanded,
+    trigger,
+    list,
+    options.length,
+    true,
+    submenu ? 'side' : 'below',
+  );
   useEffect(() => {
     if (!expanded) return;
     const outside = (event: PointerEvent) => {
@@ -46,6 +62,20 @@ export function FilterDropdown({
     document.addEventListener('pointerdown', outside);
     return () => document.removeEventListener('pointerdown', outside);
   }, [expanded]);
+  useEffect(() => {
+    const group = root.current?.parentElement;
+    if (!expanded || !submenu || !group) return;
+    const siblingHovered = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const sibling = event.target.closest('.filter-submenu');
+      if (sibling && sibling !== root.current && sibling.parentElement === group) {
+        cancelClose();
+        setOpen(false);
+      }
+    };
+    group.addEventListener('pointerover', siblingHovered);
+    return () => group.removeEventListener('pointerover', siblingHovered);
+  }, [expanded, submenu]);
   useEffect(() => {
     if (!expanded) return;
     const option = document.getElementById(`${id}-option-${active}`),
@@ -58,10 +88,19 @@ export function FilterDropdown({
   function choose(index: number) {
     const option = options[index];
     if (option) onChange(option.value);
-    setOpen(false);
+    cancelClose();
+    setActive(index);
+    setOpen(!!submenu);
     trigger.current?.focus();
   }
   function keydown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (submenu && (event.key === 'ArrowRight' || (event.key === 'ArrowLeft' && expanded))) {
+      event.preventDefault();
+      event.stopPropagation();
+      setActive(selected);
+      setOpen(event.key === 'ArrowRight');
+      return;
+    }
     if (event.key === 'Escape' && expanded) {
       event.preventDefault();
       event.stopPropagation();
@@ -100,8 +139,19 @@ export function FilterDropdown({
   }
   return (
     <div
-      className="filter-dropdown"
+      className={'filter-dropdown' + (submenu ? ' filter-submenu' : '')}
       ref={root}
+      onPointerEnter={(event) => {
+        if (!submenu || disabled || event.pointerType === 'touch') return;
+        cancelClose();
+        setActive(selected);
+        setOpen(true);
+      }}
+      onPointerLeave={() => {
+        if (!submenu) return;
+        cancelClose();
+        closeTimer.current = setTimeout(() => setOpen(false), SUBMENU_CLOSE_DELAY);
+      }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
       }}
@@ -123,11 +173,14 @@ export function FilterDropdown({
         onKeyDown={keydown}
         onClick={() => {
           setActive(selected);
-          setOpen(!expanded);
+          setOpen(submenu ? true : !expanded);
         }}
       >
+        {submenu ? <Icon name={submenu.icon} className="filter-category-icon" /> : null}
         <span>
-          {options[selected]?.color || options[selected]?.badge ? (
+          {submenu ? (
+            submenu.label
+          ) : options[selected]?.color || options[selected]?.badge ? (
             <Badge label={options[selected].label} color={options[selected].color} />
           ) : (
             options[selected]?.label

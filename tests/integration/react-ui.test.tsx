@@ -15,6 +15,89 @@ import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
 
+test('탭 오른쪽 도구 패널에서 보기·필터를 선택하고 Escape와 외부 클릭으로 닫는다', async () => {
+  const f = await fixture();
+  try {
+    assert.ok(f.element('.workspace-tab-row').contains(f.element('#workspaceTools')));
+    assert.equal(f.element<HTMLElement>('#viewOptionsOpen-panel').hidden, true);
+    await f.click('#viewOptionsOpen');
+    assert.equal(f.element('#viewOptionsOpen').getAttribute('aria-expanded'), 'true');
+    await f.click('[data-view="board"]');
+    assert.equal(f.store.active?.view, 'board');
+    await act(() =>
+      f
+        .element('[data-view="board"]')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.element('#viewOptionsOpen').getAttribute('aria-expanded'), 'false');
+    assert.equal(document.activeElement, f.element('#viewOptionsOpen'));
+    await f.click('#filterOptionsOpen');
+    assert.equal(f.element('#status > span').textContent, '상태');
+    await act(() =>
+      f
+        .element('#status')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.ok(f.host.querySelector('#status-options'));
+    await act(() =>
+      f
+        .element('#status')
+        .dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }),
+        ),
+    );
+    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'true');
+    await act(() =>
+      f.element('#status').dispatchEvent(new MouseEvent('pointerover', { bubbles: true })),
+    );
+    assert.ok(f.host.querySelector('#status-options'));
+    await act(() =>
+      f.element('#status').dispatchEvent(new MouseEvent('pointerout', { bubbles: true })),
+    );
+    await act(() =>
+      f.element('#priorityFilter').dispatchEvent(new MouseEvent('pointerover', { bubbles: true })),
+    );
+    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.ok(f.host.querySelector('#priorityFilter-options'));
+    await act(() =>
+      f.element('#status').dispatchEvent(new MouseEvent('pointerover', { bubbles: true })),
+    );
+    assert.equal(f.host.querySelector('#priorityFilter-options'), null);
+    assert.ok(f.host.querySelector('#status-options'));
+    await f.click('#status-options [data-value="done"]');
+    assert.equal(f.store.getSnapshot().status, 'done');
+    assert.equal(
+      f.element('#status-options [data-value="done"]').getAttribute('aria-selected'),
+      'true',
+    );
+    assert.ok(f.host.querySelector('#status-options'));
+    assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'true');
+    assert.ok(f.element('#filterOptionsOpen').classList.contains('active'));
+    assert.equal(f.element('#status > span').textContent, '상태');
+    assert.equal(f.host.querySelector('.filter-category-value'), null);
+    assert.match(f.element('[data-remove-filter="status"]').textContent ?? '', /상태: 완료/);
+    assert.ok(f.element('#workspaceHome').contains(f.element('.applied-filters')));
+    assert.ok(
+      f.element('.applied-filters').compareDocumentPosition(f.element('#content')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));
+    assert.equal(f.element('#filterOptionsOpen').getAttribute('aria-expanded'), 'false');
+    await f.click('[data-remove-filter="status"]');
+    assert.equal(f.store.getSnapshot().status, 'all');
+    assert.ok(f.host.querySelector('.applied-filters'));
+    assert.equal(f.element('.applied-filters').getAttribute('aria-hidden'), 'true');
+    assert.equal(f.host.querySelector('.applied-filter'), null);
+  } finally {
+    await f.close();
+  }
+});
+
 test('에픽 직속 이슈는 미지정 그룹 없이 표시하고 마일스톤 선택·해제로 같은 ID를 유지한다', async () => {
   const f = await fixture();
   try {
@@ -874,14 +957,15 @@ test('손상된 세션은 저장하지 않고 프로젝트를 직접 열어 복�
 test('설정 저장·언어 전환과 실패 시 기존 값 유지를 지원한다', async () => {
   const f = await fixture();
   try {
+    await f.click('[data-workspace-page="tasks"]');
     await act(() => f.store.saveSetting('language', 'en'));
-    assert.ok(f.host.textContent?.includes('Issue list'));
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Issues');
     f.setSettingsFailure(true);
     await act(() => f.store.saveSetting('language', 'ko'));
     assert.equal(f.store.getSnapshot().settings.language, 'en');
     f.setSettingsFailure(false);
     await act(() => f.store.saveSetting('language', 'ko'));
-    assert.ok(f.host.textContent?.includes('이슈 목록'));
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Issues');
   } finally {
     await f.close();
   }
@@ -1551,10 +1635,11 @@ test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정
     const popup = f.element<HTMLElement>('#status-options');
     assert.equal(popup.getAttribute('popover'), 'manual');
     assert.equal(shown, 1);
-    assert.equal(popup.style.top, '354px');
+    assert.equal(popup.style.left, '248px');
+    assert.equal(popup.style.top, `${Math.min(600, window.innerHeight - 8 - 240)}px`);
     top = 100;
     await act(() => window.dispatchEvent(new Event('resize')));
-    assert.equal(popup.style.top, '146px');
+    assert.equal(popup.style.top, '100px');
     await act(() =>
       trigger.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }),
@@ -1566,7 +1651,7 @@ test('공용 필터 목록은 상위 표시 레이어에 떠서 위치를 보정
       ),
     );
     assert.equal(f.store.getSnapshot().status, 'done');
-    assert.equal(f.host.querySelector('#status-options'), null);
+    assert.ok(f.host.querySelector('#status-options'));
     assert.equal(document.activeElement, trigger);
     await f.click('#status');
     await act(() => document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })));

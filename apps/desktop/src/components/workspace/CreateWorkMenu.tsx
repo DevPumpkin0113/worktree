@@ -70,6 +70,8 @@ export function CreateWorkMenu({
         ref={trigger}
         className="task-add-button"
         type="button"
+        title={messages.addWork}
+        aria-label={messages.addWork}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? 'workAddMenu' : undefined}
@@ -85,8 +87,6 @@ export function CreateWorkMenu({
         }}
       >
         <Icon name="plus" />
-        <span>{messages.addWork}</span>
-        <Icon name="chevron-right" className="create-menu-chevron" />
       </button>
       {open ? (
         <div

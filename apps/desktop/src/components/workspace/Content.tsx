@@ -1,6 +1,8 @@
 import { legacyPriorities } from '@worktree/core/project-priorities';
 import { priorityColor } from '../../views/priority-color';
 import { taskTypeColor } from '@worktree/core/task-type-colors';
+import { WorkspaceToolsPanel } from './WorkspaceToolsPanel';
+import { AppliedFilters } from './AppliedFilters';
 import { TaskTabs } from './TaskTabs';
 import { ProjectInitializer } from '../project/ProjectInitializer';
 import { messages } from '../../i18n/messages';
@@ -127,26 +129,20 @@ export function Content({
           />
         ) : null}
       </div>
-      {tabsVisible && model ? (
-        <TaskTabs
-          ids={active?.taskTabs ?? []}
-          creationTabs={active?.creationTabs}
-          selectedId={state.selectedId}
-          model={model}
-          label={label}
-          onSelect={selectWork}
-          onClose={onCloseTaskTab}
-          onMove={(source, target, after) => store.reorderTaskTabs(source, target, after)}
-          enabled={!state.settingsOpen}
-        />
-      ) : null}
-      <div
-        id="workspaceHome"
-        className="workspace-home"
-        role={tabsVisible ? 'tabpanel' : undefined}
-        aria-labelledby={tabsVisible ? 'task-home-tab' : undefined}
-        hidden={!homeVisible}
-      >
+      <div className="workspace-tab-row">
+        {tabsVisible && model ? (
+          <TaskTabs
+            ids={active?.taskTabs ?? []}
+            creationTabs={active?.creationTabs}
+            selectedId={state.selectedId}
+            model={model}
+            label={label}
+            onSelect={selectWork}
+            onClose={onCloseTaskTab}
+            onMove={(source, target, after) => store.reorderTaskTabs(source, target, after)}
+            enabled={!state.settingsOpen}
+          />
+        ) : null}
         <div
           id="workspaceTools"
           className="tools"
@@ -154,103 +150,146 @@ export function Content({
             state.page === 'analytics' || state.page === 'project' || state.page === 'initialize'
           }
         >
-          {(Object.keys(VIEWS) as View[]).map((view) => (
-            <button
-              key={view}
-              data-view={view}
-              className={'view-button' + (active?.view === view ? ' active' : '')}
-              title={VIEWS[view]}
-              aria-label={VIEWS[view]}
-              aria-pressed={active?.view === view}
-              hidden={state.page !== 'board'}
-              onClick={() => {
-                capture();
-                store.setView(view);
-              }}
+          <div hidden={state.page !== 'board'}>
+            <WorkspaceToolsPanel
+              key={'view:' + active?.path + state.page + state.settingsOpen + state.selectedId}
+              id="viewOptionsOpen"
+              label={messages.viewOptions}
+              icon="view-options"
             >
-              <Icon className="view-icon" name={view} />
-            </button>
-          ))}
-          <div className="workspace-filter-actions">
-            <FilterDropdown
-              key={'priority:' + active?.path + state.page + state.settingsOpen}
-              id="priorityFilter"
-              label={messages.priority}
-              value={state.priority}
-              options={[
-                { value: 'all', label: messages.allPriorities },
-                { value: 'priority:-', label: messages.unassignedPriority },
-                ...(model?.priorities ?? legacyPriorities()).map((priority, index, priorities) => ({
-                  value: 'priority:' + priority.id,
-                  label: priority.name,
-                  badge: true,
-                  color: priorityColor(index, priorities.length),
-                })),
-              ]}
-              disabled={state.settingsOpen}
-              onChange={(priority) => {
-                capture();
-                store.setFilters({ priority });
-              }}
-            />
-            <FilterDropdown
-              key={'taskType:' + active?.path + state.page + state.settingsOpen}
-              id="taskTypeFilter"
-              label={messages.taskType}
-              value={state.taskType}
-              options={[
-                { value: 'all', label: messages.allTaskTypes },
-                ...(model?.taskTypes ?? []).map((type) => ({
-                  value: 'type:' + type,
-                  label: type,
-                  badge: true,
-                  color: taskTypeColor(model?.taskTypeColors, type),
-                })),
-              ]}
-              disabled={state.settingsOpen}
-              onChange={(taskType) => {
-                capture();
-                store.setFilters({ taskType });
-              }}
-            />
-            <FilterDropdown
-              key={'owner:' + active?.path + state.page + state.settingsOpen}
-              id="owner"
-              label={messages.ownerFilter}
-              value={state.owner}
-              options={[
-                { value: 'all', label: messages.allOwners },
-                ...owners.map((owner) => ({
-                  value: 'owner:' + owner,
-                  label: owner === '-' ? messages.unassigned : owner,
-                })),
-              ]}
-              disabled={state.settingsOpen}
-              onChange={(owner) => {
-                capture();
-                store.setFilters({ owner });
-              }}
-            />
-            <FilterDropdown
-              key={'status:' + active?.path + state.page + state.settingsOpen}
-              id="status"
-              label={messages.statusFilter}
-              value={state.status}
-              options={[
-                { value: 'all', label: messages.allStatuses },
-                { value: 'todo', label: messages.todo },
-                { value: 'doing', label: messages.doing },
-                { value: 'blocked', label: messages.blocked },
-                { value: 'done', label: messages.done },
-              ]}
-              disabled={state.settingsOpen}
-              onChange={(status) => {
-                capture();
-                store.setFilters({ status });
-              }}
-            />
+              {(Object.keys(VIEWS) as View[]).map((view) => (
+                <button
+                  key={view}
+                  data-view={view}
+                  className={'view-button' + (active?.view === view ? ' active' : '')}
+                  title={VIEWS[view]}
+                  aria-label={VIEWS[view]}
+                  aria-pressed={active?.view === view}
+                  hidden={state.page !== 'board'}
+                  onClick={() => {
+                    capture();
+                    store.setView(view);
+                  }}
+                >
+                  <Icon className="view-icon" name={view} />
+                </button>
+              ))}
+            </WorkspaceToolsPanel>
           </div>
+          <WorkspaceToolsPanel
+            key={'filter:' + active?.path + state.page + state.settingsOpen + state.selectedId}
+            id="filterOptionsOpen"
+            label={messages.filters}
+            icon="filter"
+            active={[state.priority, state.taskType, state.owner, state.status].some(
+              (value) => value !== 'all',
+            )}
+          >
+            <div className="workspace-filter-actions">
+              <FilterDropdown
+                key={'status:' + active?.path + state.page + state.settingsOpen}
+                id="status"
+                submenu={{ label: messages.status, icon: 'status' }}
+                label={messages.statusFilter}
+                value={state.status}
+                options={[
+                  { value: 'all', label: messages.allStatuses },
+                  { value: 'todo', label: messages.todo },
+                  { value: 'doing', label: messages.doing },
+                  { value: 'blocked', label: messages.blocked },
+                  { value: 'done', label: messages.done },
+                ]}
+                disabled={state.settingsOpen}
+                onChange={(status) => {
+                  capture();
+                  store.setFilters({ status });
+                }}
+              />
+              <FilterDropdown
+                key={'priority:' + active?.path + state.page + state.settingsOpen}
+                id="priorityFilter"
+                submenu={{ label: messages.priority, icon: 'priority' }}
+                label={messages.priority}
+                value={state.priority}
+                options={[
+                  { value: 'all', label: messages.allPriorities },
+                  { value: 'priority:-', label: messages.unassignedPriority },
+                  ...(model?.priorities ?? legacyPriorities()).map(
+                    (priority, index, priorities) => ({
+                      value: 'priority:' + priority.id,
+                      label: priority.name,
+                      badge: true,
+                      color: priorityColor(index, priorities.length),
+                    }),
+                  ),
+                ]}
+                disabled={state.settingsOpen}
+                onChange={(priority) => {
+                  capture();
+                  store.setFilters({ priority });
+                }}
+              />
+              <FilterDropdown
+                key={'taskType:' + active?.path + state.page + state.settingsOpen}
+                id="taskTypeFilter"
+                submenu={{ label: messages.taskType, icon: 'task-list' }}
+                label={messages.taskType}
+                value={state.taskType}
+                options={[
+                  { value: 'all', label: messages.allTaskTypes },
+                  ...(model?.taskTypes ?? []).map((type) => ({
+                    value: 'type:' + type,
+                    label: type,
+                    badge: true,
+                    color: taskTypeColor(model?.taskTypeColors, type),
+                  })),
+                ]}
+                disabled={state.settingsOpen}
+                onChange={(taskType) => {
+                  capture();
+                  store.setFilters({ taskType });
+                }}
+              />
+              <FilterDropdown
+                key={'owner:' + active?.path + state.page + state.settingsOpen}
+                id="owner"
+                submenu={{ label: messages.owner, icon: 'person' }}
+                label={messages.ownerFilter}
+                value={state.owner}
+                options={[
+                  { value: 'all', label: messages.allOwners },
+                  ...owners.map((owner) => ({
+                    value: 'owner:' + owner,
+                    label: owner === '-' ? messages.unassigned : owner,
+                  })),
+                ]}
+                disabled={state.settingsOpen}
+                onChange={(owner) => {
+                  capture();
+                  store.setFilters({ owner });
+                }}
+              />
+            </div>
+          </WorkspaceToolsPanel>
         </div>
+      </div>
+      <div
+        id="workspaceHome"
+        className="workspace-home"
+        role={tabsVisible ? 'tabpanel' : undefined}
+        aria-labelledby={tabsVisible ? 'task-home-tab' : undefined}
+        hidden={!homeVisible}
+      >
+        {(state.page === 'board' || state.page === 'tasks') && model ? (
+          <AppliedFilters
+            state={state}
+            model={model}
+            onRemove={(key) => {
+              capture();
+              store.setFilters({ [key]: 'all' });
+            }}
+          />
+        ) : null}
         <div id="content" ref={root} onScrollCapture={capture}>
           {store.activeProject && store.activeProject.files.length === 0 ? (
             <ProjectInitializer

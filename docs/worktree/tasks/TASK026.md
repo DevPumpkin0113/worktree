@@ -1,11 +1,11 @@
 ---
 schemaVersion: 1
 id: "TASK026"
-title: "영문 한국어 제품 사용 안내"
+title: "영문, 한국어 제품 사용 안내"
 start: "-"
 end: "-"
 createdAt: "2026-10-29T15:56:54.656Z"
-updatedAt: "2026-10-29T15:56:54.656Z"
+updatedAt: "2026-10-29T19:22:53.504Z"
 status: "done"
 owner: "Codex:Main"
 milestone: "MS006"

@@ -1,0 +1,61 @@
+button.action-button[data-variant] {
+  --action-background: var(--color-surface);
+  --action-color: var(--color-text);
+  --action-border: var(--color-border-control);
+  --action-hover-background: var(--color-option-hover);
+  --action-hover-color: var(--color-primary);
+  --action-hover-border: var(--color-border-control);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid var(--action-border);
+  border-radius: 6px;
+  background: var(--action-background);
+  color: var(--action-color);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  box-shadow: none;
+}
+button.action-button[data-variant='primary'] {
+  --action-background: var(--color-primary);
+  --action-color: var(--color-text-inverse);
+  --action-border: var(--color-primary);
+  --action-hover-background: var(--color-primary-hover);
+  --action-hover-color: var(--color-text-inverse);
+  --action-hover-border: var(--color-primary-hover);
+}
+button.action-button[data-variant='danger'] {
+  --action-background: var(--color-danger);
+  --action-color: var(--color-text-inverse);
+  --action-border: var(--color-danger);
+  --action-hover-background: var(--color-danger-hover);
+  --action-hover-color: var(--color-text-inverse);
+  --action-hover-border: var(--color-danger-hover);
+}
+button.action-button[data-size='compact'] {
+  min-height: 28px;
+  padding: 4px 10px;
+}
+button.action-button:hover:not(:disabled),
+button.action-button:focus-visible:not(:disabled) {
+  background: var(--action-hover-background);
+  border-color: var(--action-hover-border);
+  color: var(--action-hover-color);
+}
+button.action-button:focus-visible:not(:disabled) {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+button.action-button:disabled,
+button.action-button:disabled:hover {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  opacity: 1;
+  cursor: not-allowed;
+}

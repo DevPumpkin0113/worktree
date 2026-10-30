@@ -71,11 +71,22 @@ export function CommentForm({
         <small>{messages.commentShortcut}</small>
         <div className="comment-edit-actions">
           {onCancel ? (
-            <button type="button" disabled={busy} onClick={onCancel}>
+            <button
+              data-variant="secondary"
+              className="action-button"
+              type="button"
+              disabled={busy}
+              onClick={onCancel}
+            >
               {messages.cancelEdit}
             </button>
           ) : null}
-          <button type="submit" disabled={busy || !canSubmit || !author || !text.trim()}>
+          <button
+            data-variant="primary"
+            className="action-button"
+            type="submit"
+            disabled={busy || !canSubmit || !author || !text.trim()}
+          >
             {busy ? messages.savingTask : editing ? messages.saveTask : messages.submitComment}
           </button>
         </div>

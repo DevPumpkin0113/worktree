@@ -20,5 +20,7 @@ import './styles/filters.css';
 import './styles/project.css';
 
 import './styles/task-editor.css';
+import './styles/delete-dialog.css';
 
 import './styles/focus.css';
+import './styles/buttons.css';

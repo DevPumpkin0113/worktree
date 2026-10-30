@@ -53,13 +53,21 @@ export function ProjectSettingsEditor({
         ) : null}
       </div>
       <div className="project-settings-actions">
-        <button id="projectSettings-reset" type="button" disabled={form.saving} onClick={onCancel}>
+        <button
+          data-variant="secondary"
+          className="action-button"
+          id="projectSettings-reset"
+          type="button"
+          disabled={form.saving}
+          onClick={onCancel}
+        >
           {messages.resetProjectSettings}
         </button>
         <button
+          data-variant="primary"
           id="projectSettings-save"
           type="submit"
-          className="task-save"
+          className="task-save action-button"
           disabled={form.saving || !form.dirty}
         >
           {form.saving ? messages.savingTask : messages.saveTask}

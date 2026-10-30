@@ -376,12 +376,6 @@ header.titlebar {
   color: var(--color-about-section-button-disabled-color);
   cursor: not-allowed;
 }
-.about-section .about-primary-action:disabled,
-.about-section .about-primary-action:disabled:hover {
-  background: var(--color-about-section-about-primary-action-disabled-background);
-  border-color: var(--color-about-section-about-primary-action-disabled-border-color);
-  color: var(--color-about-section-about-primary-action-disabled-color);
-}
 #settings .about-auto-check {
   display: flex;
   align-items: center;

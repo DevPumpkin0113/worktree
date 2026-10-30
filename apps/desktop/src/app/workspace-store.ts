@@ -715,8 +715,13 @@ export class WorkspaceStore {
     const text = deleteProjectComment(expected, taskId, id);
     await this.saveProjectSource(path, expected, text, taskId, messages.commentConflict);
   }
-  async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
-    const text = deleteProjectTask(expected, id, options);
+  async deleteTask(
+    path: string,
+    expected: string,
+    id: string,
+    options: Pick<DeleteOptions, 'detachPredecessors'>,
+  ) {
+    const text = deleteProjectTask(expected, id, { ...options, children: 'keep' });
     await this.saveProjectSource(path, expected, text, null, messages.deleteConflict);
   }
   private async saveProjectSource(

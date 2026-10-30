@@ -449,11 +449,23 @@ body:has(#detail.sidebar[open]) main#workspace {
   min-width: 144px;
 }
 .create-work-menu .filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   border: 0;
   background: transparent;
   text-align: left;
   justify-content: flex-start;
+}
+.create-work-icon {
+  display: flex;
+  flex-shrink: 0;
+}
+.create-work-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.5;
 }
 .create-work-menu .filter-option:hover,
 .create-work-menu .filter-option:focus-visible {
@@ -518,9 +530,6 @@ body:has(#detail.sidebar[open]) main#workspace {
   gap: 8px;
   font-size: 11px;
   color: var(--color-text-secondary);
-}
-.unassigned-tasks .task-count-progress {
-  margin-left: 12px;
 }
 
 header.titlebar {

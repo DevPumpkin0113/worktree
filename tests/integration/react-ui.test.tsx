@@ -351,7 +351,7 @@ test('에픽 직속 이슈는 미지정 그룹 없이 표시하고 마일스톤 
   }
 });
 
-test('추가 메뉴는 단일 버튼에서 작업·마일스톤·에픽 순서로 열고 키보드와 바깥 클릭으로 닫는다', async () => {
+test('추가 메뉴는 에픽·마일스톤·이슈 순서와 아이콘을 표시하고 키보드와 바깥 클릭으로 닫는다', async () => {
   const f = await fixture();
   try {
     const key = async (selector: string, value: string) =>
@@ -368,18 +368,19 @@ test('추가 메뉴는 단일 버튼에서 작업·마일스톤·에픽 순서�
         f.element('#workAddMenu').querySelectorAll('[role="menuitem"]'),
         (item) => item.textContent,
       ),
-      ['이슈', '마일스톤', '에픽'],
+      ['에픽', '마일스톤', '이슈'],
     );
-    assert.equal(document.activeElement?.id, 'taskAddOpen');
-    await key('#taskAddOpen', 'End');
+    assert.equal(f.host.querySelectorAll('#workAddMenu .create-work-icon svg').length, 3);
     assert.equal(document.activeElement?.id, 'epicAddOpen');
-    await key('#epicAddOpen', 'ArrowDown');
+    await key('#epicAddOpen', 'End');
     assert.equal(document.activeElement?.id, 'taskAddOpen');
-    await key('#taskAddOpen', 'Escape');
+    await key('#taskAddOpen', 'ArrowDown');
+    assert.equal(document.activeElement?.id, 'epicAddOpen');
+    await key('#epicAddOpen', 'Escape');
     assert.equal(f.host.querySelector('#workAddMenu'), null);
     assert.equal(document.activeElement?.id, 'workAddOpen');
     await key('#workAddOpen', 'ArrowUp');
-    assert.equal(document.activeElement?.id, 'epicAddOpen');
+    assert.equal(document.activeElement?.id, 'taskAddOpen');
     await act(async () =>
       document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true })),
     );
@@ -425,6 +426,24 @@ test('에픽 생성·마일스톤 배정·소속 해제는 기존 작업 ID와 �
     assert.equal(model.rows.find((row) => row.id === 'MS001')!.parent, '-');
     assert.equal(model.rows.filter((row) => row.type === 'task').length, 2);
     assert.ok(f.host.querySelector('[data-view-group="unassigned-epics"]'));
+  } finally {
+    await f.close();
+  }
+});
+
+test('소속 없는 이슈는 에픽 미지정 안에서 미지정 마일스톤과 나란히 표시한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#taskAddOpen');
+    await f.value('#taskEditor-name', '소속 없는 이슈');
+    await f.submit();
+    const issueId = f.store.getSnapshot().selectedId!;
+    assert.equal(f.store.active!.model!.rows.find((row) => row.id === issueId)!.parent, '-');
+    await act(() => f.store.selectWork(null));
+    const group = f.element('[data-view-group="unassigned-epics"]').parentElement!;
+    assert.ok(group.querySelector(':scope > .children > .group > summary[data-work-id="MS001"]'));
+    assert.ok(group.querySelector(`:scope > .children > .task[data-id="${issueId}"]`));
+    assert.equal(f.host.querySelector('[data-view-group="unassigned"]'), null);
   } finally {
     await f.close();
   }
@@ -1076,6 +1095,49 @@ test('수정의 마일스톤 선택은 표시 ID와 제목을 보여주고 원�
     await f.close();
   }
 });
+test('마일스톤 삭제는 하위 이슈·댓글·연결을 유지하고 에픽 직속 또는 미지정으로 옮긴다', async () => {
+  for (const withEpic of [false, true]) {
+    const f = await fixture();
+    try {
+      await act(() => f.store.saveSetting('displayName', 'Codex'));
+      await act(() => f.store.saveComment(first, f.files.get(first)!, 'W001', '유지할 댓글'));
+      await act(() => f.store.saveComment(first, f.files.get(first)!, 'MS001', '삭제될 댓글'));
+      if (withEpic) {
+        await f.click('#epicAddOpen');
+        await f.value('#taskEditor-name', '제품');
+        await f.submit();
+        await act(() => f.store.selectWork('MS001'));
+        await f.click('#taskEditOpen');
+        await f.click('#taskEditor-parent');
+        await f.click('#taskEditor-parent-options [data-value="EP001"]');
+        await f.submit();
+      } else {
+        await act(() => f.store.selectWork('MS001'));
+      }
+      await f.click('#taskDeleteOpen');
+      assert.equal(f.host.querySelector('#taskDeleteDialog input[type="radio"]'), null);
+      assert.equal(f.host.querySelector('#taskDeleteDialog.milestone-delete-dialog'), null);
+      assert.match(
+        f.element('#taskDeleteDialog').textContent ?? '',
+        withEpic ? /상위 에픽 직속으로 이동/ : /미지정으로 이동/,
+      );
+      await f.click('#taskDeleteConfirm');
+      const model = f.store.active!.model!;
+      assert.equal(
+        model.rows.some((row) => row.id === 'MS001'),
+        false,
+      );
+      for (const id of ['W001', 'W002'])
+        assert.equal(model.rows.find((row) => row.id === id)?.parent, withEpic ? 'EP001' : '-');
+      assert.deepEqual(model.rows.find((row) => row.id === 'W002')?.deps, ['W001']);
+      assert.equal(model.comments?.filter((comment) => comment.taskId === 'W001').length, 1);
+      assert.equal(model.comments?.filter((comment) => comment.taskId === 'MS001').length, 0);
+    } finally {
+      await f.close();
+    }
+  }
+});
+
 test('작업 삭제는 선행 참조 해제 선택과 실패 보존을 지원한다', async () => {
   const f = await fixture();
   try {

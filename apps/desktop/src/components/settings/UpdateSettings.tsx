@@ -41,15 +41,18 @@ export function UpdateSettings({
       </details>
       <div className="about-update-actions">
         <button
+          data-variant="secondary"
           id="checkUpdates"
           type="button"
-          className="about-primary-action"
+          className="action-button"
           disabled={app.busy}
           onClick={() => void app.check()}
         >
           {messages.checkUpdates}
         </button>
         <button
+          data-variant="primary"
+          className="action-button"
           id="installUpdate"
           type="button"
           disabled={app.busy || app.update?.kind !== 'available'}
@@ -58,6 +61,8 @@ export function UpdateSettings({
           {messages.downloadAndInstall}
         </button>
         <button
+          data-variant="secondary"
+          className="action-button"
           id="releasePage"
           type="button"
           hidden={app.update?.kind !== 'manual'}

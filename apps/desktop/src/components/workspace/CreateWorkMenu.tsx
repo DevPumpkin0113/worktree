@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useFloatingList } from '../../hooks/use-floating-list';
 import { messages } from '../../i18n/messages';
+import { CircleDot, Layers, Plus } from 'lucide-react';
 import { Icon } from '../shared/Icon';
 
 export function CreateWorkMenu({
@@ -18,9 +19,14 @@ export function CreateWorkMenu({
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const options = [
-    { id: 'taskAddOpen', label: messages.task, action: onAddTask },
-    { id: 'milestoneAddOpen', label: messages.milestone, action: onAddMilestone },
-    { id: 'epicAddOpen', label: messages.epic, action: onAddEpic },
+    { id: 'epicAddOpen', label: messages.epic, action: onAddEpic, icon: <Layers /> },
+    {
+      id: 'milestoneAddOpen',
+      label: messages.milestone,
+      action: onAddMilestone,
+      icon: <Icon name="milestone-diamond" />,
+    },
+    { id: 'taskAddOpen', label: messages.task, action: onAddTask, icon: <CircleDot /> },
   ];
   const position = useFloatingList(open, trigger, menu, options.length, true);
   useLayoutEffect(() => {
@@ -86,7 +92,7 @@ export function CreateWorkMenu({
           setOpen(true);
         }}
       >
-        <Icon name="plus" />
+        <Plus size={16} strokeWidth={1.5} aria-hidden="true" focusable="false" />
       </button>
       {open ? (
         <div
@@ -113,6 +119,9 @@ export function CreateWorkMenu({
                 option.action();
               }}
             >
+              <span className="create-work-icon" aria-hidden="true">
+                {option.icon}
+              </span>
               {option.label}
             </button>
           ))}

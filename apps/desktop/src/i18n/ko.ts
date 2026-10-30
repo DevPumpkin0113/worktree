@@ -141,17 +141,16 @@ export const ko = {
 
   deleteTask: '이슈 삭제',
   deleteMilestone: '마일스톤 삭제',
-  deleteSourceHint:
-    '선택한 항목의 파일을 프로젝트에서 삭제합니다. 삭제 범위를 확인해 주세요. 앱에서 실행 취소는 지원하지 않습니다.',
-  deleteChildrenTitle: (count: string | number) => `하위 이슈 ${count}개 처리`,
-  deleteKeepChildren: '이슈를 유지하고 마일스톤 소속만 해제',
-  deleteWithChildren: '하위 이슈도 함께 삭제',
+  deleteSourceHint: '선택한 항목만 삭제합니다. 삭제 후에는 실행 취소할 수 없습니다.',
+  milestoneDeleteKeepInEpicHint: (count: number) =>
+    `하위 이슈 ${count}개는 유지되며 상위 에픽 직속으로 이동합니다.`,
+  milestoneDeleteKeepUnassignedHint: (count: number) =>
+    `하위 이슈 ${count}개는 유지되며 미지정으로 이동합니다.`,
   deleteDependentTitle: (count: string | number) => `영향받는 이슈 ${count}개`,
   deleteDetachPredecessors: '위 이슈는 유지하고, 표시된 선행 연결만 해제합니다.',
   deleteDependentHint:
     '아래 이슈는 삭제되지 않습니다. 선행 이슈 목록에서 삭제 대상만 제외되며, 다른 연결은 유지됩니다.',
   deleteTaskKept: '유지됨',
-  deleteTaskRemoved: '삭제됨',
   deleteRemovedLinks: '제외되는 선행 이슈',
   parentMilestone: '마일스톤',
   milestoneDetailSuffix: ' 마일스톤 상세',

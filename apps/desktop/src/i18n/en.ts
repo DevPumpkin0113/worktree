@@ -144,17 +144,16 @@ export const en = {
 
   deleteTask: 'Delete issue',
   deleteMilestone: 'Delete milestone',
-  deleteSourceHint:
-    'Delete the selected items from the project files. Review the scope below. Undo is not supported in the app.',
-  deleteChildrenTitle: (count: string | number) => `Handle ${count} child issues`,
-  deleteKeepChildren: 'Keep issues and remove their milestone assignment',
-  deleteWithChildren: 'Delete child issues too',
+  deleteSourceHint: 'Only the selected item will be deleted. This action cannot be undone.',
+  milestoneDeleteKeepInEpicHint: (count: number) =>
+    `${count} child issues will be kept and moved directly to the parent epic.`,
+  milestoneDeleteKeepUnassignedHint: (count: number) =>
+    `${count} child issues will be kept and become unassigned.`,
   deleteDependentTitle: (count: string | number) => `${count} affected issues`,
   deleteDetachPredecessors: 'Keep these issues and remove only the predecessor links shown.',
   deleteDependentHint:
     'These issues will not be deleted. Only deleted items are removed from their predecessor lists; other links remain.',
   deleteTaskKept: 'Kept',
-  deleteTaskRemoved: 'Deleted',
   deleteRemovedLinks: 'Predecessors to remove',
   parentMilestone: 'Milestone',
   milestoneDetailSuffix: ' milestone details',

@@ -220,10 +220,23 @@ export function TaskEditor({
               </p>
             ) : null}
             <div className="task-editor-actions">
-              <button id="taskEditorCancel" type="button" disabled={saving} onClick={onClose}>
+              <button
+                data-variant="secondary"
+                className="action-button"
+                id="taskEditorCancel"
+                type="button"
+                disabled={saving}
+                onClick={onClose}
+              >
                 {messages.cancelEdit}
               </button>
-              <button id="taskEditorSave" className="task-save" type="submit" disabled={saving}>
+              <button
+                data-variant="primary"
+                id="taskEditorSave"
+                className="task-save action-button"
+                type="submit"
+                disabled={saving}
+              >
                 {saving ? messages.savingTask : messages.saveTask}
               </button>
             </div>

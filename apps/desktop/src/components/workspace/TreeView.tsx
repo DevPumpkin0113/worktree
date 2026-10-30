@@ -1,5 +1,4 @@
 import { useProjectDates } from '../project/ProjectDateFormatProvider';
-import { UnassignedTasks } from './UnassignedTasks';
 import { MilestoneSummary } from './MilestoneSummary';
 import { messages } from '../../i18n/messages';
 import { useMemo } from 'react';
@@ -102,24 +101,26 @@ export function TreeView({
       });
   }
   const unassignedMilestones = branch('-', 'milestone');
+  const unassignedTasks = (children.get('-') ?? []).filter(
+    (row) => row.type === 'task' && visibleIds.has(row.id),
+  );
   return (
     <div className="tree-view">
       {branch('-', 'epic')}
-      {unassignedMilestones.length ? (
+      {unassignedMilestones.length || unassignedTasks.length ? (
         <details className="group unassigned-epics" open onToggle={onToggle}>
           <summary data-view-group="unassigned-epics">
             <Icon name="chevron-right" className="tree-toggle" />
             {messages.unassignedEpic}
           </summary>
-          <div className="children">{unassignedMilestones}</div>
+          <div className="children">
+            {unassignedMilestones}
+            {unassignedTasks.map((row) => (
+              <TaskCard key={row.id} row={row} {...props} selected={props.selectedId === row.id} />
+            ))}
+          </div>
         </details>
       ) : null}
-      <UnassignedTasks
-        rows={(children.get('-') ?? []).filter((row) => row.type === 'task')}
-        visibleIds={visibleIds}
-        onToggle={onToggle}
-        {...props}
-      />
     </div>
   );
 }

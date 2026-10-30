@@ -96,11 +96,10 @@
   min-width: 0;
 }
 .kanban-view .task-name {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  display: block;
   overflow: hidden;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-text);
   font-size: 12px;
   font-weight: 500;

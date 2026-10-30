@@ -9,7 +9,7 @@ const groupKey = (summary: HTMLElement) =>
     : summary.dataset.viewGroup === 'unassigned-epics'
       ? unassignedEpicKey
       : undefined);
-const scrollers = ['.diagram-scroll', '.gantt-scroll', '.all-tasks'];
+const scrollers = ['.diagram-scroll', '.gantt-scroll', '.all-tasks', '.kanban-view'];
 
 export function createDocumentViewState() {
   const documents = new Map<

@@ -19,7 +19,7 @@ export function validProjectRuleValues(value: string, required = false) {
 }
 
 export function validTaskPrefix(value: string) {
-  return /^[A-Z]{1,20}$/.test(value) && value !== 'MS';
+  return /^[A-Z]{1,20}$/.test(value) && value !== 'MS' && value !== 'EP';
 }
 export function validInitializationDirectory(value: string) {
   return (

@@ -677,6 +677,27 @@ test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 
     await f.close();
   }
 });
+test('초기화 규칙의 다음 버튼은 생성 버튼과 분리되어 최종 확인에서 멈춘다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.open('C:/NEW'));
+    await f.click('#initializationNext');
+    const next = f.element<HTMLButtonElement>('#initializationNext');
+    await act(() => next.click());
+    const submit = f.element<HTMLButtonElement>('#initializationSubmit');
+    assert.notEqual(next, submit);
+    assert.equal(next.isConnected, false);
+    assert.ok(f.host.querySelector('.initialization-review'));
+    assert.ok(!f.store.active?.model);
+    await act(() => next.click());
+    assert.ok(!f.store.active?.model);
+    await act(() => submit.click());
+    assert.ok(f.store.active?.model);
+  } finally {
+    await f.close();
+  }
+});
+
 test('초기화하지 않은 폴더는 생성 화면을 제공하고 지정 위치·프리픽스를 전달한다', async () => {
   const f = await fixture();
   try {
@@ -1863,6 +1884,10 @@ test('초기화는 기본 검증 말풍선 없이 오류를 안내하고 상하�
     await f.value('#initialization-prefix', 'MS');
     await f.click('#initializationNext');
     assert.equal(document.activeElement, f.element('#initialization-prefix'));
+    await f.value('#initialization-prefix', 'EP');
+    await f.click('#initializationNext');
+    assert.equal(document.activeElement, f.element('#initialization-prefix'));
+    assert.ok(f.host.querySelector('#initializationNext'));
     await f.value('#initialization-prefix', 'W');
     await f.clearBadges('#initialization-taskTypes');
     await f.click('#initializationNext');
@@ -2397,6 +2422,16 @@ test('우선순위 색상은 이름 대신 순서·개수로 갱신되며 미지
     assert.equal(color('low'), 'var(--color-priority-low)');
     await f.click('#projectSettings-priorities .priority-add');
     await f.click('#projectSettings-priorities .priority-add');
+    assert.equal(
+      f.element<HTMLButtonElement>('#projectSettings-priorities .priority-add').disabled,
+      true,
+    );
+    assert.match(f.element('#projectSettings-priorities-limit').textContent ?? '', /더 이상 추가/);
+    await f.click('#projectSettings-priorities .priority-add');
+    assert.equal(
+      f.host.querySelectorAll('#projectSettings-priorities [data-priority-id]').length,
+      5,
+    );
     assert.equal(color('low'), 'var(--color-priority-middle)');
     assert.match(color('normal'), /high.*50%.*middle/);
     const priorities = f.host.querySelectorAll<HTMLElement>(

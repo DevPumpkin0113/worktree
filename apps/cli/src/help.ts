@@ -207,8 +207,8 @@ export function help(language: Language, topic?: string, session = false) {
           t('프로젝트 이름. 기본: 폴더명.', 'Project name. Default: folder name.'),
         '--prefix W        ' +
           t(
-            '이슈 접두어. 기본: W. 영문 1~20자, MS 제외. 소문자는 대문자로 변환.',
-            'Issue prefix. Default: W. 1–20 ASCII letters, except MS; lowercase is uppercased.',
+            '이슈 접두어. 기본: W. 영문 1~20자, EP·MS 제외. 소문자는 대문자로 변환.',
+            'Issue prefix. Default: W. 1–20 ASCII letters, except EP and MS; lowercase is uppercased.',
           ),
         '--directory PATH  ' +
           t(

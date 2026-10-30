@@ -654,6 +654,9 @@
   justify-content: center;
   padding: 6px;
 }
+.priority-editor > small.priority-limit-message {
+  color: var(--color-danger);
+}
 .priority-editor li svg,
 .priority-add svg {
   width: 14px;

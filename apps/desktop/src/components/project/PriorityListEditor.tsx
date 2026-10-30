@@ -143,6 +143,7 @@ export function PriorityListEditor({
         type="button"
         className="priority-add"
         disabled={value.length >= MAX_PROJECT_PRIORITIES}
+        aria-describedby={value.length >= MAX_PROJECT_PRIORITIES ? id + '-limit' : undefined}
         onClick={() => {
           let name = messages.priority;
           let number = 1;
@@ -153,6 +154,11 @@ export function PriorityListEditor({
         <Icon name="plus" />
         {messages.addPriority}
       </button>
+      {value.length >= MAX_PROJECT_PRIORITIES ? (
+        <small id={id + '-limit'} role="status" className="priority-limit-message">
+          {messages.priorityLimitReached}
+        </small>
+      ) : null}
     </div>
   );
 }

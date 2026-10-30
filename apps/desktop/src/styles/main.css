@@ -106,7 +106,14 @@ input {
   overflow: auto;
   overscroll-behavior: contain;
 }
-#workspace:is([data-page='board'], [data-page='tasks'], [data-page='analytics']) #content {
+#workspace:is(
+    [data-page='board'],
+    [data-page='tasks'],
+    [data-page='analytics'],
+    [data-page='project'],
+    [data-page='initialize']
+  )
+  #content {
   border: 0;
   border-radius: 0;
   padding: 0;

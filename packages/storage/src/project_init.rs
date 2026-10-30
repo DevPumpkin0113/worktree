@@ -41,6 +41,27 @@ impl Default for InitializationRules {
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn priorities_allow_five_but_reject_six() {
+        let mut rules = InitializationRules::default();
+        rules.priorities = (0..5)
+            .map(|i| ProjectPriority {
+                id: format!("p{i}"),
+                name: format!("Priority {i}"),
+            })
+            .collect();
+        assert!(rules.valid());
+        rules.priorities.push(ProjectPriority {
+            id: "sixth".into(),
+            name: "Sixth".into(),
+        });
+        assert!(!rules.valid());
+    }
+}
 impl InitializationRules {
     pub fn valid(&self) -> bool {
         let list = |values: &[String]| {
@@ -68,7 +89,7 @@ impl InitializationRules {
             && list(&self.labels)
             && list(&self.assignees)
             && !self.assignees.iter().any(|v| v == "-")
-            && self.priorities.len() <= 100
+            && self.priorities.len() <= 5
             && self.priorities.iter().all(|p| {
                 !p.id.is_empty()
                     && p.id.len() <= 80
@@ -121,6 +142,7 @@ pub fn initialize(
         || prefix.is_empty()
         || prefix.len() > 20
         || prefix == "MS"
+        || prefix == "EP"
         || !prefix.chars().all(|c| c.is_ascii_uppercase())
     {
         return Err(files::invalid());

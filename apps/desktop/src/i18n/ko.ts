@@ -102,7 +102,7 @@ export const ko = {
   initializingProject: '프로젝트 생성 중…',
   initializeProjectHint: '이 폴더에 프로젝트 문서 집합을 생성합니다.',
   dataDirectory: '데이터 저장 위치',
-  taskPrefixHint: '영문 대문자 1~20자 · MS 제외 · 생성 후 변경 불가',
+  taskPrefixHint: '영문 대문자 1~20자 · EP·MS 제외 · 생성 후 변경 불가',
   initializeFailed: '프로젝트를 생성하지 못했습니다: ',
   description: '설명',
   noDescription: '작성된 설명이 없습니다.',
@@ -509,7 +509,7 @@ export const ko = {
   projectRootLocation: '프로젝트 루트',
   initializationLocation: '생성 위치',
   initializationPrefixInvalid:
-    '영문 대문자 1~20자로 입력하세요. MS는 마일스톤용으로 사용할 수 없습니다.',
+    '영문 대문자 1~20자로 입력하세요. EP와 MS는 에픽·마일스톤용으로 사용할 수 없습니다.',
   initializationBrowseFailed: '폴더를 선택하지 못했습니다: ',
   initializationParentHint: '새 폴더를 둘 위치',
   initializationFolderNameHint: '이 위치에 새로 만들 폴더',
@@ -519,7 +519,9 @@ export const ko = {
   colorHexInvalid: '색상은 #000000 형식의 6자리 HEX로 입력하세요.',
   priorities: '우선순위 목록',
   priorityOrderSummary: '위쪽이 높음 · 아래쪽이 낮음',
-  priorityOrderHint: '위쪽일수록 높고 아래쪽일수록 낮습니다. 손잡이를 드래그해 순서를 변경하세요.',
+  priorityOrderHint:
+    '최대 5개까지 추가할 수 있습니다. 위쪽일수록 높습니다. 손잡이를 드래그해 순서를 변경하세요.',
+  priorityLimitReached: '더 이상 추가할 수 없습니다.',
   addPriority: '우선순위 추가',
   assignees: '담당자 목록',
   reorderPriority: '순서 변경',

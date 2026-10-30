@@ -7,7 +7,7 @@ export const ko = {
   idSequenceExhausted: '이슈 번호의 발급 한도를 초과했습니다.',
   invalidDeleteOption: '올바르지 않은 삭제 옵션입니다.',
   invalidIdSeparator: '잘못된 ID 구분자 설정입니다.',
-  invalidPriorities: '이름이 비었거나 중복되었는지 확인하세요.',
+  invalidPriorities: '우선순위는 최대 5개이며, 이름이 비었거나 중복되면 안 됩니다.',
   invalidProjectField: (file: string, field: string) => `${file}: ${field} 값을 확인해 주세요.`,
   lowPriority: '하',
   missingEffortNotice: (missingEfforts: string | number) => ` · 예상 시간 미정 ${missingEfforts}개`,

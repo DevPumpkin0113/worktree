@@ -8,7 +8,7 @@ export const en = {
   idSequenceExhausted: 'The issue ID sequence limit has been reached.',
   invalidDeleteOption: 'Invalid deletion option.',
   invalidIdSeparator: 'Invalid ID separator setting.',
-  invalidPriorities: 'Check for empty or duplicate names.',
+  invalidPriorities: 'Use up to 5 priorities with nonempty, unique names.',
   invalidProjectField: (file: string, field: string) => `${file}: check the ${field} field.`,
   lowPriority: 'Low',
   missingEffortNotice: (missingEfforts: string | number) =>

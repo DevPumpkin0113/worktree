@@ -207,11 +207,13 @@ export function ProjectInitialization({
           ) : null}
           {step < initializationTitles().length - 1 ? (
             <button
+              key="next"
               data-variant="primary"
               className="action-button"
               id="initializationNext"
               type="button"
-              onClick={() => {
+              onClick={(event) => {
+                event.preventDefault();
                 if (!busy && validateCurrent()) onStep(step + 1);
               }}
             >
@@ -219,6 +221,7 @@ export function ProjectInitialization({
             </button>
           ) : (
             <button
+              key="submit"
               data-variant="primary"
               className="action-button"
               id="initializationSubmit"

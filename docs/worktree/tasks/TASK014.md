@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK014"
 title: "외부 갱신 상태 유지와 오류 안내"
-start: "-"
-end: "-"
+start: "2026-10-20"
+end: "2026-10-20"
 createdAt: "2026-10-29T15:56:54.628Z"
-updatedAt: "2026-10-30T04:41:35.756Z"
+updatedAt: "2026-10-30T09:58:50.936Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS003"

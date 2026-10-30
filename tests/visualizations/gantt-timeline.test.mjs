@@ -46,5 +46,42 @@ test('간트 React 출력은 5주 표기·안전한 제목·일정 미정 분리
  assert.match(html, /gantt-fixed-heading[\s\S]*<thead>[\s\S]*<\/thead>[\s\S]*class="gantt-scroll"/);
  assert.doesNotMatch(html.slice(html.indexOf('class="gantt-scroll"')), /<thead>/);
  assert.match(html,/data-visible-days="35"/);assert.match(html,/43주차/);assert.match(html,/gantt-frame/);assert.match(html,/today-line/);assert.doesNotMatch(html,/<script>/);assert.match(html,/&lt;script&gt;/);
- const unknown=renderToStaticMarkup(createElement(GanttView,props([task()])));assert.match(unknown,/일정이 아직 입력되지/);assert.doesNotMatch(unknown,/gantt-table/);assert.equal(timelineRange([task()]),null);
+ const unknown=renderToStaticMarkup(createElement(GanttView,props([task()])));assert.match(unknown,/일정 미정/);assert.match(unknown,/gantt-table/);assert.doesNotMatch(unknown,/unscheduled-list/);assert.equal(timelineRange([task()]),null);
+});
+
+test('간트 날짜축은 연월 경계를 표시하고 일 단위에서만 주말을 구분한다',()=>{
+ const row=task('2026-12-29','2027-01-03');
+ const day=renderToStaticMarkup(createElement(GanttView,props([row],'day','2027-01-01')));
+ assert.match(day,/gantt-month-label[^>]*>2026.12/);
+ assert.match(day,/gantt-month-label[^>]*>2027.01/);
+ assert.match(day,/gantt-weekend/);
+ const week=renderToStaticMarkup(createElement(GanttView,props([row],'week','2027-01-01')));
+ assert.doesNotMatch(week,/gantt-weekend/);
+ assert.match(week,/today-line/);
+});
+
+test('일정 있는 이슈가 앞서고 미정 이슈는 같은 표의 날짜 영역에 표시한다',()=>{
+ const scheduled={...task('2026-10-20','2026-10-23'),id:'W002',name:'Scheduled issue'};
+ const unknown={...task(),id:'W001',name:'Unknown issue'};
+ const html=renderToStaticMarkup(createElement(GanttView,props([unknown,scheduled])));
+ assert.ok(html.indexOf('data-id="W002"') < html.indexOf('data-id="W001"'));
+ assert.match(html,/gantt-unscheduled-start/);
+ assert.match(html,/gantt-unscheduled-label[^>]*>일정 미정/);
+ assert.doesNotMatch(html,/unscheduled-list/);
+});
+
+test('간트는 최신 시작일·늦은 종료일 순이며 같은 일정과 미정의 원래 순서는 유지한다',()=>{
+ const rows=[
+  {...task(),id:'U001'},
+  {...task('2026-10-20','2026-11-10'),id:'OLD'},
+  {...task('2026-10-30','2026-10-31'),id:'SHORT'},
+  {...task('2026-10-30','2026-11-02'),id:'LONG'},
+  {...task('2026-10-30','2026-11-02'),id:'SAME'},
+  {...task(),id:'U002'},
+ ];
+ const before=JSON.stringify(rows);
+ const html=renderToStaticMarkup(createElement(GanttView,props(rows)));
+ const ids=[...html.matchAll(/class="gantt-label[^"\n]*"[^>]*data-id="([^"]+)"/g)].map(match=>match[1]);
+ assert.deepEqual(ids,['LONG','SAME','SHORT','OLD','U001','U002']);
+ assert.equal(JSON.stringify(rows),before);
 });

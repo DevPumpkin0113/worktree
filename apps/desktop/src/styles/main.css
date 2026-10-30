@@ -596,8 +596,7 @@ summary.detail-selected {
   border-color: var(--color-view-button-active-border-color);
   background: var(--color-selection);
 }
-.gantt-label.detail-selected,
-.unscheduled-list button.detail-selected {
+.gantt-label.detail-selected {
   background: var(--color-selection);
   color: var(--color-gantt-label-detail-selected-color);
 }
@@ -1152,14 +1151,12 @@ body:has(#documentProblems:not([hidden])) {
 }
 
 .all-tasks .all-task-id,
-.gantt-label[data-id],
-.unscheduled .unscheduled-list button {
+.gantt-label[data-id] {
   position: relative;
   padding-left: 22px;
 }
 .all-task-id::before,
-.gantt-label::before,
-.unscheduled-list button::before {
+.gantt-label::before {
   content: '';
   position: absolute;
   left: 8px;

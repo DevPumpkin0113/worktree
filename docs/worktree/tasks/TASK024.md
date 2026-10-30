@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK024"
 title: "Windows 앱 배포와 서명 업데이트"
-start: "-"
-end: "-"
+start: "2026-10-20"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.650Z"
-updatedAt: "2026-10-30T04:41:35.817Z"
+updatedAt: "2026-10-30T09:58:51.125Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS006"

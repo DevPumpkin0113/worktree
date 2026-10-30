@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK004"
 title: "프로젝트 데이터 재초기화"
-start: "-"
-end: "-"
+start: "2026-10-22"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.611Z"
-updatedAt: "2026-10-30T04:41:35.690Z"
+updatedAt: "2026-10-30T09:58:50.763Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"

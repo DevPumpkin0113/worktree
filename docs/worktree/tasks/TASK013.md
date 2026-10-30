@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK013"
 title: "한국어 영어와 프로젝트 표시 형식"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.626Z"
-updatedAt: "2026-10-30T04:41:35.750Z"
+updatedAt: "2026-10-30T09:58:50.920Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS003"

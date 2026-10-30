@@ -463,7 +463,7 @@ export const en = {
   unknownLocation: 'Location unavailable',
   unknownSetting: 'Unknown setting.',
   unscheduled: 'Unscheduled',
-  unscheduledPrefix: 'Unscheduled · ',
+  ganttUnscheduled: 'Unscheduled',
   update: 'Updates',
   updateAhead: 'Using a development version',
   updateCheckFailed: 'Could not check for updates',

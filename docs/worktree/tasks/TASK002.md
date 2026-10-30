@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK002"
 title: "프로젝트 초기화와 작업 규칙 설정"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.609Z"
-updatedAt: "2026-10-30T04:41:35.674Z"
+updatedAt: "2026-10-30T09:58:50.729Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"

@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK019"
 title: "CLI 작업 마일스톤과 댓글 변경"
-start: "-"
-end: "-"
+start: "2026-10-23"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.638Z"
-updatedAt: "2026-10-30T04:41:35.785Z"
+updatedAt: "2026-10-30T09:58:51.028Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"

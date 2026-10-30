@@ -454,7 +454,7 @@ export const ko = {
   unknownLocation: '위치 확인 불가',
   unknownSetting: '알 수 없는 설정입니다.',
   unscheduled: '일정 미정',
-  unscheduledPrefix: '일정 미정 · ',
+  ganttUnscheduled: '일정 미정',
   update: '업데이트',
   updateAhead: '개발 버전을 사용 중입니다',
   updateCheckFailed: '업데이트 확인에 실패했습니다',

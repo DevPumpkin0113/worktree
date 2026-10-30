@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK020"
 title: "CLI 프로젝트 초기화와 설정 편집"
-start: "-"
-end: "-"
+start: "2026-10-23"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.641Z"
-updatedAt: "2026-10-30T04:41:35.792Z"
+updatedAt: "2026-10-30T09:58:51.048Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"

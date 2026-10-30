@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK021"
 title: "CLI 대화형 콘솔과 다국어 도움말"
-start: "-"
-end: "-"
+start: "2026-10-23"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.643Z"
-updatedAt: "2026-10-30T04:41:35.799Z"
+updatedAt: "2026-10-30T09:58:51.068Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"

@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK006"
 title: "작업과 마일스톤 문서 모델"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-21"
 createdAt: "2026-10-29T15:56:54.614Z"
-updatedAt: "2026-10-30T04:41:35.702Z"
+updatedAt: "2026-10-30T09:58:50.794Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS002"

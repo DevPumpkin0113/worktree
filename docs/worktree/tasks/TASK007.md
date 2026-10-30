@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK007"
 title: "작업과 마일스톤 생성 수정 삭제"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.616Z"
-updatedAt: "2026-10-30T04:41:35.710Z"
+updatedAt: "2026-10-30T09:58:50.816Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS002"

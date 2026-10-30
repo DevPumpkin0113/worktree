@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK005"
 title: "앱 설정과 프로젝트 세션 보존"
-start: "-"
-end: "-"
+start: "2026-10-20"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.613Z"
-updatedAt: "2026-10-30T04:41:35.696Z"
+updatedAt: "2026-10-30T09:58:50.779Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"

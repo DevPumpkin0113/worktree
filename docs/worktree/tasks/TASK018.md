@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK018"
 title: "CLI 조회 검증과 프로젝트 규격 안내"
-start: "-"
-end: "-"
+start: "2026-10-23"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.635Z"
-updatedAt: "2026-10-30T04:41:35.779Z"
+updatedAt: "2026-10-30T09:58:51.009Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"

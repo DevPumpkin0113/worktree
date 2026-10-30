@@ -1,7 +1,6 @@
-import { useContext } from 'react';
-import { ProjectPriorityContext, priorityStyle } from '../../app/project-priority-context';
 import { useMemo, useRef } from 'react';
 import { messages } from '../../i18n/messages';
+import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import {
   DAY_MS,
@@ -9,6 +8,8 @@ import {
   ganttTicks,
   seoulToday,
   timelineRange,
+  initialWindowStart,
+  visibleDays,
   type GanttUnit,
 } from '../../views/gantt-timeline';
 import { useChartPan } from '../../hooks/use-chart-pan';
@@ -33,15 +34,25 @@ export function GanttView({
   onScroll: () => void;
   today?: string;
 }) {
-  const priorities = useContext(ProjectPriorityContext);
+  const { date } = useProjectDates();
   const root = useRef<HTMLDivElement>(null);
   const consumeClick = useChartPan(root);
-  const known = useMemo(() => rows.filter((row) => row.start !== '-'), [rows]);
-  const unknown = useMemo(() => rows.filter((row) => row.start === '-'), [rows]);
-  const range = useMemo(
-    () => (known.length ? timelineRange(rangeRows, unit, today) : null),
-    [known.length, rangeRows, unit, today],
+  const known = useMemo(
+    () =>
+      rows
+        .filter((row) => row.start !== '-' && row.end !== '-')
+        .sort((a, b) => b.start.localeCompare(a.start) || b.end.localeCompare(a.end)),
+    [rows],
   );
+  const unknown = useMemo(() => rows.filter((row) => row.start === '-' || row.end === '-'), [rows]);
+  const range = useMemo(() => {
+    if (!rows.length) return null;
+    const scheduledRange = timelineRange(rangeRows, unit, today);
+    if (scheduledRange) return scheduledRange;
+    const start = initialWindowStart(today, unit),
+      days = visibleDays(unit);
+    return { start, end: start + (days - 1) * DAY_MS, days };
+  }, [rows.length, rangeRows, unit, today]);
   const { scroller, geometry, start, updateScroll, scrollbarWidth } = useGanttViewport(
     range,
     unit,
@@ -56,9 +67,13 @@ export function GanttView({
   }
   return (
     <div ref={root} className="gantt-view">
-      <div className="schedule-toolbar">
+      <div className="schedule-toolbar gantt-toolbar">
         <div>
-          <strong>{messages.gantt}</strong>
+          <strong title={messages.ganttRangeHint}>
+            {range && geometry
+              ? `${date(dateString(start))} ~ ${date(dateString(start + geometry.windowDays * DAY_MS - 1))}`
+              : messages.gantt}
+          </strong>
           <span className="sub">
             {messages.ganttScheduledPrefix}
             {known.length}
@@ -79,10 +94,6 @@ export function GanttView({
       </div>
       {range && geometry ? (
         <>
-          <p className="sub">
-            {dateString(start)} ~ {dateString(start + geometry.windowDays * DAY_MS - 1)}
-            {messages.ganttRangeHint}
-          </p>
           <div className="chart-scroll-frame gantt-frame">
             <div className="gantt-fixed-heading">
               <div className="gantt-heading-viewport" style={{ marginRight: scrollbarWidth }}>
@@ -142,10 +153,12 @@ export function GanttView({
                   </colgroup>
 
                   <tbody>
-                    {known.map((row) => (
+                    {[...known, ...unknown].map((row, index) => (
                       <GanttTaskRow
                         key={row.id}
                         row={row}
+                        unscheduledStart={index === known.length && known.length > 0}
+                        unit={unit}
                         geometry={geometry}
                         ticks={ticks}
                         start={start}
@@ -165,30 +178,6 @@ export function GanttView({
       ) : (
         <div className="empty">{messages.ganttEmpty}</div>
       )}
-      {unknown.length ? (
-        <details className="unscheduled" open>
-          <summary>
-            {messages.unscheduledPrefix}
-            {unknown.length}
-            {messages.countSuffix}
-          </summary>
-          <div className="unscheduled-list">
-            {unknown.map((row) => (
-              <button
-                type="button"
-                key={row.id}
-                style={priorityStyle(row.priority ?? '-', priorities)}
-                data-id={row.id}
-                className={selectedId === row.id ? 'detail-selected' : undefined}
-                aria-current={selectedId === row.id ? 'true' : undefined}
-                onClick={() => select(row.id)}
-              >
-                <span className="id">{label(row.id)}</span> {row.name}
-              </button>
-            ))}
-          </div>
-        </details>
-      ) : null}
     </div>
   );
 }

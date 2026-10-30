@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK015"
 title: "React TypeScript 화면 책임 분리"
-start: "-"
-end: "-"
+start: "2026-10-20"
+end: "2026-10-21"
 createdAt: "2026-10-29T15:56:54.629Z"
-updatedAt: "2026-10-30T04:41:35.761Z"
+updatedAt: "2026-10-30T09:58:50.952Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS004"

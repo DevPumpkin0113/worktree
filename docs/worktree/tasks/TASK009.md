@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK009"
 title: "일 주 단위 간트 일정 탐색"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.619Z"
-updatedAt: "2026-10-30T04:41:35.724Z"
+updatedAt: "2026-10-30T09:58:50.850Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS002"

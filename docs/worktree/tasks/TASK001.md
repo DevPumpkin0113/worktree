@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK001"
 title: "프로젝트 폴더 열기와 전환"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-21"
 createdAt: "2026-10-29T15:56:54.607Z"
-updatedAt: "2026-10-30T04:41:35.665Z"
+updatedAt: "2026-10-30T09:58:50.710Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"

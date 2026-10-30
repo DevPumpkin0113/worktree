@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK017"
 title: "공용 안전 저장 충돌 검사와 복구"
-start: "-"
-end: "-"
+start: "2026-10-21"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.633Z"
-updatedAt: "2026-10-30T04:41:35.773Z"
+updatedAt: "2026-10-30T09:58:50.986Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS004"

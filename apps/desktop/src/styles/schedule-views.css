@@ -115,36 +115,6 @@
   background: var(--color-timeline-row-hover-background);
 }
 
-.unscheduled {
-  margin-top: 18px;
-  border: 1px solid var(--color-group-border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.unscheduled summary {
-  font-size: 13px;
-}
-.unscheduled-list {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 12px;
-}
-.unscheduled-list button {
-  text-align: left;
-  border: 0;
-  border-bottom: 1px solid var(--color-tag-background);
-  border-radius: 0;
-  font-size: 12px;
-  padding: 10px;
-  background: var(--color-surface);
-}
-.unscheduled-list button:hover {
-  background: var(--color-recent-files-button-hover-background);
-  color: var(--color-gantt-label-hover-color);
-}
-.unscheduled-list .id {
-  margin-right: 8px;
-}
 .dependency-focus {
   padding: 12px 14px;
   background: var(--color-gantt-label-hover-background);
@@ -298,6 +268,10 @@
   display: block;
 }
 
+.gantt-view {
+  margin-top: 8px;
+}
+
 .gantt-view:has(.gantt-frame) {
   display: flex;
   flex: 1;
@@ -317,11 +291,6 @@
   flex: 1;
   min-height: 0;
 }
-.gantt-view:has(.gantt-frame) > .unscheduled {
-  flex-shrink: 0;
-  max-height: 30%;
-  overflow: auto;
-}
 
 .gantt-fixed-heading {
   flex-shrink: 0;
@@ -337,4 +306,85 @@
   position: static;
   height: 48px;
   border-bottom: 0;
+}
+
+/* Gantt keeps its own compact layout without changing dependency diagrams. */
+.gantt-toolbar {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gantt-toolbar > div:first-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.gantt-toolbar strong {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.gantt-toolbar .sub {
+  margin: 0;
+  font-size: 11px;
+}
+.gantt-toolbar .filter-dropdown {
+  min-width: 100px;
+}
+.gantt-toolbar .filter-trigger {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+.gantt-view > .gantt-frame {
+  --chart-scroll-inset: 0px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.gantt-frame .gantt-label[data-id] {
+  height: 36px;
+  gap: 7px;
+  padding: 0 10px 0 22px;
+}
+.gantt-frame .gantt-label:hover:not(:disabled) {
+  background: var(--color-option-hover);
+  color: var(--color-primary);
+}
+.gantt-status {
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-chart-todo);
+}
+.gantt-status.state-doing {
+  background: var(--color-chart-doing);
+}
+.gantt-status.state-done {
+  background: var(--color-chart-done);
+}
+.gantt-status.state-blocked {
+  background: var(--color-chart-blocked);
+}
+.gantt-month-label {
+  font:
+    10px Segoe UI,
+    sans-serif;
+  fill: var(--color-text-muted);
+}
+.gantt-weekend {
+  fill: var(--color-surface-muted);
+  pointer-events: none;
+}
+.gantt-unscheduled-start > th,
+.gantt-unscheduled-start > td {
+  border-top: 1px solid var(--color-border);
+}
+.gantt-unscheduled-label {
+  font:
+    11px Segoe UI,
+    Malgun Gothic,
+    sans-serif;
+  fill: var(--color-text-muted);
 }

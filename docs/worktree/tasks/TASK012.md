@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK012"
 title: "댓글 영구 저장과 한 단계 답글"
-start: "-"
-end: "-"
+start: "2026-10-22"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.624Z"
-updatedAt: "2026-10-30T04:41:35.744Z"
+updatedAt: "2026-10-30T09:58:50.897Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS003"

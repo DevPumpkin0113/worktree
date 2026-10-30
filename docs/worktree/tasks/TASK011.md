@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK011"
 title: "작업 상세 탭과 분할 패널"
-start: "-"
-end: "-"
+start: "2026-10-20"
+end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.622Z"
-updatedAt: "2026-10-30T04:41:35.738Z"
+updatedAt: "2026-10-30T09:58:50.882Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS003"

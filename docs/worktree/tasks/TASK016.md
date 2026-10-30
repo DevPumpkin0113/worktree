@@ -2,10 +2,10 @@
 schemaVersion: 1
 id: "TASK016"
 title: "독립 workspace와 공통 도메인 분리"
-start: "-"
-end: "-"
+start: "2026-10-22"
+end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.631Z"
-updatedAt: "2026-10-30T04:41:35.767Z"
+updatedAt: "2026-10-30T09:58:50.967Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS004"

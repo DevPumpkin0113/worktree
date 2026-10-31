@@ -315,6 +315,11 @@ export function help(language: Language, topic?: string, session = false) {
                   'Predecessor original IDs; empty string clears. JSON also accepts an array.',
                 ),
               '--blocked-reason TEXT  ' + t('막힘 사유.', 'Blocked reason.'),
+              '--completed-at ISO  ' +
+                t(
+                  '완료 이슈의 완료 시각 보정(UTC ISO 8601).',
+                  'Correct a done issue completion timestamp (UTC ISO 8601).',
+                ),
               '--references JSON   ' +
                 t(
                   '배열 [{"type":"text|file","value":"..."}]. []로 비움. file은 루트 상대 경로.',

@@ -5,7 +5,7 @@ title: "한국어 영어와 프로젝트 표시 형식"
 start: "2026-10-21"
 end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.626Z"
-updatedAt: "2026-10-30T09:58:50.920Z"
+updatedAt: "2026-10-31T05:54:28.176Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS003"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop","Core"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-21T15:00:00.000Z"
 ---
 
 ## 목적

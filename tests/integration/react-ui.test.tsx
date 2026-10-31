@@ -742,6 +742,60 @@ test('에픽을 접어도 하위 마일스톤 접힘을 보존하고 삭제된 �
   }
 });
 
+test('인사이트 완료 그래프는 기간 선택·완료일 미상·잘못된 기간을 표시한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setPage('analytics'));
+    assert.equal(f.host.querySelectorAll('.insight-day').length, 7);
+    assert.ok(f.host.textContent?.includes('완료일 미상'));
+    assert.equal(f.host.querySelector('.insight-trend select'), null);
+    const choose = async (value: string) => {
+      await f.click('#completionPeriod');
+      await f.click(`#completionPeriod-options [data-value="${value}"]`);
+    };
+    await choose('30');
+    assert.equal(f.host.querySelectorAll('.insight-day').length, 30);
+    await choose('custom');
+    await f.value('.insight-date-range label:first-child input', '2026-10-31');
+    await f.value('.insight-date-range label:last-child input', '2026-10-31');
+    assert.equal(f.host.querySelectorAll('.insight-day').length, 1);
+    await f.value('.insight-date-range label:first-child input', '2026-11-01');
+    assert.ok(f.element('.insight-trend [role="alert"]').textContent?.includes('366'));
+    assert.equal(f.host.querySelector('.insight-day'), null);
+  } finally {
+    await f.close();
+  }
+});
+
+test('인사이트는 예시 막대 대신 실제 상태·담당자·에픽 현황을 표시하고 갱신한다', async () => {
+  const f = await fixture();
+  try {
+    await act(() => f.store.setPage('analytics'));
+    assert.equal(f.host.querySelector('.analytics-placeholder'), null);
+    assert.equal(f.host.querySelector('.analytics-intro'), null);
+    assert.equal(f.element('[data-insight-status="doing"] strong').textContent, '1');
+    assert.equal(f.element('[data-insight-status="done"] strong').textContent, '1');
+    assert.ok(f.element('[data-insight-owner="codex"]').textContent?.includes('0/1'));
+    assert.ok(f.element('[data-insight-epic="-"]').textContent?.includes('1/2'));
+    const progress = f.element<HTMLProgressElement>('[data-insight-epic="-"] progress');
+    assert.equal(progress.value, 1);
+    assert.equal(progress.max, 2);
+    f.files.set(
+      first,
+      deleteProjectTask(f.files.get(first)!, 'W002', {
+        children: 'keep',
+        detachPredecessors: false,
+      }),
+    );
+    await act(() => f.store.refreshProject());
+    assert.equal(f.element('[data-insight-status="done"] strong').textContent, '0');
+    assert.ok(f.element('[data-insight-epic="-"]').textContent?.includes('0/1'));
+    assert.equal(f.host.querySelector('[data-insight-owner="박대호"]'), null);
+  } finally {
+    await f.close();
+  }
+});
+
 test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 없이 페이지·프로젝트를 전환한다', async () => {
   const f = await fixture();
   try {

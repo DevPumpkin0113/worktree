@@ -5,7 +5,7 @@ title: "프로젝트 데이터 재초기화"
 start: "2026-10-22"
 end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.611Z"
-updatedAt: "2026-10-30T09:58:50.763Z"
+updatedAt: "2026-10-31T05:54:28.060Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop","Storage"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-21T15:00:00.000Z"
 ---
 
 ## 목적

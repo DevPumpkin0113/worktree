@@ -5,7 +5,7 @@ title: "CLI 작업 마일스톤과 댓글 변경"
 start: "2026-10-23"
 end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.638Z"
-updatedAt: "2026-10-30T09:58:51.028Z"
+updatedAt: "2026-10-31T05:54:28.251Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["CLI","Core","Storage"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-22T15:00:00.000Z"
 ---
 
 ## 목적

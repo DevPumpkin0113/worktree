@@ -18,6 +18,20 @@ function cli(root,args,input){return spawnSync(process.execPath,[main,...args,'-
 function ok(root,...args){const result=cli(root,[...args,'--json']);assert.equal(result.status,0,result.stderr);return JSON.parse(result.stdout);}
 function error(root,code,...args){const result=cli(root,[...args,'--json']);assert.equal(result.status,1,result.stdout);assert.equal(JSON.parse(result.stderr).error.code,code,result.stderr);}
 
+test('CLI 완료 기록은 종료일을 보존하고 재오픈 시 해제한다',t=>{
+ const root=fixture(t);
+ ok(root,'task','edit','W001','--start','2026-10-21','--end','2026-10-22','--status','done');
+ const completed=ok(root,'task','show','W001').task;
+ assert.match(completed.completedAt,/Z$/);assert.equal(completed.end,'2026-10-22');
+ ok(root,'task','edit','W001','--title','완료 뒤 수정');
+ assert.equal(ok(root,'task','show','W001').task.completedAt,completed.completedAt);
+ ok(root,'task','edit','W001','--status','doing');
+ assert.equal(ok(root,'task','show','W001').task.completedAt,undefined);
+ assert.equal(ok(root,'task','show','W002').task.completedAt,undefined);
+ ok(root,'task','edit','W002','--completed-at','2026-10-19T15:00:00.000Z');
+ assert.equal(ok(root,'task','show','W002').task.completedAt,'2026-10-19T15:00:00.000Z');
+});
+
 test('작업 생성·JSON 편집·원본 ID·선행 관계 저장과 dry-run 불변성',t=>{
  const root=fixture(t);const revision=ok(root,'status').revision;
  const preview=ok(root,'task','add','--title','새 작업','--dry-run');assert.equal(preview.dryRun,true);assert.equal(ok(root,'status').revision,revision);

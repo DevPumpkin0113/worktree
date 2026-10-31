@@ -10,6 +10,7 @@ import {
 } from './project-source';
 import { readTaskFile, writeTaskFile } from './task-file';
 export interface ProjectTaskDraft {
+  completedAt?: string;
   type: 'task' | 'milestone' | 'epic';
   icon?: EpicIcon;
   iconColor?: string;
@@ -120,6 +121,9 @@ export function updateProjectTask(
   });
   if (milestone) metadata.epic = draft.parent || '-';
   if (!container) {
+    if (draft.status === 'done' && existing?.status !== 'done') metadata.completedAt = updatedAt;
+    else if (draft.status !== 'done') delete metadata.completedAt;
+    if (draft.completedAt !== undefined) metadata.completedAt = draft.completedAt;
     const parentEpic = model.rows.find((row) => row.id === draft.parent)?.epic;
     if (parentEpic || metadata.epic !== undefined) metadata.epic = parentEpic ? draft.parent : '-';
     Object.assign(metadata, {

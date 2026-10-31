@@ -69,6 +69,8 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
       description: 'description',
       owner: 'owner',
       status: 'status',
+      completedAt: 'completedAt',
+      'completed-at': 'completedAt',
       milestone: 'parent',
       epic: 'parent',
       start: 'start',

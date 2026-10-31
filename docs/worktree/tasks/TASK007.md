@@ -5,7 +5,7 @@ title: "작업과 마일스톤 생성 수정 삭제"
 start: "2026-10-21"
 end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.616Z"
-updatedAt: "2026-10-30T09:58:50.816Z"
+updatedAt: "2026-10-31T05:54:28.098Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS002"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop","Core"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-21T15:00:00.000Z"
 ---
 
 ## 목적

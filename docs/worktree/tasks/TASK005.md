@@ -5,7 +5,7 @@ title: "앱 설정과 프로젝트 세션 보존"
 start: "2026-10-20"
 end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.613Z"
-updatedAt: "2026-10-30T09:58:50.779Z"
+updatedAt: "2026-10-31T05:54:28.073Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-21T15:00:00.000Z"
 ---
 
 ## 목적

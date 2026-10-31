@@ -115,6 +115,18 @@ export function parseProject(text: string): WorkModel {
         fail(key);
     }
     if (string('updatedAt') < string('createdAt')) fail('updatedAt');
+    if (m.completedAt !== undefined) {
+      const completed = string('completedAt');
+      if (
+        container ||
+        status !== 'done' ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(completed) ||
+        Number.isNaN(Date.parse(completed)) ||
+        new Date(completed).toISOString() !== completed ||
+        completed > string('updatedAt')
+      )
+        fail('completedAt');
+    }
     const milestoneParent = container ? '-' : string('milestone', '-');
     const epicParent = epic ? '-' : string('epic', '-');
     if (!container && milestoneParent !== '-' && epicParent !== '-') fail('epic');
@@ -142,6 +154,7 @@ export function parseProject(text: string): WorkModel {
       references: references as TaskReference[],
       createdAt: string('createdAt'),
       updatedAt: string('updatedAt'),
+      ...(m.completedAt !== undefined ? { completedAt: string('completedAt') } : {}),
     };
     if (new Set(row.deps).size !== row.deps.length) fail('dependencies');
     if (locations.has(id)) fail('id');

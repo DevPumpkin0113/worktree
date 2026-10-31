@@ -39,6 +39,8 @@ export function DisplayNameSetting({
             onChange={(event) => setDraft(event.target.value)}
           />
           <button
+            data-variant="primary"
+            className="action-button"
             type="submit"
             disabled={disabled || normalized === value || !validDisplayName(normalized, true)}
           >

@@ -5,7 +5,7 @@ title: "프로젝트 폴더 열기와 전환"
 start: "2026-10-21"
 end: "2026-10-21"
 createdAt: "2026-10-29T15:56:54.607Z"
-updatedAt: "2026-10-30T09:58:50.710Z"
+updatedAt: "2026-10-31T05:54:28.017Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-20T15:00:00.000Z"
 ---
 
 ## 목적

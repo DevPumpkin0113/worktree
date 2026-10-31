@@ -66,7 +66,7 @@ export function Content({
     store.detailMode === 'sidebar' && !state.settingsOpen ? state.selectedId : null;
   const rows = model?.rows;
   const root = useRef<HTMLDivElement>(null);
-  const viewState = useRef(createDocumentViewState());
+  const viewState = useRef(createDocumentViewState({ trackGroups: false }));
   const pageKey =
     state.page === 'board'
       ? active?.view === 'gantt'
@@ -330,6 +330,7 @@ export function Content({
             <AllTasks rows={filtered} label={label} selectedId={selectedId} onSelect={selectWork} />
           ) : active.view === 'tree' ? (
             <TreeView
+              key={active.path}
               rows={model.rows}
               visibleIds={visibleIds}
               showEmptyMilestones={showEmptyMilestones}
@@ -337,7 +338,11 @@ export function Content({
               label={label}
               selectedId={selectedId}
               onSelect={selectWork}
-              onToggle={capture}
+              collapsedGroups={active.collapsedGroups ?? []}
+              onGroupToggle={(id, open) => {
+                if (homeVisible) capture();
+                store.setTreeGroupOpen(active.path, id, open);
+              }}
             />
           ) : active.view === 'board' ? (
             <KanbanView

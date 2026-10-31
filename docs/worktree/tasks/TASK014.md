@@ -5,7 +5,7 @@ title: "외부 갱신 상태 유지와 오류 안내"
 start: "2026-10-20"
 end: "2026-10-20"
 createdAt: "2026-10-29T15:56:54.628Z"
-updatedAt: "2026-10-30T09:58:50.936Z"
+updatedAt: "2026-10-31T05:54:28.189Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS003"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop","Core"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-19T15:00:00.000Z"
 ---
 
 ## 목적

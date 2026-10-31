@@ -2,6 +2,8 @@ import { useProjectDates } from '../project/ProjectDateFormatProvider';
 import { messages } from '../../i18n/messages';
 import { TaskMetadata } from './TaskMetadata';
 import { TaskContentMetadata } from './TaskContentMetadata';
+import { Icon } from '../shared/Icon';
+import { CircleDot } from 'lucide-react';
 import { summarizeGroups } from '@worktree/core/group-summary';
 import { groupEffort, groupProgress, groupSchedule } from '../../views/group-summary';
 import { STATUS_NAMES, type WorkModel, type WorkRow } from '../../app/types';
@@ -27,7 +29,8 @@ export function TaskInfo({
   const children = model.rows.filter((item) => item.parent === row.id),
     previous = row.deps.map((id) => byId.get(id)!).filter(Boolean),
     next = model.rows.filter((item) => item.deps.includes(row.id));
-  const group = row.type === 'group' ? summarizeGroups(model.rows).get(row.id) : null;
+  const summaries = summarizeGroups(model.rows);
+  const group = row.type === 'group' ? summaries.get(row.id) : null;
   const facts = group
     ? [
         ...(row.epic || row.milestone
@@ -55,7 +58,7 @@ export function TaskInfo({
         [messages.startDate, row.start === '-' ? messages.unknown : date(row.start)],
         [messages.endDate, row.end === '-' ? messages.unknown : date(row.end)],
       ];
-  const links = (items: WorkRow[]) =>
+  const links = (items: WorkRow[], childList = false) =>
     items.length ? (
       items.map((item) => (
         <button
@@ -64,8 +67,24 @@ export function TaskInfo({
           data-detail={item.id}
           onClick={() => onSelect(item.id)}
         >
-          {item.type === 'task' ? <span className="detail-link-id">{label(item.id)}</span> : null}
-          <span className="detail-link-name">{item.name}</span>
+          {item.milestone ? (
+            <Icon name="milestone-diamond" className="detail-link-milestone-icon" />
+          ) : childList ? (
+            <CircleDot className="detail-child-issue-icon" size={16} strokeWidth={1.5} />
+          ) : null}
+          {childList || item.type === 'task' ? (
+            <span className="detail-link-id">{label(item.id)}</span>
+          ) : null}
+          <span className="detail-link-name" title={childList ? item.name : undefined}>
+            {item.name}
+          </span>
+          {item.milestone ? (
+            <span className="detail-link-count">
+              {summaries.get(item.id)?.completedTasks ?? 0}/{summaries.get(item.id)?.taskCount ?? 0}
+            </span>
+          ) : childList ? (
+            <span className="detail-link-count" aria-hidden="true" />
+          ) : null}
           <span className={'detail-status ' + item.status}>{STATUS_NAMES[item.status]}</span>
           <span aria-hidden="true">›</span>
         </button>
@@ -119,12 +138,12 @@ export function TaskInfo({
           ) : null}
           {!isGroup ? <TaskContentMetadata row={row} /> : null}
           {children.length ? (
-            <section className="detail-section">
+            <section className="detail-section detail-children">
               <h3>
                 {messages.children + ' '}
                 <span>{children.length}</span>
               </h3>
-              {links(children)}
+              <div className="detail-child-list">{links(children, true)}</div>
             </section>
           ) : null}
           {!isGroup ? (
@@ -207,9 +226,11 @@ export function TaskInfo({
           </details>
         ) : null}
         <button
+          data-variant="danger"
+          data-size="compact"
           type="button"
           id="taskDeleteOpen"
-          className="task-delete-open"
+          className="task-delete-open action-button"
           onClick={() => onDelete(row.id)}
         >
           {messages.delete}

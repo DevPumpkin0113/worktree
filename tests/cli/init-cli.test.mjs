@@ -22,8 +22,16 @@ test('빈 폴더의 일반 파일은 보존하고 두 번째 초기화는 거부
 });
 test('init dry-run·잘못된 접두어·경로·설정은 폴더를 생성하지 않는다',t=>{
  const root=location(t);assert.equal(ok(root,'init','--dry-run').dryRun,true);assert.equal(fs.existsSync(root),false);
- for(const args of [['--prefix','MS'],['--directory','../outside'],['--time-format','wrong'],['--use-effort','maybe']]){const result=cli(root,['init',...args,'--json']);assert.notEqual(result.status,0);assert.equal(fs.existsSync(root),false);}
+ for(const args of [['--prefix','EP'],['--prefix','ep'],['--prefix','MS'],['--directory','../outside'],['--time-format','wrong'],['--use-effort','maybe']]){const result=cli(root,['init',...args,'--json']);assert.notEqual(result.status,0);assert.equal(fs.existsSync(root),false);}
 });
+test('초기화 우선순위는 5개까지 허용하고 6개는 파일 생성 전에 거부한다',t=>{
+ const root=location(t),priorities=Array.from({length:5},(_,i)=>({id:`p${i}`,name:`Priority ${i}`}));
+ const run=values=>cli(root,['init','--dry-run','--input','-','--json'],JSON.stringify({priorities:values}));
+ assert.equal(run(priorities).status,0);
+ assert.notEqual(run([...priorities,{id:'sixth',name:'Sixth'}]).status,0);
+ assert.equal(fs.existsSync(root),false);
+});
+
 test('기존 데이터와 미완료 초기화 기록을 덮어쓰지 않는다',t=>{
  const root=location(t);fs.mkdirSync(path.join(root,'docs/worktree'),{recursive:true});fs.writeFileSync(path.join(root,'docs/worktree/keep.txt'),'keep');const existing=cli(root,['init','--json']);assert.equal(JSON.parse(existing.stderr).error.code,'TARGET_EXISTS');assert.equal(fs.existsSync(path.join(root,'worktree.json')),false);
  const resetRoot=location(t);fs.mkdirSync(resetRoot);fs.writeFileSync(path.join(resetRoot,'.worktree-reset.json'),'pending');const pending=cli(resetRoot,['init','--json']);assert.equal(JSON.parse(pending.stderr).error.code,'RECOVERY_REQUIRED');assert.equal(fs.readFileSync(path.join(resetRoot,'.worktree-reset.json'),'utf8'),'pending');

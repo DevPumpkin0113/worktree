@@ -17,6 +17,7 @@ export interface WorkRow {
   references?: import('./project-source').TaskReference[];
   createdAt?: string;
   updatedAt?: string;
+  completedAt?: string;
   owner: string;
   status: Status;
   start: string;

@@ -1,5 +1,4 @@
 import { useProjectDates } from '../project/ProjectDateFormatProvider';
-import { UnassignedTasks } from './UnassignedTasks';
 import { MilestoneSummary } from './MilestoneSummary';
 import { messages } from '../../i18n/messages';
 import { useMemo } from 'react';
@@ -10,17 +9,20 @@ import type { ListProps } from './types';
 import { TaskCard } from './TaskCard';
 import { Icon } from '../shared/Icon';
 import { WorkGroupIcon } from '../shared/WorkGroupIcon';
+import { UNASSIGNED_EPIC_GROUP } from '../../interactions/tree-group-state';
 export function TreeView({
   rows,
   visibleIds,
   useEffort,
-  onToggle,
+  collapsedGroups,
+  onGroupToggle,
   showEmptyMilestones = true,
   ...props
 }: ListProps & {
   visibleIds: Set<string>;
   useEffort: boolean;
-  onToggle: () => void;
+  collapsedGroups: string[];
+  onGroupToggle: (id: string, open: boolean) => void;
   showEmptyMilestones?: boolean;
 }) {
   const { date } = useProjectDates();
@@ -50,7 +52,14 @@ export function TreeView({
         if (!content.length && !((row.milestone || row.epic) && showEmptyMilestones)) return [];
         const summary = summaries.get(row.id)!;
         return [
-          <details className="group" key={row.id} open onToggle={onToggle}>
+          <details
+            className="group"
+            key={row.id}
+            open={!collapsedGroups.includes(row.id)}
+            onToggle={(event) => {
+              if (event.currentTarget.isConnected) onGroupToggle(row.id, event.currentTarget.open);
+            }}
+          >
             <summary
               data-work-id={row.id}
               className={props.selectedId === row.id ? 'detail-selected' : undefined}
@@ -102,24 +111,33 @@ export function TreeView({
       });
   }
   const unassignedMilestones = branch('-', 'milestone');
+  const unassignedTasks = (children.get('-') ?? []).filter(
+    (row) => row.type === 'task' && visibleIds.has(row.id),
+  );
   return (
     <div className="tree-view">
       {branch('-', 'epic')}
-      {unassignedMilestones.length ? (
-        <details className="group unassigned-epics" open onToggle={onToggle}>
+      {unassignedMilestones.length || unassignedTasks.length ? (
+        <details
+          className="group unassigned-epics"
+          open={!collapsedGroups.includes(UNASSIGNED_EPIC_GROUP)}
+          onToggle={(event) => {
+            if (event.currentTarget.isConnected)
+              onGroupToggle(UNASSIGNED_EPIC_GROUP, event.currentTarget.open);
+          }}
+        >
           <summary data-view-group="unassigned-epics">
             <Icon name="chevron-right" className="tree-toggle" />
             {messages.unassignedEpic}
           </summary>
-          <div className="children">{unassignedMilestones}</div>
+          <div className="children">
+            {unassignedMilestones}
+            {unassignedTasks.map((row) => (
+              <TaskCard key={row.id} row={row} {...props} selected={props.selectedId === row.id} />
+            ))}
+          </div>
         </details>
       ) : null}
-      <UnassignedTasks
-        rows={(children.get('-') ?? []).filter((row) => row.type === 'task')}
-        visibleIds={visibleIds}
-        onToggle={onToggle}
-        {...props}
-      />
     </div>
   );
 }

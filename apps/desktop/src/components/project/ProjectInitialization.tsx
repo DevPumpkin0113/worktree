@@ -179,7 +179,14 @@ export function ProjectInitialization({
       </div>
       <div className="initialization-actions">
         {onCancel ? (
-          <button id="initializationCancel" disabled={busy} type="button" onClick={onCancel}>
+          <button
+            data-variant="secondary"
+            className="action-button"
+            id="initializationCancel"
+            disabled={busy}
+            type="button"
+            onClick={onCancel}
+          >
             {messages.initializationCancel}
           </button>
         ) : (
@@ -188,6 +195,8 @@ export function ProjectInitialization({
         <div>
           {step > 0 ? (
             <button
+              data-variant="secondary"
+              className="action-button"
               id="initializationPrevious"
               type="button"
               disabled={busy}
@@ -198,16 +207,27 @@ export function ProjectInitialization({
           ) : null}
           {step < initializationTitles().length - 1 ? (
             <button
+              key="next"
+              data-variant="primary"
+              className="action-button"
               id="initializationNext"
               type="button"
-              onClick={() => {
+              onClick={(event) => {
+                event.preventDefault();
                 if (!busy && validateCurrent()) onStep(step + 1);
               }}
             >
               {messages.initializationNext}
             </button>
           ) : (
-            <button id="initializationSubmit" type="submit" disabled={busy || !onInitialize}>
+            <button
+              key="submit"
+              data-variant="primary"
+              className="action-button"
+              id="initializationSubmit"
+              type="submit"
+              disabled={busy || !onInitialize}
+            >
               {busy ? messages.initializingProject : messages.initializeProject}
             </button>
           )}

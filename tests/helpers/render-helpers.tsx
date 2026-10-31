@@ -21,7 +21,8 @@ export const renderTree = (
       label={label}
       selectedId={null}
       onSelect={() => {}}
-      onToggle={() => {}}
+      collapsedGroups={[]}
+      onGroupToggle={() => {}}
     />,
   );
 export const renderTaskDetail = (model: WorkModel, id: string, label: (id: string) => string) => ({

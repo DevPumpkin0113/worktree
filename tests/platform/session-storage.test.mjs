@@ -4,6 +4,16 @@ import {createSessionStorage,emptySession,validateSession} from '../../apps/desk
 const path='C:\\documents\\일정.wbs';
 const sample=()=>({...emptySession(),recentFiles:[path],tabs:[{path,view:'gantt',ganttUnit:'week'}],activePath:path,projects:[{path:'C:\\documents',activePath:path}],activeProjectPath:'C:\\documents',recentProjects:['C:\\documents']});
 
+test('트리 접힘 세션은 독립 복사하고 잘못된 키·중복·초과 항목을 거부한다',()=>{
+ const value=sample();value.tabs[0].collapsedGroups=['EP001','MS001','@unassigned-epics'];
+ const copy=validateSession(value);value.tabs[0].collapsedGroups.pop();
+ assert.deepEqual(copy.tabs[0].collapsedGroups,['EP001','MS001','@unassigned-epics']);
+ for(const keys of [null,['../MS001'],['MS001','MS001'],Array.from({length:2001},(_,i)=>`MS${String(i+1).padStart(3,'0')}`)]){
+  const invalid=sample();invalid.tabs[0].collapsedGroups=keys;assert.throws(()=>validateSession(invalid));
+ }
+ assert.equal(validateSession(sample()).tabs[0].collapsedGroups,undefined);
+});
+
 test('세션 저장은 스냅샷을 순서대로 쓰고 실패 후 다음 저장을 재시도한다',async()=>{
  const calls=[];let fail=true;
  const storage=createSessionStorage(async(command,args)=>{

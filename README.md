@@ -4,7 +4,7 @@
   <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree icon" />
   <h1>Worktree</h1>
   <p>A Windows desktop app and CLI for tasks and schedules</p>
-  <p><strong>Beta Worktree 0.34.0</strong></p>
+  <p><strong>Beta Worktree 0.35.0</strong></p>
   <a href="https://github.com/DevPumpkin0113/worktree/releases">
     <img src="https://img.shields.io/badge/Windows-Download-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" />
   </a>
@@ -15,14 +15,15 @@
 ## Features
 
 - **Multiple views** — Tree, Kanban, dependency network, Gantt chart, and task list.
-- **Task management** — Create, edit, and delete tasks and milestones, and track progress.
+- **Issue hierarchy** — Organize work as epic → milestone → issue, or assign issues directly to an epic.
 - **Schedules and dependencies** — Manage dates, estimated work hours, predecessors, and successors.
 - **Organization and search** — Organize tasks by assignee, status, priority, type, and labels; search and filter the results.
 - **Task details** — Open multiple tasks in tabs or use a side panel alongside the list.
+- **Insights** — Compare issue statuses, assignee progress, and epic completion. View daily completions for the last 7 days, 30 days, or a custom period of up to 366 days, using Korea time.
 - **Comments and replies** — Discuss tasks using your configured display name.
 - **Project management** — Switch between project tabs and configure rules for each project.
 - **Local files** — Keep data in your project folder and refresh external changes.
-- **CLI** — Manage tasks, milestones, and comments from a terminal or interactive console. [CLI guide](apps/cli/README.md)
+- **CLI** — Manage epics, milestones, issues, and comments from a terminal or interactive console. [CLI guide](apps/cli/README.md)
 - **Languages** — English and Korean.
 
 ## CLI
@@ -36,7 +37,7 @@ worktree init
 worktree shell
 ```
 
-The CLI supports tasks, milestones, comments, filters, batch changes, conflict checks, and recovery. Skip init for an existing desktop project. [English CLI guide](apps/cli/README.md) · [한국어 CLI 안내](apps/cli/README.ko.md)
+The CLI supports epics, milestones, issues, comments, filters, batch changes, conflict checks, and recovery. Skip init for an existing desktop project. [English CLI guide](apps/cli/README.md) · [한국어 CLI 안내](apps/cli/README.ko.md)
 
 ## Agent skill
 
@@ -58,6 +59,8 @@ project/
 └─ docs/
    └─ worktree/
       ├─ project.json            # Project settings and rules
+      ├─ epics/
+      │  └─ EP001.md             # One file per epic
       ├─ tasks/
       │  └─ W001.md              # One file per task
       ├─ milestones/
@@ -67,60 +70,62 @@ project/
             └─ <UUID>.md         # One file per comment on this task
 ```
 
-The task prefix, `W` in this example, is chosen during initialization. Tasks, milestones, and comments have separate files. Renaming a title preserves the ID and filename. Empty directories may be created when their first item is added.
+The issue prefix, `W` in this example, is chosen during initialization. Epics use `EP`, milestones use `MS`, and each item has its own file. Renaming or moving an item preserves its ID and filename. Empty directories may be created when their first item is added.
+
+New issue prefixes cannot be `EP` or `MS`, and projects support up to five priorities, excluding Unassigned. Existing `EP`-prefix projects remain supported. App deletion removes only the selected item and keeps its children; deleting a milestone moves its issues to the parent epic or No epic. Removing links from successor issues requires explicit consent. CLI cascade deletion remains an explicit option.
 
 Files are text-based, so you can inspect them and track them with Git.
 
 ## Screenshots
 
-These examples use Worktree development tasks. Dates and statuses are demonstration data.
+Screenshots use Worktree development tasks as example data.
 
 ### Project management
 
 Review and edit project settings and task rules.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EA%B4%80%EB%A6%AC.png" width="1000" alt="Worktree Project management" />
+  <img src=".github/assets/screenshot-001.png" width="900" alt="Worktree Project management" />
 </div>
 
-### Task board · Tree
+### View · Tree
 
-Group tasks by milestone and track progress.
+Browse epics, milestones, and direct issues in a hierarchy and track progress.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%ED%8A%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.png" width="1000" alt="Worktree Task board · Tree" />
+  <img src=".github/assets/screenshot-002.png" width="900" alt="Worktree View · Tree" />
 </div>
 
-### Task board · Kanban
+### View · Kanban
 
 Follow the workflow with tasks grouped by status.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%B9%B8%EB%B0%98%EB%B3%B4%EA%B8%B0.png" width="1000" alt="Worktree Task board · Kanban" />
+  <img src=".github/assets/screenshot-003.png" width="900" alt="Worktree View · Kanban" />
 </div>
 
-### Task board · Dependency network
+### View · Dependency network
 
 Explore predecessor and successor relationships.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC.png" width="1000" alt="Worktree Task board · Dependency network" />
+  <img src=".github/assets/screenshot-004.png" width="900" alt="Worktree View · Dependency network" />
 </div>
 
-### Task board · Gantt chart
+### View · Gantt chart
 
 Review task schedules and durations.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EA%B0%84%ED%8A%B8%EC%B0%A8%ED%8A%B8.png" width="1000" alt="Worktree Task board · Gantt chart" />
+  <img src=".github/assets/screenshot-005.png" width="900" alt="Worktree View · Gantt chart" />
 </div>
 
-### Task list
+### Issues
 
 Inspect all tasks in a table and use search and filters.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EB%AA%A9%EB%A1%9D.png" width="1000" alt="Worktree Task list" />
+  <img src=".github/assets/screenshot-006.png" width="900" alt="Worktree Issues" />
 </div>
 
 ### Task details
@@ -128,7 +133,7 @@ Inspect all tasks in a table and use search and filters.
 Review and edit dates, descriptions, assignees, priorities, and dependencies.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9E%91%EC%97%85%EC%83%81%EC%84%B8.png" width="1000" alt="Worktree Task details" />
+  <img src=".github/assets/screenshot-007.png" width="900" alt="Worktree Issue details" />
 </div>
 
 ### Comments and replies
@@ -136,22 +141,22 @@ Review and edit dates, descriptions, assignees, priorities, and dependencies.
 Discuss each task and identify reply targets by comment number.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EB%8C%93%EA%B8%80.png" width="1000" alt="Worktree Comments and replies" />
+  <img src=".github/assets/screenshot-008.png" width="900" alt="Worktree Comments and replies" />
 </div>
 
 ### Insights
 
-**Further development required** — Project analytics are still in development.
+Insights shows issue and epic completion totals, status distribution, assignee progress, and epic progress, including issues with no epic. Daily completions are calculated from actual completion timestamps.
 
 <div align="center">
-  <img src=".github/assets/%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC-%EC%9D%B8%EC%82%AC%EC%9D%B4%ED%8A%B8.png" width="1000" alt="Worktree Insights" />
+  <img src=".github/assets/screenshot-009.png" width="900" alt="Worktree Insights" />
 </div>
 
 ## Getting started
 
 1. Open a folder for your project.
 2. Set project information and task rules.
-3. Add milestones and tasks to manage your schedule.
+3. Add epics, milestones, and issues. Issues can belong directly to an epic or remain unassigned.
 
 Use the download button for published desktop installers.
 
@@ -163,9 +168,7 @@ Report bugs and suggestions through [GitHub Issues](https://github.com/DevPumpki
 
 Include your version, reproduction steps, and error message. Remove personal information and sensitive project content from screenshots.
 
-## References and related projects
+## References
 
-Backlog.md was consulted while exploring document-based task management and human–AI collaboration. Linear is included as a related project-management service for comparison.
-
-- [Backlog.md](https://github.com/MrLesk/Backlog.md) — Markdown-based task management for people and AI agents.
-- [Linear](https://linear.app/features) — A collaborative product-development service for issue tracking, project planning, and cycles.
+- [Backlog.md](https://github.com/MrLesk/Backlog.md)
+- [Linear](https://linear.app/features)

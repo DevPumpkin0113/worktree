@@ -5,7 +5,7 @@ title: "에이전트 CLI 스킬과 명령 레퍼런스"
 start: "2026-10-23"
 end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.658Z"
-updatedAt: "2026-10-30T09:58:51.182Z"
+updatedAt: "2026-10-31T05:54:28.358Z"
 status: "done"
 owner: "Codex:Main"
 milestone: "MS006"
@@ -16,6 +16,7 @@ type: "docs"
 labels: ["AgentSkill","CLI","Docs"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-22T15:00:00.000Z"
 ---
 
 ## 목적

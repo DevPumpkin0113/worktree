@@ -79,7 +79,8 @@ export function ProjectManagement({
                       directory: readSource(source.text).dataDirectory,
                     });
                 }}
-                className="project-reset-button"
+                className="project-reset-button action-button"
+                data-variant="danger"
                 type="button"
               >
                 {messages.initializeProject}

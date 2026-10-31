@@ -1,5 +1,5 @@
 import type { OpenDocument } from '../../app/types';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { TaskEditorTitleContext, TaskEditorIconRequestContext } from './task-editor-title-context';
 import { messages } from '../../i18n/messages';
 import { useDetailDialog } from './use-detail-dialog';
@@ -54,6 +54,13 @@ export function TaskDetail({
 }) {
   const comments = useCommentThreads(documents);
   const [titleTarget, setTitleTarget] = useState<HTMLDivElement | null>(null);
+  const title = useRef<HTMLHeadingElement>(null);
+  const [titleSpace, setTitleSpace] = useState<{ id: string; height: number } | null>(null);
+  function startEditing(id: string) {
+    const height = title.current?.getBoundingClientRect().height ?? 0;
+    setTitleSpace({ id, height });
+    onEdit(id);
+  }
   const [iconRequest, setIconRequest] = useState<string | null>(null);
   const visible = !!model && !!id && !settingsOpen;
   const row = model?.rows.find((item) => item.id === id);
@@ -133,10 +140,12 @@ export function TaskDetail({
             <div className="detail-header-actions">
               {row && !editing ? (
                 <button
+                  data-variant="secondary"
+                  data-size="compact"
                   id="taskEditOpen"
                   type="button"
-                  className="task-edit-open"
-                  onClick={() => onEdit(row.id)}
+                  className="task-edit-open action-button"
+                  onClick={() => startEditing(row.id)}
                 >
                   {messages.edit}
                 </button>
@@ -157,9 +166,18 @@ export function TaskDetail({
           </div>
           <div className="detail-title-row">
             {editing ? (
-              <div id="detailTitle" className="detail-title-editor" ref={setTitleTarget} />
+              <div
+                id="detailTitle"
+                className="detail-title-editor"
+                ref={setTitleTarget}
+                style={
+                  titleSpace?.id === id && titleSpace.height > 0
+                    ? { minHeight: titleSpace.height }
+                    : undefined
+                }
+              />
             ) : (
-              <h2 id="detailTitle">
+              <h2 id="detailTitle" ref={title}>
                 {row?.epic ? (
                   <button
                     id="detailEpicIconOpen"
@@ -169,7 +187,7 @@ export function TaskDetail({
                     title={messages.chooseEpicIcon}
                     onClick={() => {
                       setIconRequest(row.id);
-                      onEdit(row.id);
+                      startEditing(row.id);
                     }}
                   >
                     <WorkGroupIcon epic icon={row.icon} iconColor={row.iconColor} />

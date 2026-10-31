@@ -5,7 +5,7 @@ title: "CLI 조회 검증과 프로젝트 규격 안내"
 start: "2026-10-23"
 end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.635Z"
-updatedAt: "2026-10-30T09:58:51.009Z"
+updatedAt: "2026-10-31T05:54:28.239Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["CLI","Core"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-22T15:00:00.000Z"
 ---
 
 ## 목적

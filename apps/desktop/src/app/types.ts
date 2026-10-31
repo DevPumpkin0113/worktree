@@ -13,6 +13,7 @@ export interface TaskCreationTab {
   saving?: boolean;
 }
 export interface OpenDocument {
+  collapsedGroups?: string[];
   creationTabs?: TaskCreationTab[];
   forceTaskTabs?: boolean;
   taskTabs?: string[];

@@ -9,6 +9,7 @@ export function TaskTimestamps({ row }: { row: WorkRow }) {
       {[
         [messages.createdAt, row.createdAt],
         [messages.updatedAt, row.updatedAt],
+        ...(row.completedAt ? [[messages.completedAt, row.completedAt]] : []),
       ].map(([name, value]) => (
         <div key={name}>
           <dt>{name}</dt>

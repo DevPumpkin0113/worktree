@@ -5,7 +5,7 @@ title: "CLI 프로젝트 재초기화와 재생성"
 start: "2026-10-23"
 end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.647Z"
-updatedAt: "2026-10-30T09:58:51.110Z"
+updatedAt: "2026-10-31T05:54:28.302Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["CLI","Storage"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-22T15:00:00.000Z"
 ---
 
 ## 목적

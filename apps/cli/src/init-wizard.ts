@@ -97,7 +97,10 @@ export async function initWizard(
         t('이슈 ID 접두어', 'Issue ID prefix'),
         options.values.prefix ?? 'W',
         (v) => validTaskPrefix(v.replace(/[a-z]/g, (c) => c.toUpperCase())),
-        t('MS를 제외한 영문 1~20자를 입력하세요.', 'Enter 1–20 ASCII letters, excluding MS.'),
+        t(
+          'EP와 MS를 제외한 영문 1~20자를 입력하세요.',
+          'Enter 1–20 ASCII letters, excluding EP and MS.',
+        ),
       )
     ).toUpperCase();
     const customize = await select(

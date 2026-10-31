@@ -5,7 +5,7 @@ title: "트리 칸반 네트워크와 작업 목록"
 start: "2026-10-20"
 end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.617Z"
-updatedAt: "2026-10-30T09:58:50.833Z"
+updatedAt: "2026-10-31T05:54:28.110Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS002"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop","Core"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-21T15:00:00.000Z"
 ---
 
 ## 목적

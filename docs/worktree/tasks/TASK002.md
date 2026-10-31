@@ -5,7 +5,7 @@ title: "프로젝트 초기화와 작업 규칙 설정"
 start: "2026-10-21"
 end: "2026-10-22"
 createdAt: "2026-10-29T15:56:54.609Z"
-updatedAt: "2026-10-30T09:58:50.729Z"
+updatedAt: "2026-10-31T05:54:28.033Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS001"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["Desktop","Core","Storage"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-21T15:00:00.000Z"
 ---
 
 ## 목적

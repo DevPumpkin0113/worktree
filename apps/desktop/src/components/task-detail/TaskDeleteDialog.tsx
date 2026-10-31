@@ -1,6 +1,7 @@
+import { Trash2 } from 'lucide-react';
+import { Icon } from '../shared/Icon';
 import { useModalDismiss } from '../../hooks/use-modal-dismiss';
 import { DeleteDependencyImpact } from './DeleteDependencyImpact';
-import { DeleteChildTasks } from './DeleteChildTasks';
 import { parseProject } from '@worktree/core/project-document';
 import { createIdLabels } from '@worktree/core/id-display';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -18,13 +19,12 @@ export function TaskDeleteDialog({
   onClose,
 }: {
   session: TaskDeleteSession;
-  onDelete: (options: DeleteOptions) => Promise<void>;
+  onDelete: (options: Pick<DeleteOptions, 'detachPredecessors'>) => Promise<void>;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const busy = useRef(false);
   const [saving, setSaving] = useState(false);
-  const [children, setChildren] = useState<DeleteOptions['children']>('keep');
   const [detach, setDetach] = useState(false);
   const [error, setError] = useState('');
   const dismiss = useModalDismiss(onClose, () => busy.current);
@@ -34,8 +34,8 @@ export function TaskDeleteDialog({
   }, [session.text]);
   const label = (id: string) => labels.get(id) ?? id;
   const impact = useMemo(
-    () => deletionImpact(session.text, session.id, children),
-    [session.text, session.id, children],
+    () => deletionImpact(session.text, session.id, 'keep'),
+    [session.text, session.id],
   );
   useLayoutEffect(() => {
     const node = dialog.current!;
@@ -49,7 +49,7 @@ export function TaskDeleteDialog({
     setSaving(true);
     setError('');
     try {
-      await onDelete({ children, detachPredecessors: detach });
+      await onDelete({ detachPredecessors: detach });
       onClose();
     } catch (error) {
       setError(messages.deleteFailed + String(error instanceof Error ? error.message : error));
@@ -62,8 +62,9 @@ export function TaskDeleteDialog({
     <dialog
       ref={dialog}
       id="taskDeleteDialog"
-      className={'task-editor' + (impact.childRows.length ? ' milestone-delete-dialog' : '')}
+      className="task-editor"
       aria-labelledby="taskDeleteTitle"
+      aria-describedby="taskDeleteHint"
       {...dismiss}
     >
       <form
@@ -73,7 +74,10 @@ export function TaskDeleteDialog({
           void remove();
         }}
       >
-        <div className="task-editor-heading">
+        <div className="task-editor-heading delete-dialog-heading">
+          <span className="delete-dialog-icon" aria-hidden="true">
+            <Trash2 size={18} strokeWidth={1.5} />
+          </span>
           <h2 id="taskDeleteTitle">
             {impact.target.epic
               ? messages.deleteEpic
@@ -81,11 +85,25 @@ export function TaskDeleteDialog({
                 ? messages.deleteMilestone
                 : messages.deleteTask}
           </h2>
+          <button
+            className="delete-dialog-close"
+            type="button"
+            disabled={saving}
+            aria-label={messages.close}
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
         </div>
         <div className="task-delete-body">
-          <p className="delete-target">{label(impact.target.id) + ' · ' + impact.target.name}</p>
-          <p className="task-editor-hint">{messages.deleteSourceHint}</p>
-          {impact.target.epic ? (
+          <div className="delete-target">
+            <span className="id">{label(impact.target.id)}</span>
+            <strong>{impact.target.name}</strong>
+          </div>
+          <p id="taskDeleteHint" className="task-editor-hint">
+            {messages.deleteSourceHint}
+          </p>
+          {impact.target.epic && impact.childRows.length ? (
             <p className="task-editor-hint">{messages.epicDeleteKeepHint}</p>
           ) : null}
           {impact.commentCount ? (
@@ -93,24 +111,17 @@ export function TaskDeleteDialog({
               {messages.commentsDeletedWithTask(impact.commentCount)}
             </p>
           ) : null}
-          {impact.childRows.length && !impact.target.epic ? (
-            <DeleteChildTasks
-              rows={impact.childRows}
-              value={children}
-              disabled={saving}
-              label={label}
-              onChange={(value) => {
-                setChildren(value);
-                setDetach(false);
-              }}
-            />
+          {impact.target.milestone && impact.childRows.length ? (
+            <p className="task-editor-hint">
+              {impact.target.parent !== '-'
+                ? messages.milestoneDeleteKeepInEpicHint(impact.childRows.length)
+                : messages.milestoneDeleteKeepUnassignedHint(impact.childRows.length)}
+            </p>
           ) : null}
           {impact.dependents.length ? (
             <DeleteDependencyImpact
               dependents={impact.dependents}
-              removedRows={[impact.target, ...impact.childRows].filter((row) =>
-                impact.removed.has(row.id),
-              )}
+              removedRows={[impact.target]}
               label={label}
               checked={detach}
               disabled={saving}
@@ -124,13 +135,21 @@ export function TaskDeleteDialog({
           ) : null}
         </div>
         <div className="task-editor-actions">
-          <button type="button" id="taskDeleteCancel" disabled={saving} onClick={onClose}>
+          <button
+            data-variant="secondary"
+            className="action-button"
+            type="button"
+            id="taskDeleteCancel"
+            disabled={saving}
+            onClick={onClose}
+          >
             {messages.cancelEdit}
           </button>
           <button
+            data-variant="danger"
             type="submit"
             id="taskDeleteConfirm"
-            className="task-delete"
+            className="task-delete action-button"
             disabled={saving || (impact.dependents.length > 0 && !detach)}
           >
             {saving

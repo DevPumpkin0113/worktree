@@ -40,7 +40,8 @@ export const en = {
   useEffortRequiresTrueFalse: '--use-effort requires true|false',
   prefixMustBeAString: 'prefix must be a string',
   provideAProjectNameOfToCharacters: 'Provide a project name of 1 to 200 characters.',
-  prefixMustBeToAsciiLettersExcludingMs: 'Prefix must be 1 to 20 ASCII letters, excluding MS.',
+  prefixMustBeToAsciiLettersExcludingEpAndMs:
+    'Prefix must be 1 to 20 ASCII letters, excluding EP and MS.',
   invalidRelativeDataDirectory: 'Invalid relative data directory.',
   aProjectMarkerAlreadyExistsInitializationNeverOverwritesIt:
     'A project marker already exists; initialization never overwrites it.',

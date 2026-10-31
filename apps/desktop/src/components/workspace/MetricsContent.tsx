@@ -18,9 +18,9 @@ export function MetricsContent({
         <small className="metric-detail">{messages.completedTotal}</small>
       </div>
       <div className="metric">
-        <span>{messages.milestone}</span>
+        <span>{messages.epic}</span>
         <strong>
-          {summary.completedMilestones} / {summary.milestoneCount}
+          {summary.completedEpics} / {summary.epicCount}
         </strong>
         <small className="metric-detail">{messages.completedTotal}</small>
       </div>

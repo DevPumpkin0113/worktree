@@ -1,0 +1,231 @@
+.analytics-view {
+  padding-top: 12px;
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.analytics-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.analytics-card h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.analytics-card small {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.insight-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.insight-status-bar {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  margin: 20px 0 12px;
+  border-radius: 4px;
+  background: var(--color-surface-muted);
+}
+.insight-status-list {
+  margin: 0;
+  font-size: 12px;
+}
+.insight-status-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.insight-status-list dt,
+.insight-status-list dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.insight-status-list i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.insight-status-list dd small {
+  min-width: 36px;
+  text-align: right;
+}
+.insight-list {
+  max-height: 360px;
+  overflow: auto;
+  margin-top: 12px;
+}
+.insight-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 45%);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 12px;
+}
+.insight-row:last-child {
+  border-bottom: 0;
+}
+.insight-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.insight-name > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.insight-name svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+.insight-name .insight-blocked {
+  color: var(--color-status-blocked-text);
+}
+.insight-completion {
+  display: grid;
+  grid-template-columns: 48px minmax(40px, 1fr) 36px;
+  align-items: center;
+  gap: 8px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.insight-completion progress {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 3px;
+  background: var(--color-surface-muted);
+  accent-color: var(--color-primary);
+}
+.insight-completion progress::-webkit-progress-bar {
+  background: var(--color-surface-muted);
+}
+.insight-completion progress::-webkit-progress-value {
+  background: var(--color-primary);
+}
+.insight-completion progress::-moz-progress-bar {
+  background: var(--color-primary);
+}
+.insight-epics {
+  grid-column: 1 / -1;
+}
+.insight-trend {
+  grid-column: 1 / -1;
+}
+.insight-date-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.insight-date-range label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.insight-date-range input {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+.insight-trend-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+}
+.insight-trend-summary strong {
+  font-size: 24px;
+}
+.insight-trend-summary small {
+  margin-left: auto;
+}
+.insight-trend-scroll {
+  overflow-x: auto;
+  padding: 0 32px;
+  margin: 16px 0;
+}
+.insight-trend-bars {
+  display: flex;
+  gap: 4px;
+  padding-top: 28px;
+}
+.insight-day {
+  flex: 1;
+  min-width: 24px;
+  text-align: center;
+}
+.insight-day-track {
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+}
+.insight-day-fill {
+  display: block;
+  width: 100%;
+  max-width: 40px;
+  background: var(--color-primary);
+  border-radius: 3px 3px 0 0;
+}
+.insight-day-count {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 22px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.insight-day-label {
+  display: block;
+  position: relative;
+  left: 50%;
+  width: 80px;
+  transform: translateX(-50%);
+  height: 20px;
+  padding-top: 6px;
+  font-size: 9px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.insight-empty {
+  margin: 16px 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+@media (max-width: 900px) {
+  .analytics-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -207,8 +207,8 @@ export function help(language: Language, topic?: string, session = false) {
           t('프로젝트 이름. 기본: 폴더명.', 'Project name. Default: folder name.'),
         '--prefix W        ' +
           t(
-            '이슈 접두어. 기본: W. 영문 1~20자, MS 제외. 소문자는 대문자로 변환.',
-            'Issue prefix. Default: W. 1–20 ASCII letters, except MS; lowercase is uppercased.',
+            '이슈 접두어. 기본: W. 영문 1~20자, EP·MS 제외. 소문자는 대문자로 변환.',
+            'Issue prefix. Default: W. 1–20 ASCII letters, except EP and MS; lowercase is uppercased.',
           ),
         '--directory PATH  ' +
           t(
@@ -315,6 +315,11 @@ export function help(language: Language, topic?: string, session = false) {
                   'Predecessor original IDs; empty string clears. JSON also accepts an array.',
                 ),
               '--blocked-reason TEXT  ' + t('막힘 사유.', 'Blocked reason.'),
+              '--completed-at ISO  ' +
+                t(
+                  '완료 이슈의 완료 시각 보정(UTC ISO 8601).',
+                  'Correct a done issue completion timestamp (UTC ISO 8601).',
+                ),
               '--references JSON   ' +
                 t(
                   '배열 [{"type":"text|file","value":"..."}]. []로 비움. file은 루트 상대 경로.',

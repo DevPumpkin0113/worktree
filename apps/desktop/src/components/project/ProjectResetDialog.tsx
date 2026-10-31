@@ -93,13 +93,21 @@ export function ProjectResetDialog({
           </p>
         ) : null}
         <div className="task-editor-actions">
-          <button type="button" id="projectResetCancel" disabled={saving} onClick={onClose}>
+          <button
+            data-variant="secondary"
+            className="action-button"
+            type="button"
+            id="projectResetCancel"
+            disabled={saving}
+            onClick={onClose}
+          >
             {messages.cancelEdit}
           </button>
           <button
+            data-variant="danger"
             id="projectResetConfirm"
             type="submit"
-            className="project-reset-button"
+            className="project-reset-button action-button"
             disabled={saving || confirmation !== name || !name}
           >
             {saving ? messages.projectResetting : messages.initializeProject}

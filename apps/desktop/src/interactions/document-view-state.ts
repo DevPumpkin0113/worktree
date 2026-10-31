@@ -11,7 +11,7 @@ const groupKey = (summary: HTMLElement) =>
       : undefined);
 const scrollers = ['.diagram-scroll', '.gantt-scroll', '.all-tasks', '.kanban-view'];
 
-export function createDocumentViewState() {
+export function createDocumentViewState({ trackGroups = true } = {}) {
   const documents = new Map<
     string,
     {
@@ -50,7 +50,8 @@ export function createDocumentViewState() {
           };
         }
       }
-      for (const summary of root.querySelectorAll?.<HTMLElement>(groupSelector) || []) {
+      for (const summary of (trackGroups && root.querySelectorAll?.<HTMLElement>(groupSelector)) ||
+        []) {
         const key = groupKey(summary);
         if (key) current.groups.set(key, (summary.parentElement as HTMLDetailsElement).open);
       }
@@ -63,7 +64,7 @@ export function createDocumentViewState() {
       rows: (Pick<WorkRow, 'id'> & Partial<Pick<WorkRow, 'type' | 'parent' | 'milestone'>>)[],
     ) {
       const current = documents.get(path);
-      if (current) {
+      if (current && trackGroups) {
         const ids = new Set(rows.map((row) => row.id));
         if (rows.some((row) => row.type === 'task' && row.parent === '-')) ids.add(unassignedKey);
         if (rows.some((row) => row.milestone && row.parent === '-')) ids.add(unassignedEpicKey);

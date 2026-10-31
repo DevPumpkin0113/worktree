@@ -24,6 +24,7 @@ import {
   MAX_SESSION_TABS,
 } from '../platform/session-storage';
 import { reorderDocumentTabs } from '../interactions/document-tabs';
+import { treeGroupKeys } from '../interactions/tree-group-state';
 import type {
   OpenDocument,
   OpenProject,
@@ -187,11 +188,13 @@ export class WorkspaceStore {
     try {
       text = serializeSource(readSource(text));
       const model = parseProject(text);
+      const groups = treeGroupKeys(model.rows);
       return {
         path,
         text,
         model,
         problems: [],
+        collapsedGroups: (previous?.collapsedGroups ?? []).filter((id) => groups.has(id)),
         creationTabs: previous?.creationTabs?.map((tab) => ({ ...tab, text })),
         forceTaskTabs: previous?.forceTaskTabs,
         taskTabs:
@@ -216,6 +219,7 @@ export class WorkspaceStore {
         path,
         text,
         model: null,
+        collapsedGroups: previous?.collapsedGroups ?? [],
         creationTabs: previous?.creationTabs,
         forceTaskTabs: previous?.forceTaskTabs,
         taskTabs: previous?.taskTabs ?? [],
@@ -520,6 +524,23 @@ export class WorkspaceStore {
     });
     this.saveSession();
   }
+  setTreeGroupOpen(path: string, id: string, open: boolean) {
+    const doc = this.state.documents.find((item) => item.path === path);
+    if (!doc?.model || !treeGroupKeys(doc.model.rows).has(id)) return;
+    const collapsed = doc.collapsedGroups ?? [];
+    if (collapsed.includes(id) === !open) return;
+    this.patch({
+      documents: this.state.documents.map((item) =>
+        item.path === path
+          ? {
+              ...item,
+              collapsedGroups: open ? collapsed.filter((key) => key !== id) : [...collapsed, id],
+            }
+          : item,
+      ),
+    });
+    this.saveSession();
+  }
   setGraphFocus(graphFocus: string | null) {
     this.patch({
       documents: this.state.documents.map((doc) =>
@@ -715,8 +736,13 @@ export class WorkspaceStore {
     const text = deleteProjectComment(expected, taskId, id);
     await this.saveProjectSource(path, expected, text, taskId, messages.commentConflict);
   }
-  async deleteTask(path: string, expected: string, id: string, options: DeleteOptions) {
-    const text = deleteProjectTask(expected, id, options);
+  async deleteTask(
+    path: string,
+    expected: string,
+    id: string,
+    options: Pick<DeleteOptions, 'detachPredecessors'>,
+  ) {
+    const text = deleteProjectTask(expected, id, { ...options, children: 'keep' });
     await this.saveProjectSource(path, expected, text, null, messages.deleteConflict);
   }
   private async saveProjectSource(

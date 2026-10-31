@@ -1,5 +1,5 @@
 import { messages } from './i18n/messages';
-export const MAX_PROJECT_PRIORITIES = 100;
+export const MAX_PROJECT_PRIORITIES = 5;
 export const MAX_PRIORITY_NAME_LENGTH = 100;
 export interface ProjectPriority {
   id: string;

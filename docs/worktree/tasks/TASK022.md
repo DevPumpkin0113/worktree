@@ -5,7 +5,7 @@ title: "CLI 구조화 입력 일괄 변경과 복구"
 start: "2026-10-23"
 end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.645Z"
-updatedAt: "2026-10-30T09:58:51.090Z"
+updatedAt: "2026-10-31T05:54:28.289Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS005"
@@ -16,6 +16,7 @@ type: "feature"
 labels: ["CLI","Storage"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-22T15:00:00.000Z"
 ---
 
 ## 목적

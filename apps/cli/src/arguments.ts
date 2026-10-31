@@ -64,6 +64,7 @@ const valued = [
   'labels',
   'deps',
   'blocked-reason',
+  'completed-at',
   'references',
   'input',
   'text',
@@ -228,6 +229,7 @@ export function parseArguments(args: string[], cwd: string): Options {
             'labels',
             'deps',
             'blocked-reason',
+            'completed-at',
             'references',
           ]
         : result.kind === 'milestone'

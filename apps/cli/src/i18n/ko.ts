@@ -40,7 +40,7 @@ export const ko = {
   useEffortRequiresTrueFalse: '--use-effort는 true 또는 false여야 합니다.',
   prefixMustBeAString: 'prefix는 문자열이어야 합니다.',
   provideAProjectNameOfToCharacters: '프로젝트 이름을 1~200자로 입력하세요.',
-  prefixMustBeToAsciiLettersExcludingMs: '접두어는 MS를 제외한 영문 1~20자여야 합니다.',
+  prefixMustBeToAsciiLettersExcludingEpAndMs: '접두어는 EP와 MS를 제외한 영문 1~20자여야 합니다.',
   invalidRelativeDataDirectory: '올바른 상대 데이터 경로를 지정하세요.',
   aProjectMarkerAlreadyExistsInitializationNeverOverwritesIt:
     '프로젝트 마커가 이미 있습니다. 기존 프로젝트를 덮어쓰지 않습니다.',

@@ -65,7 +65,7 @@ export function initializeProject(options: Options) {
   if (typeof name !== 'string' || !name.trim() || name.length > 200 || /[\r\n\0]/.test(name))
     throw new CliError('USAGE', errorMessage('provideAProjectNameOfToCharacters'));
   if (!validTaskPrefix(prefix))
-    throw new CliError('USAGE', errorMessage('prefixMustBeToAsciiLettersExcludingMs'));
+    throw new CliError('USAGE', errorMessage('prefixMustBeToAsciiLettersExcludingEpAndMs'));
   if (typeof directory !== 'string' || !validInitializationDirectory(directory))
     throw new CliError('UNSAFE_PATH', errorMessage('invalidRelativeDataDirectory'));
   if (hasProjectMarker(root))

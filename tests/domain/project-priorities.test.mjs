@@ -11,6 +11,14 @@ test('우선순위는 중복·빈 이름·예약 ID를 거부하고 순서만 �
  for(const invalid of [[...values,values[0]],[{id:'-',name:'미지정'}],[{id:'x',name:''}],[{id:'x',name:' 이름 '}],[{id:'a',name:'같음'},{id:'b',name:'같음'}]])assert.equal(validPriorities(invalid),false);
  assert.deepEqual(movePriority(values,0,2).map(p=>p.id),['normal','low','high']);assert.equal(values[0].id,'high');assert.equal(movePriority(values,-1,1),values);
 });
+
+test('우선순위는 최대 5개이며 미지정은 개수에 포함하지 않는다',()=>{
+ const values=Array.from({length:5},(_,i)=>({id:`p${i}`,name:`Priority ${i}`}));
+ assert.equal(validPriorities(values),true);
+ assert.equal(validPriorities([...values,{id:'sixth',name:'Sixth'}]),false);
+ const source=projectFixture();
+ assert.throws(()=>updateProjectSettings(source,{...projectSettingsDraft(source),priorities:[...defaultPriorities(),...values]}));
+});
 test('우선순위 이름·순서 수정과 담당자 목록 제거는 기존 작업 원본을 바꾸지 않는다',()=>{
  const source=projectFixture();const before=readSource(source);
  const priorities=[{id:'high',name:'최우선'},{id:'normal',name:'기본'},{id:'low',name:'나중'}];

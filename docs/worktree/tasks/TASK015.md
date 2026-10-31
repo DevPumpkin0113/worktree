@@ -5,7 +5,7 @@ title: "React TypeScript 화면 책임 분리"
 start: "2026-10-20"
 end: "2026-10-21"
 createdAt: "2026-10-29T15:56:54.629Z"
-updatedAt: "2026-10-30T09:58:50.952Z"
+updatedAt: "2026-10-31T05:54:28.202Z"
 status: "done"
 owner: "Codex:Dev"
 milestone: "MS004"
@@ -16,6 +16,7 @@ type: "chore"
 labels: ["Desktop","Build"]
 blockedReason: ""
 references: []
+completedAt: "2026-10-20T15:00:00.000Z"
 ---
 
 ## 목적

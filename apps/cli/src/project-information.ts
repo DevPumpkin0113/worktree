@@ -35,6 +35,11 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
         description: field('string'),
         owner: field('string', { suggestions: info.config.assignees }),
         status: field('string', { enum: ['todo', 'doing', 'blocked', 'done'] }),
+        completedAt: field('string', {
+          correctionAllowed: 'Explicit completedAt input for done issues only.',
+          format: 'ISO 8601 UTC',
+          automatic: 'Set on completion; cleared on reopen.',
+        }),
         epic: field('string', {
           enum: ['-', ...project.model.rows.filter((r) => r.epic).map((r) => r.id)],
           exclusiveWith: 'milestone',

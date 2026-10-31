@@ -9,6 +9,7 @@ import './styles/task-detail.css';
 import './styles/task-tabs.css';
 import './styles/settings.css';
 import './styles/workspace.css';
+import './styles/insights.css';
 import './styles/tree-view.css';
 import './styles/kanban-view.css';
 import './styles/network-view.css';
@@ -20,5 +21,7 @@ import './styles/filters.css';
 import './styles/project.css';
 
 import './styles/task-editor.css';
+import './styles/delete-dialog.css';
 
 import './styles/focus.css';
+import './styles/buttons.css';

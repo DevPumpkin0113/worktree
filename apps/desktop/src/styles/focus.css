@@ -34,14 +34,6 @@
 .graph-node:focus-visible rect {
   fill: var(--color-nav-selected);
 }
-.task-delete-open:focus-visible:not(:disabled),
-.task-delete:focus-visible:not(:disabled),
-.project-reset-button:focus-visible:not(:disabled) {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-  color: var(--color-text-inverse);
-}
-
 .gantt-view :is(.gantt-scroll, .gantt-label, .timeline-row):focus {
   outline: none;
   box-shadow: none;

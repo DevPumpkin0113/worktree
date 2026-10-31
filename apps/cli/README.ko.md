@@ -27,6 +27,8 @@ worktree init
 
 프로젝트 이름, 저장 위치, ID 접두어와 작업 규칙을 설정합니다. Enter는 기본값 선택, Ctrl+C는 취소입니다. 이미 초기화한 프로젝트는 생략합니다.
 
+이슈 접두어로 영문 1~20자를 입력하며 소문자는 대문자로 변환합니다. `EP`·`MS`는 예약어로 사용할 수 없습니다. 우선순위는 미지정 제외 최대 5개입니다. 기존 `EP` 접두어 프로젝트는 계속 읽을 수 있습니다.
+
 ## 세션 — `shell`
 
 현재 프로젝트를 유지하며 명령을 반복 실행합니다.
@@ -84,6 +86,19 @@ worktree task delete W001 --yes
 
 상태는 `todo`, `doing`, `blocked`, `done`입니다. 우선순위와 작업 유형은 프로젝트 설정을 따릅니다. 전체 항목은 `worktree task add --help`에서 확인합니다.
 
+### 완료 시각
+
+이슈를 `done`으로 변경하면 `completedAt`을 UTC로 자동 기록합니다. 완료 상태에서 수정하면 기존 시각을 유지하고, 재오픈하면 해제하며 재완료 시 새 시각을 기록합니다. 예정 `start`·`end`는 변경하지 않습니다. 시각이 없는 기존 완료 이슈는 완료일 미상으로 남기고 날짜별 집계에서 제외합니다.
+
+과거 완료 시각을 명시적으로 알고 있는 경우 완료 이슈에 다음과 같이 보정할 수 있습니다.
+
+```powershell
+worktree task edit W001 --completed-at "2026-10-29T15:00:00.000Z"
+worktree task show W001 --json
+```
+
+예시는 한국 시간 2026-10-30 00:00입니다. 완료 상태인 이슈에만 보정할 수 있고 수정 시각보다 미래일 수 없습니다. 회고 등록한 작업은 완료 시각이 문서 생성 시각보다 앞설 수 있습니다. 앱 인사이트는 한국 날짜 기준으로 완료 수를 집계합니다.
+
 ### 검색·필터
 
 필터는 함께 사용할 수 있습니다.
@@ -106,7 +121,7 @@ worktree task list --label frontend
 worktree milestone list
 worktree milestone show MS001
 worktree milestone add --title "첫 배포"
-worktree milestone edit MS001 --end 2026-10-30
+worktree milestone edit MS001 --start 2026-10-23 --end 2026-10-30
 worktree milestone delete MS001 --yes --children keep
 ```
 
@@ -114,7 +129,7 @@ worktree milestone delete MS001 --yes --children keep
 
 ## 에픽 — `epic` (CLI 0.6.0)
 
-에픽은 마일스톤을 묶는 상위 단위입니다. 기존 프로젝트는 에픽 미지정으로 읽으며 자동 변경하지 않습니다.
+에픽은 마일스톤과 직속 이슈를 묶는 상위 단위입니다. 기존 프로젝트는 에픽 미지정으로 읽으며 자동 변경하지 않습니다.
 
 ```powershell
 worktree epic add --title "CLI 제공"
@@ -257,7 +272,7 @@ worktree --version
 
 [문제 제보](https://github.com/DevPumpkin0113/worktree/issues) 시 버전, 명령어, 오류와 재현 방법을 알려주세요.
 
-## 참고·유사 프로젝트
+## 참고
 
-- [Backlog.md](https://github.com/MrLesk/Backlog.md) — 문서 기반 작업 관리와 사람·AI 협업 참고.
-- [Linear](https://linear.app/features) — 이슈·프로젝트 관리 서비스 비교 대상.
+- [Backlog.md](https://github.com/MrLesk/Backlog.md)
+- [Linear](https://linear.app/features)

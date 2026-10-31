@@ -27,6 +27,8 @@ worktree init
 
 Choose a project name, data directory, ID prefix, and task rules. Enter accepts the default; Ctrl+C cancels. Skip this step for an initialized project.
 
+Issue prefixes accept 1–20 ASCII letters, converted to uppercase, except reserved `EP` and `MS`. Priorities are limited to five, excluding Unassigned. Existing `EP`-prefix projects remain readable.
+
 ## Session — `shell`
 
 Keep a project open while running commands.
@@ -84,6 +86,19 @@ Common options:
 
 Statuses: `todo`, `doing`, `blocked`, `done`. Priorities and types follow project settings. Run `worktree task add --help` for all fields.
 
+### Completion timestamps
+
+Changing an issue to `done` automatically records `completedAt` in UTC. Editing a completed issue preserves it; reopening clears it, and completing again records a new timestamp. Planned `start` and `end` dates remain unchanged. Existing completed issues without a timestamp are left unknown and excluded from daily completion statistics.
+
+For an explicitly known historical completion time, correct a completed issue with:
+
+```powershell
+worktree task edit W001 --completed-at "2026-10-29T15:00:00.000Z"
+worktree task show W001 --json
+```
+
+This example represents 2026-10-30 00:00 in Korea time. Correction is allowed only for completed issues and cannot exceed the updated timestamp. Retrospectively recorded work can have a completion timestamp earlier than its document creation timestamp. App Insights groups completions by Korea date.
+
 ### Search and filters
 
 Filters can be combined.
@@ -106,7 +121,7 @@ Group tasks with a title and optional dates.
 worktree milestone list
 worktree milestone show MS001
 worktree milestone add --title "First release"
-worktree milestone edit MS001 --end 2026-10-30
+worktree milestone edit MS001 --start 2026-10-23 --end 2026-10-30
 worktree milestone delete MS001 --yes --children keep
 ```
 
@@ -114,7 +129,7 @@ Use `--children keep` to retain tasks or `--children delete` to delete them. Add
 
 ## Epics — `epic` (CLI 0.6.0)
 
-Epics group milestones. Existing projects without epics remain readable without automatic file changes.
+Epics group milestones and can also contain issues directly. Existing projects without epics remain readable without automatic file changes.
 
 ```powershell
 worktree epic add --title "CLI delivery"
@@ -257,7 +272,7 @@ worktree --version
 
 [Report an issue](https://github.com/DevPumpkin0113/worktree/issues) with the version, command, error, and reproduction steps.
 
-## References and related projects
+## References
 
-- [Backlog.md](https://github.com/MrLesk/Backlog.md) — Reference for document-based tasks and human–AI collaboration.
-- [Linear](https://linear.app/features) — Related issue and project management service.
+- [Backlog.md](https://github.com/MrLesk/Backlog.md)
+- [Linear](https://linear.app/features)

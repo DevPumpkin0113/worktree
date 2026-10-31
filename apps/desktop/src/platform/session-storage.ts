@@ -10,6 +10,7 @@ export interface Session {
     ganttUnit: 'day' | 'week';
     taskTabs?: string[];
     activeTaskTab?: string | null;
+    collapsedGroups?: string[];
   }[];
   activePath: string | null;
   projects: { path: string; activePath: string | null }[];
@@ -21,7 +22,12 @@ const validTaskId = (id: unknown): id is string =>
   typeof id === 'string' && /^[A-Z]{1,20}\d{3,}$/.test(id);
 function validTaskTabs(tab: Session['tabs'][number]) {
   const ids = tab.taskTabs ?? [];
+  const groups = tab.collapsedGroups ?? [];
   return (
+    (tab.collapsedGroups === undefined || Array.isArray(tab.collapsedGroups)) &&
+    groups.length <= MAX_TASK_TABS &&
+    groups.every((id) => id === '@unassigned-epics' || validTaskId(id)) &&
+    new Set(groups).size === groups.length &&
     (tab.taskTabs === undefined || Array.isArray(tab.taskTabs)) &&
     ids.length <= MAX_TASK_TABS &&
     ids.every(validTaskId) &&
@@ -134,6 +140,7 @@ export function validateSession(input: unknown): Session {
     tabs: value.tabs.map((tab) => ({
       ...tab,
       ...(tab.taskTabs ? { taskTabs: [...tab.taskTabs] } : {}),
+      ...(tab.collapsedGroups ? { collapsedGroups: [...tab.collapsedGroups] } : {}),
     })),
     activePath: value.activePath,
     projects: projects.map((project) => ({ ...project })),

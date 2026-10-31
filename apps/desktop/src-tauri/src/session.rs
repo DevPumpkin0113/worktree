@@ -21,6 +21,8 @@ pub struct DocumentTab {
     task_tabs: Vec<String>,
     #[serde(default)]
     active_task_tab: Option<String>,
+    #[serde(default)]
+    collapsed_groups: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -99,7 +101,18 @@ fn valid_task_id(id: &str) -> bool {
         && id[prefix..].bytes().all(|byte| byte.is_ascii_digit())
 }
 fn valid_task_tabs(tab: &DocumentTab) -> bool {
-    tab.task_tabs.len() <= 2000
+    tab.collapsed_groups.len() <= 2000
+        && tab
+            .collapsed_groups
+            .iter()
+            .all(|id| id == "@unassigned-epics" || valid_task_id(id))
+        && tab
+            .collapsed_groups
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            == tab.collapsed_groups.len()
+        && tab.task_tabs.len() <= 2000
         && tab.task_tabs.iter().all(|id| valid_task_id(id))
         && tab
             .task_tabs
@@ -285,6 +298,7 @@ mod tests {
                 gantt_unit: "week".into(),
                 task_tabs: vec![],
                 active_task_tab: None,
+                collapsed_groups: vec![],
             }],
             projects: vec![ProjectTab {
                 path: std::env::temp_dir().to_string_lossy().into_owned(),
@@ -319,6 +333,32 @@ mod tests {
             .remove("activeTaskTab");
         let loaded: Session = serde_json::from_value(old).unwrap();
         assert!(loaded.tabs[0].task_tabs.is_empty());
+        assert!(loaded.validate().is_ok());
+    }
+
+    #[test]
+    fn collapsed_groups_round_trip_and_old_sessions_remain_valid() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = store(directory.path());
+        let mut session = sample();
+        session.tabs[0].collapsed_groups =
+            vec!["EP001".into(), "MS001".into(), "@unassigned-epics".into()];
+        store.write(&session).unwrap();
+        assert_eq!(store.read().unwrap(), session);
+        for groups in [
+            vec!["../MS001".into()],
+            vec!["MS001".into(), "MS001".into()],
+        ] {
+            session.tabs[0].collapsed_groups = groups;
+            assert!(session.validate().is_err());
+        }
+        let mut old = serde_json::to_value(sample()).unwrap();
+        old["tabs"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("collapsedGroups");
+        let loaded: Session = serde_json::from_value(old).unwrap();
+        assert!(loaded.tabs[0].collapsed_groups.is_empty());
         assert!(loaded.validate().is_ok());
     }
 

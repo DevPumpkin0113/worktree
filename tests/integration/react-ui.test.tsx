@@ -647,6 +647,101 @@ async function fixture(
   };
 }
 
+test('트리 접힘은 보기·필터·프로젝트·상세·새로고침과 세션 재시작에서 유지된다', async () => {
+  const f = await fixture();
+  try {
+    const group = () =>
+      f.element<HTMLDetailsElement>('summary[data-work-id="MS001"]')
+        .parentElement as HTMLDetailsElement;
+    const collapse = async (node: HTMLDetailsElement) =>
+      act(async () => {
+        node.open = false;
+        node.dispatchEvent(new Event('toggle'));
+      });
+    await collapse(group());
+    assert.equal(group().open, false);
+    await act(() => f.store.setView('board'));
+    await act(() => f.store.setView('tree'));
+    assert.equal(group().open, false);
+    await act(() => f.store.setFilters({ query: '一致なし' }));
+    await act(() => f.store.setFilters({ query: '' }));
+    assert.equal(group().open, false);
+    await act(() => f.store.selectWork('W001'));
+    await act(() => f.store.selectWork(null));
+    assert.equal(group().open, false);
+    await act(() => f.store.setPage('analytics'));
+    await act(() => f.store.setPage('board'));
+    assert.equal(group().open, false);
+    await act(() => f.store.selectProject('C:/QB'));
+    await act(() => f.store.setView('tree'));
+    assert.equal(group().open, true);
+    await act(() => f.store.selectProject('C:/QA'));
+    assert.equal(group().open, false);
+    await act(() => f.store.refreshProject());
+    assert.equal(group().open, false);
+    await collapse(
+      f.element('[data-view-group="unassigned-epics"]').parentElement as HTMLDetailsElement,
+    );
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+    const session = f.calls.filter((call) => call.command === 'save_session').at(-1)!.args!.session;
+    const restarted = new WorkspaceStore({
+      ...f.platform,
+      invoke: async <T,>(command: string, args?: Record<string, unknown>) =>
+        command === 'load_session'
+          ? (structuredClone(session) as T)
+          : f.platform.invoke<T>(command, args),
+    });
+    await act(() => restarted.initialize());
+    assert.deepEqual(restarted.active!.collapsedGroups, ['MS001', '@unassigned-epics']);
+    const original = f.files.get(first);
+    await act(() => f.store.setTreeGroupOpen(first, 'MS001', true));
+    assert.equal(group().open, true);
+    assert.equal(f.files.get(first), original);
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽을 접어도 하위 마일스톤 접힘을 보존하고 삭제된 그룹 상태는 정리한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('#epicAddOpen');
+    await f.value('#taskEditor-name', '접힘 에픽');
+    await f.submit();
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="EP001"]');
+    await f.submit();
+    await act(() => f.store.selectWork(null));
+    const group = (id: string) =>
+      f.element(`summary[data-work-id="${id}"]`).parentElement as HTMLDetailsElement;
+    for (const id of ['MS001', 'EP001']) {
+      await act(() => {
+        group(id).open = false;
+        group(id).dispatchEvent(new Event('toggle'));
+      });
+    }
+    await act(() => f.store.setView('board'));
+    await act(() => f.store.setView('tree'));
+    assert.equal(group('EP001').open, false);
+    await act(() => f.store.setTreeGroupOpen(first, 'EP001', true));
+    assert.equal(group('MS001').open, false);
+    f.files.set(
+      first,
+      deleteProjectTask(f.files.get(first)!, 'MS001', {
+        children: 'keep',
+        detachPredecessors: false,
+      }),
+    );
+    await act(() => f.store.refreshProject());
+    assert.equal(f.store.active!.collapsedGroups?.includes('MS001'), false);
+    assert.ok(group('EP001').querySelector(':scope > .children > .task[data-id="W001"]'));
+  } finally {
+    await f.close();
+  }
+});
+
 test('프로젝트 하나에 문서 집합 하나를 표시하며 파일 트리 없이 페이지·프로젝트를 전환한다', async () => {
   const f = await fixture();
   try {

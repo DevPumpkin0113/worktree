@@ -1,14 +1,14 @@
 ---
 schemaVersion: 1
 id: "TASK025"
-title: "CLI npm 패키징과 OIDC 게시"
+title: "CLI npm 패키징·OIDC 기반 릴리즈"
 start: "2026-10-23"
 end: "2026-10-23"
 createdAt: "2026-10-29T15:56:54.653Z"
-updatedAt: "2026-10-31T05:54:28.329Z"
+updatedAt: "2026-11-03T10:15:14.245Z"
 status: "done"
 owner: "Codex:Dev"
-milestone: "MS006"
+milestone: "MS010"
 effort: "-"
 dependencies: []
 priority: "normal"

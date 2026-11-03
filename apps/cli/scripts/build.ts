@@ -8,12 +8,12 @@ const result = spawnSync('cargo', ['build', '--manifest-path', 'native/Cargo.tom
 if (result.error) throw result.error;
 if (result.status !== 0) process.exit(result.status ?? 1);
 await build({
-  entryPoints: ['src/main.ts'],
+  entryPoints: ['src/main.ts', 'src/update-check.ts'],
   bundle: true,
   platform: 'node',
   format: 'esm',
   target: 'node24',
-  outfile: 'dist/main.js',
+  outdir: 'dist',
 });
 mkdirSync('dist', { recursive: true });
 const name = 'worktree-store' + (process.platform === 'win32' ? '.exe' : '');

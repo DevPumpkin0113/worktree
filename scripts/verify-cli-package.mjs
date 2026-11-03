@@ -7,7 +7,7 @@ export function verifyCliPack(manifest, pack, directory) {
  if(manifest.name!==packageName || pack.name!==packageName || pack.version!==manifest.version)throw Error('Unexpected CLI package identity/version');
  const filename=`devpumpkin0113-worktree-cli-${manifest.version}.tgz`;
  if(pack.filename!==filename)throw Error('Unexpected package filename');
- const expected=['README.md','README.ko.md','dist/main.js','dist/worktree-store.exe','package.json'];
+ const expected=['README.md','README.ko.md','dist/main.js','dist/update-check.js','dist/worktree-store.exe','package.json'];
  if(JSON.stringify(pack.files.map(f=>f.path).sort())!==JSON.stringify(expected.sort()))throw Error('Unexpected package contents');
  if(manifest.dependencies && Object.keys(manifest.dependencies).length)throw Error('CLI must bundle its runtime dependencies');
  const archive=path.join(directory,filename);

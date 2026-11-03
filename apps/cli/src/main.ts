@@ -9,11 +9,15 @@ import { readlineAsk } from './init-prompts';
 import { execute } from './commands';
 import { formatResult } from './output';
 import { shell } from './shell';
+import { automaticUpdateNotice, runUpdate } from './update';
 const args = process.argv.slice(2);
 selectLanguage(args);
 try {
   const options = parseArguments(args, process.cwd());
-  if (options.command === 'shell') await shell(options);
+  if (options.command !== 'update' && !options.json && process.stdout.isTTY && process.stderr.isTTY)
+    automaticUpdateNotice(options.language);
+  if (options.command === 'update') console.log(await runUpdate(options));
+  else if (options.command === 'shell') await shell(options);
   else if (
     wantsInitWizard(options, !!process.stdin.isTTY && !!process.stdout.isTTY) ||
     wantsResetWizard(options, !!process.stdin.isTTY && !!process.stdout.isTTY)

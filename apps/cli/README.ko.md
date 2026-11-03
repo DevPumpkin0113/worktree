@@ -16,6 +16,17 @@ Windows x64와 Node.js 24 이상이 필요합니다.
 npm install --global @devpumpkin0113/worktree-cli
 ```
 
+## 업데이트 — `update`
+
+```powershell
+worktree update --check
+worktree update
+```
+
+`--check`는 설치 없이 최신 버전을 확인합니다. `update`는 npm 전역 설치본을 업데이트하며 다음 실행부터 적용됩니다. 프로젝트가 없어도 사용할 수 있습니다. npm 경로를 찾지 못하면 `npm install -g @devpumpkin0113/worktree-cli@latest`를 실행합니다.
+
+터미널에서 명령을 실행하면 하루에 한 번 백그라운드에서 확인하고, 확인된 새 버전을 다음 실행에 안내합니다. 설치는 요청할 때만 실행합니다. 자동 확인은 명령을 지연시키지 않으며 `--json`과 출력 리다이렉션에서는 실행하지 않습니다.
+
 ## 시작 — `init`
 
 프로젝트 폴더에서 실행하고 안내에 따라 입력합니다.

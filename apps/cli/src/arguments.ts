@@ -5,6 +5,7 @@ export interface Options {
   command:
     | 'help'
     | 'version'
+    | 'update'
     | 'status'
     | 'list'
     | 'show'
@@ -116,6 +117,10 @@ export function parseArguments(args: string[], cwd: string): Options {
       result.json = true;
       continue;
     }
+    if (arg === '--check') {
+      result.values.check = 'true';
+      continue;
+    }
     if (arg === '--no-interactive') {
       result.noInteractive = true;
       continue;
@@ -160,9 +165,17 @@ export function parseArguments(args: string[], cwd: string): Options {
   const [first, verb, id, commentId] = words;
   if (!words.length || first === 'help') result.command = 'help';
   else if (
-    ['version', 'status', 'validate', 'shell', 'init', 'schema', 'batch', 'recover'].includes(
-      first,
-    ) &&
+    [
+      'update',
+      'version',
+      'status',
+      'validate',
+      'shell',
+      'init',
+      'schema',
+      'batch',
+      'recover',
+    ].includes(first) &&
     words.length === 1
   )
     result.command = first as Options['command'];
@@ -188,6 +201,7 @@ export function parseArguments(args: string[], cwd: string): Options {
   if (words.length > 1 && ['help', 'version'].includes(result.command))
     throw new CliError('USAGE', errorMessage('invalidArguments'));
   const allowed = new Set(['project', 'lang']);
+  if (result.command === 'update') allowed.add('check');
   if (result.command === 'init')
     for (const key of [
       'name',

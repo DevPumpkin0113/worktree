@@ -13,6 +13,13 @@ export function runCommand(args: string[], cwd: string, session = false) {
   selectLanguage(args);
   const options = parseArguments(args, cwd);
   setLanguage(options.language);
+  if (options.command === 'update')
+    throw new CliError(
+      'USAGE',
+      options.language === 'ko'
+        ? '콘솔 밖에서 worktree update를 실행하세요.'
+        : 'Run worktree update outside the shell.',
+    );
   if (options.command === 'shell')
     throw new CliError('USAGE', errorMessage('nestedShellsAreNotSupported'));
   if (options.command === 'help')

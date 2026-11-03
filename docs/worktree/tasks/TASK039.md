@@ -1,15 +1,15 @@
 ---
 schemaVersion: 1
 id: "TASK039"
-title: "앱 0.34.0·CLI 0.6.0 배포"
+title: "앱 0.34.0·CLI 0.6.0 릴리즈"
 start: "2026-10-30"
 end: "2026-10-31"
 createdAt: "2026-10-30T10:51:15.694Z"
-updatedAt: "2026-10-31T05:54:28.509Z"
-epic: "EP004"
+updatedAt: "2026-11-03T10:15:14.262Z"
+epic: "-"
 status: "done"
 owner: "Codex:Main"
-milestone: "-"
+milestone: "MS010"
 effort: "-"
 dependencies: []
 priority: "normal"

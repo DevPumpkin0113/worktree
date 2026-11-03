@@ -8,6 +8,7 @@ export const commandGroups: Record<string, string[]> = {
   project: ['show', 'edit', 'reset'],
 };
 export const singleCommands = [
+  'update',
   'init',
   'status',
   'validate',

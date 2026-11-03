@@ -16,6 +16,17 @@ Installation link (GitHub) : [@DevPumpkin0113/worktree](https://github.com/DevPu
 npm install --global @devpumpkin0113/worktree-cli
 ```
 
+## Update — `update`
+
+```powershell
+worktree update --check
+worktree update
+```
+
+`--check` checks the latest version without installing. `update` updates the npm global installation and applies on the next run. No project is required. If npm cannot be located, use `npm install -g @devpumpkin0113/worktree-cli@latest`.
+
+Interactive terminal commands check in the background at most once a day and show a known update on the next run. Updates are installed only when requested. Automatic checks never block commands and are disabled for `--json` and redirected output.
+
 ## Start — `init`
 
 Run in your project folder and follow the prompts.

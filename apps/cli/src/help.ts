@@ -3,6 +3,10 @@ import { commandGroups, singleCommands } from './help-topics';
 type Language = 'ko' | 'en';
 type Text = [string, string];
 const descriptions: Record<string, Text> = {
+  update: [
+    '최신 CLI를 확인하고 npm 전역 설치본을 업데이트합니다. --check는 확인만 합니다.',
+    'Check and update the npm global CLI installation. --check only checks.',
+  ],
   batch: [
     'JSON의 이슈·마일스톤·댓글 명령을 모두 검증한 뒤 한 번에 저장합니다.',
     'Validate issue, milestone and comment commands, then save once.',

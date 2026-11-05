@@ -3,7 +3,7 @@ import { messages } from '../i18n/messages';
 import type { Status, WorkModel, Problem } from '@worktree/core/types';
 export type { Status, WorkRow, WorkModel, Problem } from '@worktree/core/types';
 export type View = 'tree' | 'board' | 'flow' | 'gantt';
-export type Page = 'board' | 'tasks' | 'analytics' | 'project' | 'initialize';
+export type Page = 'board' | 'tasks' | 'epics' | 'analytics' | 'project' | 'initialize';
 export type DetailMode = 'sidebar' | 'tabs';
 export interface TaskCreationTab {
   id: string;

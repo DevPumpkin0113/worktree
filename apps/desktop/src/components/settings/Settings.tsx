@@ -3,7 +3,6 @@ import { messages } from '../../i18n/messages';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AboutSettings } from './AboutSettings';
 import { GeneralSettings } from './GeneralSettings';
-import { Icon } from '../shared/Icon';
 import type { WorkspaceStore } from '../../app/workspace-store';
 import type { WorkspaceSnapshot } from '../../app/types';
 export function Settings({
@@ -23,6 +22,7 @@ export function Settings({
     if (state.settingsOpen) {
       setPage('general');
       if (!dialog.current!.open) dialog.current!.show();
+      document.getElementById('settingsClose')?.focus({ preventScroll: true });
       opened.current = true;
     } else if (dialog.current!.open) dialog.current!.close();
   }, [state.settingsOpen]);
@@ -40,19 +40,6 @@ export function Settings({
         store.closeSettings();
       }}
     >
-      <header className="settings-topbar">
-        <h2 id="settingsTitle">{messages.appSettings}</h2>
-        <button
-          id="settingsClose"
-          className="modal-close"
-          aria-label={messages.closeAppSettings}
-          title={messages.close}
-          autoFocus
-          onClick={() => store.closeSettings()}
-        >
-          <Icon name="close" />
-        </button>
-      </header>
       <div className="settings-shell">
         <aside className="settings-sidebar">
           <nav
@@ -93,27 +80,34 @@ export function Settings({
           </div>
         </aside>
         <div className="settings-main">
-          <section
-            id="settingsGeneralPage"
-            className="settings-page"
-            role="tabpanel"
-            aria-labelledby="settingsGeneralTab"
-            hidden={page !== 'general'}
-          >
-            <GeneralSettings store={store} state={state} />
-          </section>
-          <section
-            id="settingsAboutPage"
-            className="settings-page"
-            role="tabpanel"
-            aria-labelledby="settingsAboutTab"
-            hidden={page !== 'about'}
-          >
-            <AboutSettings app={app} settingsReady={state.settings.ready} />
-          </section>
-          <p id="settingsError" role="alert">
-            {state.settings.error}
-          </p>
+          <div className="settings-page-heading workspace-page-heading">
+            <h3 id="settingsPageTitle">
+              {page === 'general' ? messages.general : messages.aboutApp}
+            </h3>
+          </div>
+          <div className="settings-content">
+            <section
+              id="settingsGeneralPage"
+              className="settings-page"
+              role="tabpanel"
+              aria-labelledby="settingsGeneralTab"
+              hidden={page !== 'general'}
+            >
+              <GeneralSettings store={store} state={state} />
+            </section>
+            <section
+              id="settingsAboutPage"
+              className="settings-page"
+              role="tabpanel"
+              aria-labelledby="settingsAboutTab"
+              hidden={page !== 'about'}
+            >
+              <AboutSettings app={app} settingsReady={state.settings.ready} />
+            </section>
+            <p id="settingsError" role="alert">
+              {state.settings.error}
+            </p>
+          </div>
         </div>
       </div>
     </dialog>

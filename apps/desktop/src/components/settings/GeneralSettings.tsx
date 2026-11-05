@@ -12,11 +12,7 @@ export function GeneralSettings({
 }) {
   return (
     <>
-      {' '}
-      <div className="settings-page-heading">
-        <h3>{messages.general}</h3>
-        <p>{messages.instantSettingsHint}</p>
-      </div>
+      <p className="settings-save-hint">{messages.instantSettingsHint}</p>
       <DisplayNameSetting
         key={state.settings.displayName}
         value={state.settings.displayName}

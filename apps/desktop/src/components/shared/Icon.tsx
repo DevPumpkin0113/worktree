@@ -1,5 +1,12 @@
 import type { CSSProperties, ReactNode } from 'react';
 const icons: Record<string, ReactNode> = {
+  'settings-back': <path d="m14 5-7 7 7 7M7 12h14" />,
+  epics: (
+    <>
+      <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+      <path d="m3 12 9 5 9-5M3 16l9 5 9-5" />
+    </>
+  ),
   grip: (
     <path
       d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"

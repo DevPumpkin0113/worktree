@@ -249,7 +249,7 @@ export function parseArguments(args: string[], cwd: string): Options {
         : result.kind === 'milestone'
           ? ['epic']
           : result.kind === 'epic'
-            ? ['icon', 'icon-color']
+            ? ['icon', 'icon-color', 'description', 'description-file']
             : []),
     ])
       allowed.add(key);

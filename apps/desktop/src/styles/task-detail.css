@@ -202,6 +202,68 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.detail-reference-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 0;
+}
+.detail-reference-item {
+  min-width: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.detail-reference-item:last-child {
+  border-bottom: 0;
+}
+.detail-reference-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.detail-reference-main > svg {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+.detail-reference-text {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 3px;
+}
+.detail-reference-name,
+.detail-reference-path {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.detail-reference-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+.detail-reference-path {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.detail-reference-main button.action-button[data-variant] {
+  flex-shrink: 0;
+  padding: 5px;
+  min-height: 26px;
+  width: 28px;
+}
+.detail-reference-main button svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+.detail-reference-feedback {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
 .detail-blocked {
   font-size: 12px;
   color: var(--color-detail-status-blocked-color);

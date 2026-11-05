@@ -14,6 +14,8 @@ export function IssueReport({
       <div className="about-support-action">
         <button
           id="reportIssue"
+          className="action-button"
+          data-variant="secondary"
           type="button"
           disabled={app.reporting}
           onClick={() => void app.report()}

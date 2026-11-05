@@ -25,8 +25,9 @@ export interface ProjectSource {
   files: Record<string, string>;
 }
 export interface TaskReference {
-  type: 'text' | 'file';
+  type: 'text' | 'file' | 'web' | 'folder';
   value: string;
+  name?: string;
 }
 export class ProjectValidationError extends Error {
   constructor(

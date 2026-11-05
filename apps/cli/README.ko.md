@@ -40,6 +40,23 @@ worktree init
 
 이슈 접두어로 영문 1~20자를 입력하며 소문자는 대문자로 변환합니다. `EP`·`MS`는 예약어로 사용할 수 없습니다. 우선순위는 미지정 제외 최대 5개입니다. 기존 `EP` 접두어 프로젝트는 계속 읽을 수 있습니다.
 
+## 참조 데이터
+
+에픽 목표는 `epic add`·`epic edit`의 `--description` 또는 `--description-file`로 작성합니다. 목표는 에픽 문서 본문에 Markdown으로 저장하며 다른 필드만 수정하면 기존 본문을 보존합니다.
+
+`task add`·`task edit`의 `--references` 또는 JSON 입력에서 다음 배열을 사용할 수 있습니다.
+
+```json
+[
+  { "type": "web", "value": "https://example.com/spec", "name": "설계서" },
+  { "type": "file", "value": "docs/spec.md" },
+  { "type": "folder", "value": "docs/assets", "name": "자료" },
+  { "type": "text", "value": "기존 참고 메모" }
+]
+```
+
+`name`은 선택 항목입니다. 파일·폴더 경로는 프로젝트 루트 기준 상대 경로이며 상위 폴더 이동과 절대 경로는 허용하지 않습니다. `web`은 HTTP(S) 절대 URL을 사용합니다. 기존 `text`·`file` 참조는 계속 지원하며 이름을 자동으로 저장하지 않습니다. 배열은 전체를 교체하고 `[]`는 비웁니다.
+
 ## 세션 — `shell`
 
 현재 프로젝트를 유지하며 명령을 반복 실행합니다.

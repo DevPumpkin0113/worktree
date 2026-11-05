@@ -15,6 +15,85 @@ import type { Platform } from '../../apps/desktop/src/app/types';
 const first = 'C:/QA/worktree.json',
   second = 'C:/QB/worktree.json';
 
+test('설정은 타이틀바에 제목과 뒤로가기를 통합하고 창 조작과 포커스 복귀를 유지한다', async () => {
+  const f = await fixture();
+  const controls: string[] = [];
+  f.platform.control = async (action) => {
+    controls.push(action);
+  };
+  try {
+    await f.click('#settingsOpen');
+    assert.ok(f.host.querySelector('.titlebar #settingsTitle'));
+    assert.ok(f.host.querySelector('.titlebar #settingsClose'));
+    assert.equal(f.element('#settingsOpen').getAttribute('aria-pressed'), 'true');
+    assert.ok(
+      f
+        .element('#settingsOpen')
+        .closest('.header-actions')
+        ?.nextElementSibling?.classList.contains('window-controls'),
+    );
+    assert.equal(f.host.querySelector('#settings .settings-topbar'), null);
+    assert.equal(f.host.querySelector('.titlebar #reload'), null);
+    assert.equal(f.host.querySelector('.titlebar #search'), null);
+    assert.equal(document.activeElement, f.element('#settingsClose'));
+    await f.click('#windowMinimize');
+    await f.click('#windowMaximize');
+    await act(() =>
+      f
+        .element('#titleDrag')
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, detail: 1 })),
+    );
+    assert.deepEqual(controls, ['minimize', 'maximize', 'drag']);
+    await f.click('#settingsAboutTab');
+    assert.equal((f.element('#settingsAboutPage') as HTMLElement).hidden, false);
+    await f.click('#settingsClose');
+    assert.equal(f.store.getSnapshot().settingsOpen, false);
+    assert.equal(document.activeElement, f.element('#settingsOpen'));
+    assert.ok(f.host.querySelector('#titleDrag #reload'));
+    await f.click('#settingsOpen');
+    await f.click('#settingsOpen');
+    assert.equal(f.store.getSnapshot().settingsOpen, false);
+    await f.click('#settingsOpen');
+    await act(() =>
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      ),
+    );
+    assert.equal(f.store.getSnapshot().settingsOpen, false);
+  } finally {
+    await f.close();
+  }
+});
+
+test('에픽 페이지는 목표·하위 집계를 표시하고 View 상세 및 생성으로 연결한다', async () => {
+  const f = await fixture();
+  try {
+    await f.click('[data-workspace-page="epics"]');
+    assert.ok(f.host.textContent?.includes('에픽을 추가'));
+    await f.click('.epic-overview-empty button');
+    await f.value('#taskEditor-name', '제품 목표');
+    await f.value('#taskEditor-description', '# 출시 목표\n\n- 안정적인 작업 관리');
+    await f.submit();
+    await act(() => f.store.selectWork('MS001'));
+    await f.click('#taskEditOpen');
+    await f.click('#taskEditor-parent');
+    await f.click('#taskEditor-parent-options [data-value="EP001"]');
+    await f.submit();
+    await f.click('[data-workspace-page="epics"]');
+    assert.equal(f.element('#workspacePageTitle').textContent, 'Epics');
+    assert.equal((f.element('#workspaceTools') as HTMLElement).hidden, true);
+    assert.match(f.element('[data-epic-overview-row="EP001"]').textContent ?? '', /1\/2/);
+    assert.equal(f.host.querySelector('.epic-overview-detail'), null);
+    await f.click('[data-epic-overview-row="EP001"] button');
+    assert.equal(f.store.getSnapshot().page, 'board');
+    assert.equal(f.store.getSnapshot().selectedId, 'EP001');
+    assert.equal(f.element('#detailTitle').textContent, '제품 목표');
+    assert.match(f.element('.description-section').textContent ?? '', /출시 목표/);
+  } finally {
+    await f.close();
+  }
+});
+
 test('네트워크의 HTML 제목 클릭·키보드 선택·강조 해제·상세 열기를 유지한다', async () => {
   const f = await fixture();
   try {
@@ -953,7 +1032,8 @@ test('작업은 제목만 필수이고 설명·메타데이터·참조를 개별
     await f.click('#taskEditor-priority');
     await f.click('#taskEditor-priority-options [role="option"][data-value="high"]');
     await f.click('#taskReference-add');
-    await f.value('.task-reference-row input', 'docs/spec.md');
+    await f.value('#taskEditor-reference-0', 'https://example.com/spec');
+    await f.click('#taskReference-confirm');
     await f.submit();
     assert.equal(f.host.querySelector('#taskEditor'), null);
     const row = f.store.active!.model!.rows.find((row) => row.id === 'W003')!;
@@ -1044,23 +1124,26 @@ test('저장 시 제목·일정·참조 오류를 해당 입력 아래 표시하
     await f.click('#taskEditOpen');
     assert.ok(f.element<HTMLFormElement>('#taskEditorForm').noValidate);
     await f.value('#taskEditor-name', '   ');
-    await f.click('#taskReference-add');
     await f.submit();
     assert.ok(f.element('#detailTitle').contains(f.element('#taskEditor-name-error')));
+    assert.equal(document.activeElement, f.element('#taskEditor-name'));
+    await f.value('#taskEditor-name', '검증 확인');
+    await f.click('#taskReference-add');
+    await f.click('#taskReference-confirm');
     assert.ok(
       f.element('.task-reference-value-field').contains(f.element('#taskEditor-reference-0-error')),
     );
-    assert.equal(document.activeElement, f.element('#taskEditor-name'));
+    assert.equal(document.activeElement, f.element('#taskEditor-reference-0'));
     assert.equal(f.element('#taskEditor-reference-0').getAttribute('aria-invalid'), 'true');
     assert.equal(f.calls.filter((call) => call.command === 'save_project').length, 0);
-    await f.value('#taskEditor-name', '검증 확인');
     await f.click('#taskReference-type-0');
     await f.click('#taskReference-type-0-options [data-value="file"]');
     await f.value('#taskEditor-reference-0', '../outside.txt');
-    await f.submit();
+    await f.click('#taskReference-confirm');
     assert.match(f.element('#taskEditor-reference-0-error').textContent ?? '', /상대/);
     assert.equal(document.activeElement, f.element('#taskEditor-reference-0'));
     await f.value('#taskEditor-reference-0', 'docs/design.md');
+    await f.click('#taskReference-confirm');
     await f.value('#taskEditor-start', '2026-11-10');
     await f.value('#taskEditor-end', '2026-11-01');
     await f.submit();
@@ -1789,7 +1872,7 @@ test('새로고침은 검색 왼쪽에 있고 앱 아이콘은 프로젝트명 �
     assert.deepEqual(controls, ['minimize', 'maximize', 'close', 'drag', 'maximize']);
     await f.click('#settingsOpen');
     assert.equal(f.store.getSnapshot().settingsOpen, true);
-    await f.click('#settingsOpen');
+    await f.click('#settingsClose');
     await f.click('#workspaceCollapse');
     assert.ok(f.host.querySelector('.project-entry .app-mark'));
     assert.equal(document.documentElement.classList.contains('workspace-nav-collapsed'), false);
@@ -1826,7 +1909,7 @@ test('하이픈 표시는 프로젝트에 저장하며 전환·재열기 시 분
     const before = readSource(f.files.get(first)!);
     await f.click('#settingsOpen');
     assert.equal(f.host.querySelector('#idSeparator'), null);
-    await f.click('#settingsOpen');
+    await f.click('#settingsClose');
     await f.click('#projectManageOpen');
     await f.click('#projectEditOpen');
     await f.click('#projectSettings-idSeparator');

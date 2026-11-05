@@ -156,7 +156,7 @@ export function updateProjectTask(
       references: draft.references,
     });
   }
-  source.files[file] = writeTaskFile(metadata, container ? '' : draft.description);
+  source.files[file] = writeTaskFile(metadata, !container || epic ? draft.description : '');
   if (!existing) {
     config[epic ? 'nextEpicNumber' : milestone ? 'nextMilestoneNumber' : 'nextTaskNumber'] =
       Number(key.match(/\d+$/)![0]) + 1;

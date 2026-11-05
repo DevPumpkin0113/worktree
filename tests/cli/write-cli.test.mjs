@@ -18,6 +18,25 @@ function cli(root,args,input){return spawnSync(process.execPath,[main,...args,'-
 function ok(root,...args){const result=cli(root,[...args,'--json']);assert.equal(result.status,0,result.stderr);return JSON.parse(result.stdout);}
 function error(root,code,...args){const result=cli(root,[...args,'--json']);assert.equal(result.status,1,result.stdout);assert.equal(JSON.parse(result.stderr).error.code,code,result.stderr);}
 
+test('CLI epic goal flags and partial edits preserve the Markdown body',t=>{
+ const root=fixture(t);const created=ok(root,'epic','add','--title','Goal','--description','# Outcome\n\n- Ship');
+ const id=created.id;assert.equal(ok(root,'epic','show',id).task.description,'# Outcome\n\n- Ship');
+ ok(root,'epic','edit',id,'--title','Renamed');assert.equal(ok(root,'epic','show',id).task.description,'# Outcome\n\n- Ship');
+});
+
+test('CLI named references survive native storage and partial edits; invalid targets leave files unchanged',t=>{
+ const root=fixture(t);const references=[{type:'web',value:'https://example.com/spec',name:'설계서'},{type:'folder',value:'docs/assets',name:'자료'},{type:'file',value:'docs/old.md'},{type:'text',value:'기존 메모'}];
+ ok(root,'task','edit','W001','--references',JSON.stringify(references));
+ assert.deepEqual(ok(root,'task','show','W001').task.references,references);
+ ok(root,'task','edit','W001','--title','제목만 변경');
+ assert.deepEqual(ok(root,'task','show','W001').task.references,references);
+ const schema=ok(root,'schema');assert.match(JSON.stringify(schema),/folder/);assert.match(JSON.stringify(schema),/optional string/);
+ for(const ref of [{type:'web',value:'javascript:alert(1)'},{type:'folder',value:'../escape'},{type:'text',value:'memo',name:3}]){
+  const before=ok(root,'status').revision;error(root,'INVALID_DOCUMENT','task','edit','W001','--references',JSON.stringify([ref]));assert.equal(ok(root,'status').revision,before);
+ }
+ ok(root,'validate');
+});
+
 test('CLI 완료 기록은 종료일을 보존하고 재오픈 시 해제한다',t=>{
  const root=fixture(t);
  ok(root,'task','edit','W001','--start','2026-10-21','--end','2026-10-22','--status','done');

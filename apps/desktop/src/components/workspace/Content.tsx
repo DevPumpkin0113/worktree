@@ -16,6 +16,7 @@ import { TreeView } from './TreeView';
 import { KanbanView } from './KanbanView';
 import { AllTasks } from './AllTasks';
 import { Analytics } from './Analytics';
+import { EpicOverview } from './EpicOverview';
 import { ChartView } from './ChartView';
 import { Icon } from '../shared/Icon';
 import { PAGES } from '../layout/WorkspaceNav';
@@ -147,7 +148,10 @@ export function Content({
           id="workspaceTools"
           className="tools"
           hidden={
-            state.page === 'analytics' || state.page === 'project' || state.page === 'initialize'
+            state.page === 'epics' ||
+            state.page === 'analytics' ||
+            state.page === 'project' ||
+            state.page === 'initialize'
           }
         >
           <div hidden={state.page !== 'board'}>
@@ -307,6 +311,21 @@ export function Content({
             />
           ) : state.page === 'analytics' ? (
             <Analytics model={model ?? null} />
+          ) : state.page === 'epics' ? (
+            <EpicOverview
+              key={active?.path}
+              model={model ?? null}
+              label={label}
+              onOpen={(id) => {
+                store.setPage('board');
+                store.setView('tree');
+                store.selectWork(id);
+              }}
+              onAdd={() => {
+                store.setPage('board');
+                onAddEpic();
+              }}
+            />
           ) : !active ? (
             <div className="empty">
               {store.activeProject ? messages.documentUnavailable : messages.projectOpenPrompt}

@@ -1,6 +1,7 @@
 import { messages } from './i18n/messages';
 import { isRelativePath, ProjectValidationError } from './project-source';
 import { nextProjectId, updateProjectTask, type ProjectTaskDraft } from './task-editing';
+import { validTaskReference } from './task-references';
 
 export type TaskDraftErrors = Record<string, string>;
 
@@ -34,8 +35,10 @@ export function validateTaskDraft(
     draft.references.forEach((reference, index) => {
       if (!reference.value.trim() || reference.value.includes('\0'))
         errors['reference-' + index] = messages.taskReferenceRequired;
-      else if (reference.type === 'file' && !isRelativePath(reference.value))
+      else if (['file', 'folder'].includes(reference.type) && !isRelativePath(reference.value))
         errors['reference-' + index] = messages.taskReferencePathInvalid;
+      else if (!validTaskReference(reference))
+        errors['reference-' + index] = messages.taskFieldInvalid;
     });
   }
   if (Object.keys(errors).length) return errors;

@@ -4,7 +4,7 @@
   <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree icon" />
   <h1>Worktree</h1>
   <p>A Windows desktop app and CLI for tasks and schedules</p>
-  <p><strong>Beta Worktree 0.35.0</strong></p>
+  <p><strong>Beta Worktree 0.36.0</strong></p>
   <a href="https://github.com/DevPumpkin0113/worktree/releases">
     <img src="https://img.shields.io/badge/Windows-Download-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" />
   </a>
@@ -16,6 +16,7 @@
 
 - **Multiple views** — Tree, Kanban, dependency network, Gantt chart, and task list.
 - **Issue hierarchy** — Organize work as epic → milestone → issue, or assign issues directly to an epic.
+- **Epic overview** — Compare epic goals, progress, schedules, and blocked issues; review milestones and direct issues.
 - **Schedules and dependencies** — Manage dates, estimated work hours, predecessors, and successors.
 - **Organization and search** — Organize tasks by assignee, status, priority, type, and labels; search and filter the results.
 - **Task details** — Open multiple tasks in tabs or use a side panel alongside the list.
@@ -131,6 +132,10 @@ Inspect all tasks in a table and use search and filters.
 ### Task details
 
 Review and edit dates, descriptions, assignees, priorities, and dependencies.
+
+Descriptions support Markdown headings, lists, checklists, tables, and code blocks.
+
+Name references, open web links and project-local files/folders, or copy their paths.
 
 <div align="center">
   <img src=".github/assets/screenshot-007.png" width="900" alt="Worktree Issue details" />

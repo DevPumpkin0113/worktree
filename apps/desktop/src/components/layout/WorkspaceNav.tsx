@@ -6,6 +6,9 @@ import { ProjectEntry } from '../project/ProjectEntry';
 import { Icon } from '../shared/Icon';
 import type { Page } from '../../app/types';
 export const PAGES: Record<Page, [string, string]> = {
+  get epics() {
+    return [messages.epicsPage, messages.epicOverview] as [string, string];
+  },
   get initialize() {
     return [messages.initializeProject, messages.initializationDescription] as [string, string];
   },
@@ -28,6 +31,7 @@ const PAGE_ICONS: Record<Page, string> = {
   board: 'workspace',
   tasks: 'task-list',
   analytics: 'insights',
+  epics: 'epics',
 };
 export function WorkspaceNav({
   initializationStep,
@@ -63,7 +67,7 @@ export function WorkspaceNav({
         <>
           <p className="workspace-nav-label">{messages.workspace}</p>
           <nav aria-label={messages.workspaceMenu}>
-            {(['board', 'tasks', 'analytics'] as const).map((key) => (
+            {(['board', 'epics', 'tasks', 'analytics'] as const).map((key) => (
               <button
                 key={key}
                 type="button"

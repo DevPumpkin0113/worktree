@@ -114,7 +114,12 @@ export function planTask(options: Options, project: ReturnType<typeof readProjec
       if (options.kind === 'task' && (key === 'epic' || key === 'milestone')) continue;
       if (
         options.kind !== 'task' &&
-        !['title', 'start', 'end', ...(options.kind === 'milestone' ? ['epic'] : [])].includes(key)
+        ![
+          'title',
+          'start',
+          'end',
+          ...(options.kind === 'milestone' ? ['epic'] : ['description']),
+        ].includes(key)
       )
         throw new CliError('USAGE', errorMessage('fieldNotAvailableForMilestones', [key]));
       if ((field === 'labels' || field === 'deps') && Array.isArray(value)) {

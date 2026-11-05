@@ -6,10 +6,10 @@ import {
   readSource,
   projectConfig,
   ProjectValidationError,
-  isRelativePath,
   type TaskReference,
 } from './project-source';
 import { readTaskFile } from './task-file';
+import { validTaskReference } from './task-references';
 export function parseProject(text: string): WorkModel {
   const source = readSource(text),
     config = projectConfig(source);
@@ -93,19 +93,7 @@ export function parseProject(text: string): WorkModel {
     )
       fail('labels');
     const references = m.references ?? [];
-    if (
-      !Array.isArray(references) ||
-      !references.every(
-        (v) =>
-          v &&
-          ['text', 'file'].includes(v.type) &&
-          typeof v.value === 'string' &&
-          v.value.trim() &&
-          !v.value.includes('\0') &&
-          (v.type !== 'file' || isRelativePath(v.value)),
-      )
-    )
-      fail('references');
+    if (!Array.isArray(references) || !references.every(validTaskReference)) fail('references');
     for (const key of ['createdAt', 'updatedAt']) {
       if (
         !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(string(key)) ||
@@ -182,7 +170,7 @@ export function parseProject(text: string): WorkModel {
       const previous = byId.get(dep) ?? failRow(row, 'dependencies', dep, 'dependency');
       if (!previous || previous.type === 'group' || dep === row.id)
         failRow(row, 'dependencies', dep, 'dependency');
-      if (row.start !== '-' && previous.end !== '-' && row.start <= previous.end)
+      if (row.start !== '-' && previous.end !== '-' && row.start < previous.end)
         failRow(row, 'start', dep, 'dependencyDate');
     }
   }

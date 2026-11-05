@@ -40,6 +40,23 @@ Choose a project name, data directory, ID prefix, and task rules. Enter accepts 
 
 Issue prefixes accept 1–20 ASCII letters, converted to uppercase, except reserved `EP` and `MS`. Priorities are limited to five, excluding Unassigned. Existing `EP`-prefix projects remain readable.
 
+## Reference data
+
+Use `--description` or `--description-file` with `epic add` / `epic edit` to write an epic goal. Goals are stored as Markdown in the epic document body and preserved when editing other fields.
+
+`task add` and `task edit` accept this array through `--references` or JSON input:
+
+```json
+[
+  { "type": "web", "value": "https://example.com/spec", "name": "Specification" },
+  { "type": "file", "value": "docs/spec.md" },
+  { "type": "folder", "value": "docs/assets", "name": "Assets" },
+  { "type": "text", "value": "Legacy note" }
+]
+```
+
+`name` is optional. File/folder paths are project-root-relative; absolute paths and parent traversal are rejected. `web` requires an absolute HTTP(S) URL. Existing `text`/`file` references remain supported without automatically adding names. Arrays replace the entire list; `[]` clears it.
+
 ## Session — `shell`
 
 Keep a project open while running commands.

@@ -1,7 +1,8 @@
 import type { WorkRow } from '@worktree/core/types';
 import { messages } from '../../i18n/messages';
+import { TaskReferenceList } from './TaskReferenceList';
 
-export function TaskContentMetadata({ row }: { row: WorkRow }) {
+export function TaskContentMetadata({ row, project }: { row: WorkRow; project?: string | null }) {
   return (
     <>
       <section
@@ -20,16 +21,7 @@ export function TaskContentMetadata({ row }: { row: WorkRow }) {
       <section className="detail-section">
         <h3>{messages.references}</h3>
         {row.references?.length ? (
-          <ul>
-            {row.references.map((reference, index) => (
-              <li key={index} className="task-reference-value">
-                <span>
-                  {reference.type === 'file' ? messages.referenceFile : messages.referenceText}
-                </span>{' '}
-                {reference.value}
-              </li>
-            ))}
-          </ul>
+          <TaskReferenceList key={row.id} references={row.references} project={project} />
         ) : (
           <p className="detail-empty">{messages.none}</p>
         )}

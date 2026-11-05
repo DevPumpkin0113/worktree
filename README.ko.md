@@ -4,7 +4,7 @@
   <img src="apps/desktop/public/worktree-icon.png" width="100" alt="Worktree 아이콘" />
   <h1>Worktree</h1>
   <p>작업과 일정을 한눈에 정리하는 Windows 데스크톱 앱</p>
-  <p><strong>Beta Worktree 0.35.0</strong></p>
+  <p><strong>Beta Worktree 0.36.0</strong></p>
   <a href="https://github.com/DevPumpkin0113/worktree/releases">
     <img src="https://img.shields.io/badge/Windows-다운로드-167582?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 버전 다운로드" />
   </a>
@@ -16,6 +16,7 @@
 
 - **다양한 보기** — 트리, 칸반, 작업 네트워크, 간트 차트, 작업 목록을 제공합니다.
 - **이슈 계층** — 에픽 → 마일스톤 → 이슈로 구성하거나 이슈를 에픽에 직접 배정합니다.
+- **에픽 현황** — 에픽별 목표·진행률·기간·차단 이슈를 비교하고 마일스톤과 직속 이슈를 확인합니다.
 - **일정과 작업 관계** — 시작일·종료일, 예상 작업 시간, 선행·후속 작업을 관리합니다.
 - **분류와 검색** — 담당자, 상태, 우선순위, 작업 유형, 라벨로 작업을 정리하고 검색·필터로 찾습니다.
 - **상세 보기** — 여러 작업을 탭으로 열거나 목록 옆의 분할 패널에서 확인합니다.
@@ -131,6 +132,10 @@ Worktree 개발 작업을 예시 데이터로 사용한 화면입니다.
 ### 작업 상세
 
 일정과 설명, 담당자, 우선순위, 작업 관계를 확인하고 수정합니다.
+
+설명은 Markdown의 제목·목록·체크리스트·표·코드 블록을 지원합니다.
+
+참조에 이름을 붙이고 웹 링크·프로젝트 내부 파일·폴더를 열거나 경로를 복사할 수 있습니다.
 
 <div align="center">
   <img src=".github/assets/screenshot-007.png" width="900" alt="Worktree 이슈 상세" />

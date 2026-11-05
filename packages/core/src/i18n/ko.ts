@@ -14,7 +14,7 @@ export const ko = {
   normalPriority: '중',
   priorityInUse: '사용 중인 우선순위는 삭제할 수 없습니다.',
   projectCycleError: '선행 이슈 관계가 순환합니다.',
-  projectDependencyDateError: '시작일은 선행 이슈 종료일 다음 날 이후여야 합니다.',
+  projectDependencyDateError: '시작일은 선행 이슈 종료일과 같거나 이후여야 합니다.',
   projectDependencyError: '선행 이슈은 존재하는 다른 일반 이슈의 ID여야 합니다.',
   projectDuplicateValues: '이슈 유형과 라벨은 중복 없이 입력해 주세요.',
   projectMilestoneError: '소속 마일스톤 ID가 존재하지 않거나 마일스톤이 아닙니다.',

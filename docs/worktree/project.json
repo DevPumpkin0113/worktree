@@ -17,8 +17,8 @@
     "AgentSkill"
   ],
   "name": "worktree",
-  "nextMilestoneNumber": 11,
-  "nextTaskNumber": 54,
+  "nextMilestoneNumber": 13,
+  "nextTaskNumber": 61,
   "priorities": [
     {
       "id": "high",

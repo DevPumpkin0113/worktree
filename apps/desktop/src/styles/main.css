@@ -109,6 +109,7 @@ input {
 #workspace:is(
     [data-page='board'],
     [data-page='tasks'],
+    [data-page='epics'],
     [data-page='analytics'],
     [data-page='project'],
     [data-page='initialize']

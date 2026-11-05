@@ -649,46 +649,100 @@
 }
 .task-field-references {
   min-width: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 12px;
-}
-.task-reference-row {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) auto;
-  gap: 8px;
-  margin-bottom: 8px;
-  align-items: start;
-}
-.task-reference-row .filter-dropdown {
-  min-width: 0;
-}
-.task-reference-row .filter-trigger {
-  height: 44px;
+  border: 0;
+  padding: 0;
 }
 .task-reference-value-field {
   display: grid;
   gap: 5px;
   min-width: 0;
 }
-.task-reference-row > button {
-  height: 44px;
-  padding: 8px 12px;
-  font-size: 12px;
-  white-space: nowrap;
+.reference-edit-list {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
 }
-@container task-references (max-width: 420px) {
-  .task-reference-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .task-reference-row > .filter-dropdown {
-    grid-column: 1 / -1;
-  }
-}
-.task-reference-row input {
-  height: 44px;
+.reference-edit-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
   min-width: 0;
+}
+.reference-edit-summary {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  padding: 5px 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+}
+.reference-edit-summary svg {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+.reference-edit-summary:hover:not(:disabled),
+.reference-edit-summary:focus-visible {
+  color: var(--color-primary);
+}
+.reference-edit-summary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.reference-edit-item button.reference-remove[data-variant] {
+  padding: 5px;
+  width: 28px;
+  min-height: 28px;
+}
+.reference-edit-item button.reference-remove svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.reference-composer {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  background: var(--color-tag-background);
+  min-width: 0;
+}
+.reference-composer > strong {
+  font-size: 12px;
+}
+.reference-composer label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.reference-composer input {
   width: 100%;
+  min-width: 0;
+  height: 34px;
+  border: 1px solid var(--color-border-control);
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 6px 8px;
+}
+.reference-composer .filter-dropdown {
+  min-width: 0;
+}
+.reference-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.task-field-references button[hidden] {
+  display: none;
 }
 .task-reference-value {
   white-space: pre-wrap;

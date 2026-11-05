@@ -4,6 +4,7 @@ import { messages } from '../../i18n/messages';
 import { legacyPriorities } from '@worktree/core/project-priorities';
 import { FilterDropdown } from '../shared/FilterDropdown';
 import { TaskReferenceFields } from './TaskReferenceFields';
+import { MarkdownDescriptionEditor } from './MarkdownDescriptionEditor';
 import { SearchMultiSelect } from '../shared/SearchMultiSelect';
 import { taskTypeColor } from '@worktree/core/task-type-colors';
 import type { ProjectTaskDraft } from '@worktree/core/task-editing';
@@ -97,19 +98,15 @@ export function TaskMetadataFields({
       ) : null}
       {section === 'main' ? (
         <>
-          <label className="task-editor-field task-field-description">
-            <span>{messages.description}</span>
-            <textarea
-              id="taskEditor-description"
-              aria-invalid={!!errors.description}
-              aria-describedby={errors.description ? 'taskEditor-description-error' : undefined}
-              rows={5}
+          <div className="task-editor-field task-field-description">
+            <MarkdownDescriptionEditor
               value={draft.description}
               disabled={disabled}
-              onChange={(e) => change('description', e.target.value)}
+              invalid={!!errors.description}
+              onChange={(value) => change('description', value)}
             />
             <TaskFieldError field="description" />
-          </label>
+          </div>
           <label className="task-editor-field task-field-description">
             <span>{messages.blockedReason}</span>
             <textarea

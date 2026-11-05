@@ -57,6 +57,13 @@ test('새 규격 오류는 언어 전환 후에도 실제 파일·행·입력값
  const text=changeFile('tasks/W001.md',text=>text.replace('status: "doing"','status: "wrong"'));let caught;try{parseProject(text);}catch(e){caught=e;}const [problem]=describeDocumentErrors(caught,text,'C:/p/worktree.json');const location=problem.lineNumbers;setLanguage('en');assert.match(problem.message,/check/);assert.deepEqual(problem.lineNumbers,location);assert.equal(problem.value,'"wrong"');setLanguage('ko');assert.match(problem.message,/확인/);
 });
 test('레거시 WBS·표 형식은 프로젝트 문서로 읽지 않는다',()=>{assert.throws(()=>parseProject('---\nschema_version: 2\n---\n## 작업 목록'));});
+
+test('선행 종료일과 같은 날 후속 시작은 허용하고 더 이른 시작은 거부한다',()=>{
+ const d=readSource(source);
+ for(const id of ['W001','W002']){const {metadata}=readTaskFile('tasks/'+id+'.md',d.files['tasks/'+id+'.md']);metadata.start='2026-10-22';metadata.end='2026-10-22';d.files['tasks/'+id+'.md']=writeTaskFile(metadata);}
+ assert.doesNotThrow(()=>parseProject(serializeSource(d)));
+ const {metadata}=readTaskFile('tasks/W002.md',d.files['tasks/W002.md']);metadata.start='2026-10-21';d.files['tasks/W002.md']=writeTaskFile(metadata);assert.throws(()=>parseProject(serializeSource(d)));
+});
 test('프로젝트 자체의 문서 집합이 유효하고 WBS·템플릿 파일은 제거되어 있다',()=>{
  const directory=JSON.parse(fs.readFileSync('worktree.json','utf8')).dataDirectory;const files={'project.json':fs.readFileSync(path.join(directory,'project.json'),'utf8')};for(const folder of ['tasks','milestones','epics'])for(const file of fs.readdirSync(path.join(directory,folder)))files[folder+'/'+file]=fs.readFileSync(path.join(directory,folder,file),'utf8');const model=parseProject(serializeSource({dataDirectory:directory,files}));assert.ok(model.rows.some(row=>!row.milestone));assert.ok(model.rows.some(row=>row.milestone));for(const dir of ['templates','examples','planning'])if(fs.existsSync(dir))assert.ok(fs.readdirSync(dir).every(file=>!file.endsWith('.wbs')));
 });

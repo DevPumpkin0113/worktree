@@ -7,6 +7,7 @@ mod project_files;
 mod project_reset;
 mod project_write;
 mod projects;
+mod task_references;
 mod session;
 mod settings;
 mod update_cleanup;
@@ -98,6 +99,8 @@ fn main() {
             install_app_update,
             open_issue_report,
             open_releases,
+            app_updates::open_markdown_link,
+            task_references::open_task_reference,
             load_settings,
             initialize_settings,
             save_settings,

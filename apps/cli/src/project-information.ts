@@ -59,12 +59,15 @@ export function schemaInformation(project: ReturnType<typeof readProject>) {
         'blocked-reason': field('string'),
         references: field('array', {
           items: {
-            type: { enum: ['text', 'file'] },
-            value: 'string; file paths are project-relative',
+            type: { enum: ['text', 'file', 'web', 'folder'] },
+            value:
+              'string; file/folder paths are project-relative; web requires an absolute HTTP(S) URL; text is legacy free text',
+            name: 'optional string; blank uses filename/domain as display fallback; never written automatically',
           },
         }),
       },
       epic: {
+        description: field('string', { storage: 'Markdown goal in the epic document body' }),
         iconColor: field('string', {
           pattern: '^#[0-9a-fA-F]{6}$',
           unset: '-',

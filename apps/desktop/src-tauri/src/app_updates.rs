@@ -267,9 +267,33 @@ pub async fn open_releases() -> Result<(), String> {
     .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub async fn open_markdown_link(url: String) -> Result<(), String> {
+    let parsed = reqwest::Url::parse(&url).map_err(|_| "Invalid link".to_string())?;
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host_str().is_none() {
+        return Err("Unsupported link".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || open::that(parsed.as_str()))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|_| crate::i18n::browser_failed().into())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn markdown_links_reject_non_web_targets_before_opening() {
+        for url in [
+            "javascript:alert(1)",
+            "file:///C:/test.txt",
+            "data:text/html,test",
+            "//example.com",
+            "not a URL",
+        ] {
+            assert!(tauri::async_runtime::block_on(open_markdown_link(url.into())).is_err());
+        }
+    }
     #[test]
     fn semver_order_handles_two_digit_and_prerelease_versions() {
         assert!(compare_versions("0.9.0", "v0.10.0").unwrap().is_lt());

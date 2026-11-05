@@ -1,0 +1,101 @@
+.epic-overview {
+  min-width: 0;
+  margin-top: 12px;
+}
+.epic-overview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.epic-overview-table-scroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+.epic-overview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.epic-overview-table th {
+  text-align: left;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+.epic-overview-table td {
+  padding: 12px 8px;
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+.epic-overview-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 150px;
+  max-width: 300px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.epic-overview-select > span:last-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.epic-overview-select strong {
+  font-size: 13px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.epic-overview-table small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}
+.epic-overview-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.epic-overview-progress progress {
+  width: 64px;
+  height: 5px;
+  accent-color: var(--color-primary);
+}
+.epic-overview-progress span {
+  width: 34px;
+  text-align: right;
+}
+.epic-overview-period {
+  white-space: nowrap;
+  font-size: 11px;
+}
+.epic-blocked-count {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+.epic-overview-table tbody tr {
+  cursor: pointer;
+}
+.epic-overview-table tbody tr:hover,
+.epic-overview-table tbody tr:focus-within {
+  background: var(--color-option-hover);
+}
+.epic-overview-table tbody tr:hover .epic-overview-select,
+.epic-overview-table tbody tr:focus-within .epic-overview-select {
+  color: var(--color-primary);
+}
+.epic-overview-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}

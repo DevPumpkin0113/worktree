@@ -41,7 +41,7 @@ export function Titlebar({
       .control(action)
       .catch((error) => store.report(error, '', messages.windowControlError));
   return (
-    <header className="titlebar">
+    <header className={'titlebar' + (settingsOpen ? ' settings-titlebar' : '')}>
       <div
         id="titleDrag"
         className="title-drag"
@@ -56,24 +56,42 @@ export function Titlebar({
         <h1 id="title" hidden>
           {store.active?.model?.title ?? 'Worktree'}
         </h1>
-        <div className="header-actions titlebar-search-actions">
-          <button
-            id="reload"
-            aria-label={messages.reloadSource}
-            title={messages.reloadSource}
-            disabled={!store.activeProject}
-            onClick={() => {
-              void store.refreshProject();
-            }}
-          >
-            <Icon name="reload" />
-          </button>
-        </div>
-        <TitlebarSearch
-          query={query}
-          disabled={settingsOpen || !searchEnabled}
-          onChange={(query) => store.setFilters({ query })}
-        />
+        {settingsOpen ? (
+          <>
+            <button
+              type="button"
+              id="settingsClose"
+              className="settings-back"
+              aria-label={messages.closeAppSettings}
+              title={messages.closeAppSettings}
+              onClick={() => store.closeSettings()}
+            >
+              <Icon name="settings-back" />
+            </button>
+            <h2 id="settingsTitle">{messages.appSettings}</h2>
+          </>
+        ) : (
+          <>
+            <div className="header-actions titlebar-search-actions">
+              <button
+                id="reload"
+                aria-label={messages.reloadSource}
+                title={messages.reloadSource}
+                disabled={!store.activeProject}
+                onClick={() => {
+                  void store.refreshProject();
+                }}
+              >
+                <Icon name="reload" />
+              </button>
+            </div>
+            <TitlebarSearch
+              query={query}
+              disabled={settingsOpen || !searchEnabled}
+              onChange={(query) => store.setFilters({ query })}
+            />
+          </>
+        )}
       </div>
       <div className="header-actions" role="group" aria-label={messages.documentTools}>
         <SettingsButton

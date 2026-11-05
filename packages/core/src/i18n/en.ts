@@ -16,7 +16,7 @@ export const en = {
   normalPriority: 'Medium',
   priorityInUse: 'Priorities in use cannot be deleted.',
   projectCycleError: 'The dependency graph contains a cycle.',
-  projectDependencyDateError: 'The start date must be after the predecessor’s end date.',
+  projectDependencyDateError: 'The start date must be on or after the predecessor’s end date.',
   projectDependencyError: 'A predecessor must reference another existing regular issue.',
   projectDuplicateValues: 'Issue types and labels must not contain duplicates.',
   projectMilestoneError: 'The milestone ID is missing or does not reference a milestone.',

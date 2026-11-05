@@ -5,11 +5,21 @@ import { FilterDropdown } from '../shared/FilterDropdown';
 import { createIdLabels } from '@worktree/core/id-display';
 import { TaskFieldError, TaskFieldErrorsContext } from './TaskFieldError';
 import { useContext } from 'react';
+import { MarkdownDescriptionEditor } from './MarkdownDescriptionEditor';
 export function MilestoneEditorFields(props: TaskScheduleProps & { model: WorkModel }) {
   const errors = useContext(TaskFieldErrorsContext);
   const labels = createIdLabels(props.model, props.model.idSeparator ?? 'none');
   return (
     <div className="milestone-editor-fields">
+      {props.draft.type === 'epic' ? (
+        <MarkdownDescriptionEditor
+          label={messages.epicGoal}
+          value={props.draft.description}
+          disabled={props.disabled}
+          invalid={!!errors.description}
+          onChange={(description) => props.onChange({ ...props.draft, description })}
+        />
+      ) : null}
       {props.draft.type === 'milestone' ? (
         <div className="task-editor-field">
           <span>{messages.epic}</span>

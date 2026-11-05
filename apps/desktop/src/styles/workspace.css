@@ -1,6 +1,9 @@
 :root {
-  --workspace-nav-width: 208px;
+  --workspace-nav-expanded-width: 208px;
+  --workspace-nav-width: var(--workspace-nav-expanded-width);
   --workspace-nav-padding: 8px;
+  --workspace-nav-item-padding: 11px 13px;
+  --workspace-nav-item-line-height: 20px;
   --workspace-content-padding: 12px;
   --workspace-top-gap: 12px;
   --titlebar-control-width: 48px;
@@ -49,7 +52,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 13px;
+  padding: var(--workspace-nav-item-padding);
+  line-height: var(--workspace-nav-item-line-height);
   text-align: left;
   font-size: 12px;
   border: 0;
@@ -104,7 +108,7 @@ body:has(#detail.sidebar[open]) main#workspace {
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
-.workspace-page-heading h2 {
+.workspace-page-heading :is(h2, h3) {
   margin: 0;
   color: var(--color-primary);
   font-size: 16px;
@@ -168,7 +172,7 @@ body:has(#detail.sidebar[open]) main#workspace {
 
 @media (max-width: 900px) {
   :root {
-    --workspace-nav-width: 164px;
+    --workspace-nav-expanded-width: 164px;
     --workspace-nav-padding: 8px;
   }
   .workspace-page-heading {

@@ -4,6 +4,7 @@ import { TaskMetadata } from './TaskMetadata';
 import { TaskContentMetadata } from './TaskContentMetadata';
 import { Icon } from '../shared/Icon';
 import { CircleDot } from 'lucide-react';
+import { MarkdownContent } from './MarkdownContent';
 import { summarizeGroups } from '@worktree/core/group-summary';
 import { groupEffort, groupProgress, groupSchedule } from '../../views/group-summary';
 import { STATUS_NAMES, type WorkModel, type WorkRow } from '../../app/types';
@@ -13,12 +14,14 @@ export function TaskInfo({
   label,
   onSelect,
   onDelete,
+  project,
 }: {
   row: WorkRow;
   model: WorkModel;
   label: (id: string) => string;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  project?: string | null;
 }) {
   const { date } = useProjectDates();
   const byId = new Map(model.rows.map((item) => [item.id, item]));
@@ -122,21 +125,21 @@ export function TaskInfo({
                 </div>
               ))}
           </div>
-          {!isGroup ? (
+          {!isGroup || row.epic ? (
             <section className="detail-section description-section">
               <div className="detail-section-heading">
-                <h3>{messages.description}</h3>
+                <h3>{row.epic ? messages.epicGoal : messages.description}</h3>
                 {row.status === 'done' ? (
                   <span className="detail-complete">{messages.recordedDone}</span>
                 ) : null}
               </div>
-              <p className="detail-description">{row.description || messages.noDescription}</p>
+              <MarkdownContent key={row.id} text={row.description || ''} />
               {row.status === 'blocked' ? (
                 <p className="detail-blocked">{messages.blockedHint}</p>
               ) : null}
             </section>
           ) : null}
-          {!isGroup ? <TaskContentMetadata row={row} /> : null}
+          {!isGroup ? <TaskContentMetadata row={row} project={project} /> : null}
           {children.length ? (
             <section className="detail-section detail-children">
               <h3>

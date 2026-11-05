@@ -231,6 +231,7 @@ export function TaskDetail({
                 hidden={editing || thread.tab !== 'info'}
               >
                 <TaskInfo
+                  project={path}
                   row={row}
                   model={model}
                   label={label}

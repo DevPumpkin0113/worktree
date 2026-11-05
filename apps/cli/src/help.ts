@@ -276,6 +276,12 @@ export function help(language: Language, topic?: string, session = false) {
         ),
       ]);
       section('필드 옵션', 'Field options', [
+        ...(epic
+          ? [
+              '--description TEXT  ' + t('에픽 목표 Markdown 본문.', 'Epic goal as Markdown.'),
+              '--description-file PATH  ' + t('UTF-8 목표 본문 파일.', 'UTF-8 goal body file.'),
+            ]
+          : []),
         '--title TEXT       ' + t('제목.', 'Title.'),
         '--start YYYY-MM-DD  ' + t('시작일. 미지정: -.', 'Start date; unset: -.'),
         '--end YYYY-MM-DD    ' + t('종료일. 미지정: -.', 'End date; unset: -.'),
@@ -326,8 +332,8 @@ export function help(language: Language, topic?: string, session = false) {
                 ),
               '--references JSON   ' +
                 t(
-                  '배열 [{"type":"text|file","value":"..."}]. []로 비움. file은 루트 상대 경로.',
-                  'Array [{"type":"text|file","value":"..."}]. [] clears; file paths are root-relative.',
+                  '배열 [{"type":"text|file|web|folder","value":"...","name":"선택 이름"}]. []로 비움. file/folder는 루트 상대 경로, web은 HTTP(S). 기존 text 지원.',
+                  'Array [{"type":"text|file|web|folder","value":"...","name":"optional name"}]. [] clears; file/folder are root-relative, web is HTTP(S). Legacy text is supported.',
                 ),
             ]
           : []),

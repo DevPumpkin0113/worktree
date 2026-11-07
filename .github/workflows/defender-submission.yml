@@ -1,0 +1,83 @@
+name: Defender Submission Archive
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to package (no rebuild)
+        default: v0.36.0
+        required: true
+  push:
+    branches: [develop]
+    paths: [.github/workflows/defender-submission.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag || 'v0.36.0' }}
+    steps:
+      - name: Download and verify published installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          ASSET="Worktree_${RELEASE_TAG#v}_x64-setup.exe"
+          ARCHIVE="Worktree_${RELEASE_TAG#v}_Defender-submission.zip"
+          export ASSET ARCHIVE
+          printf 'ASSET=%s\nARCHIVE=%s\n' "$ASSET" "$ARCHIVE" >> "$GITHUB_ENV"
+          gh api "repos/$GH_REPO/releases/tags/$RELEASE_TAG" > release.json
+          python3 - <<'PY'
+          import json, os, re
+          release = json.load(open('release.json'))
+          assert not release['draft'], 'Release must already be public'
+          asset, = [a for a in release['assets'] if a['name'] == os.environ['ASSET']]
+          digest = asset['digest']
+          assert re.fullmatch(r'sha256:[a-f0-9]{64}', digest), 'Missing SHA256 digest'
+          if os.environ['RELEASE_TAG'] == 'v0.36.0':
+              assert digest == 'sha256:9b1f944e5c5a0ed02a3ada2bcda309a24be0eab1b0d9a03470c0351e891b09d1'
+          open('SHA256SUMS', 'w').write(f"{digest[7:]}  {asset['name']}\n")
+          PY
+          gh release download "$RELEASE_TAG" --pattern "$ASSET"
+          sha256sum --check SHA256SUMS
+
+      - name: Create encrypted Microsoft submission ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Microsoft's documented sample-submission password; not a secret.
+          zip -j -P infected "$ARCHIVE" "$ASSET"
+          python3 - <<'PY'
+          import hashlib, os, zipfile
+          with zipfile.ZipFile(os.environ['ARCHIVE']) as archive:
+              entry, = archive.infolist()
+              assert entry.filename == os.environ['ASSET']
+              assert entry.flag_bits & 1, 'ZIP entry must be encrypted'
+              payload = archive.read(entry, pwd=b'infected')
+              assert hashlib.sha256(payload).hexdigest() == open('SHA256SUMS').read().split()[0]
+          PY
+          sha256sum "$ARCHIVE" >> SHA256SUMS
+          {
+            echo '### Microsoft Defender analysis submission'
+            echo "Existing release: $RELEASE_TAG (installer not rebuilt or executed)."
+            echo "Upload the inner file **$ARCHIVE**. Password: **infected**."
+            echo 'Do not extract or run the installer on your PC.'
+            echo '```text'
+            cat SHA256SUMS
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Worktree-Defender-submission
+          path: |
+            Worktree_*_Defender-submission.zip
+            SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
